@@ -4043,51 +4043,57 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
         </div>
       )}
       {/* ── Header ── */}
-      <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white px-6 py-4 shadow-xl">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={resolutionIQLogo} alt="ResolutionIQ" className="h-9 w-auto" />
-            <div>
-              <h1 className="text-lg font-black tracking-tight">ResolutionIQ</h1>
-              <p className="text-emerald-300 text-xs font-medium">FHA · USDA · VA · FNMA · FHLMC Loss Mitigation Rules Engine</p>
+      <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white px-4 sm:px-6 py-3 shadow-xl">
+        <div className="max-w-7xl mx-auto">
+          {/* Top row: logo + actions */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <img src={resolutionIQLogo} alt="ResolutionIQ" className="h-8 sm:h-9 w-auto flex-shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg font-black tracking-tight leading-tight">ResolutionIQ</h1>
+                <p className="text-emerald-300 text-[10px] sm:text-xs font-medium hidden sm:block">FHA · USDA · VA · FNMA · FHLMC Loss Mitigation Rules Engine</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+              {profile.role==="admin"&&<button onClick={()=>setShowAdmin(p=>!p)} className="text-emerald-300 hover:text-white text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-lg hover:bg-white/10 transition-all">Users</button>}
+              {supabaseConfigured && profile && (
+                <div className="relative">
+                  <button onClick={() => setShowNotifications(!showNotifications)}
+                    className="relative text-slate-400 hover:text-slate-600 px-2 py-1">
+                    🔔
+                    {notifications.filter(n=>!n.read).length > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                        {notifications.filter(n=>!n.read).length}
+                      </span>
+                    )}
+                  </button>
+                  {showNotifications && (
+                    <div className="absolute right-0 top-8 w-[calc(100vw-2rem)] sm:w-72 max-w-sm bg-white rounded-xl shadow-xl border border-slate-200 z-50">
+                      <div className="p-3 border-b border-slate-100 flex items-center justify-between">
+                        <span className="text-sm font-bold text-slate-700">Notifications</span>
+                        <button onClick={() => setNotifications(n => n.map(x=>({...x,read:true})))} className="text-xs text-emerald-600">Mark all read</button>
+                      </div>
+                      {notifications.length === 0
+                        ? <div className="p-4 text-xs text-slate-400 text-center">No notifications</div>
+                        : notifications.slice(0,8).map(n => (
+                          <div key={n.id} className={`p-3 border-b border-slate-50 text-xs ${n.read?"text-slate-400":"text-slate-700 font-semibold"}`}>
+                            {n.message}
+                            <div className="text-slate-400 font-normal mt-0.5">{new Date(n.createdAt).toLocaleDateString()}</div>
+                          </div>
+                        ))
+                      }
+                    </div>
+                  )}
+                </div>
+              )}
+              <button onClick={onSignOut} className="text-emerald-300 hover:text-white text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-lg hover:bg-white/10 transition-all" title="Sign out">Sign out</button>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-white/10 rounded-xl p-1 backdrop-blur-sm">
-              {LOAN_TYPES.map(t=>(<button key={t} onClick={()=>{set("loanType",t);setEvaluated(false);setResults([]);}} className={`px-4 py-1.5 rounded-lg text-sm font-black transition-all ${loan.loanType===t?"bg-white text-slate-900 shadow-md":"text-emerald-200 hover:text-white hover:bg-white/10"}`}>{t}</button>))}
+          {/* Bottom row: loan type selector (scrollable on mobile) */}
+          <div className="mt-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
+            <div className="flex items-center gap-1 bg-white/10 rounded-xl p-1 backdrop-blur-sm w-fit">
+              {LOAN_TYPES.map(t=>(<button key={t} onClick={()=>{set("loanType",t);setEvaluated(false);setResults([]);}} className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-black transition-all whitespace-nowrap ${loan.loanType===t?"bg-white text-slate-900 shadow-md":"text-emerald-200 hover:text-white hover:bg-white/10"}`}>{t}</button>))}
             </div>
-            {profile.role==="admin"&&<button onClick={()=>setShowAdmin(p=>!p)} className="text-emerald-300 hover:text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-white/10 transition-all">Users</button>}
-            {supabaseConfigured && profile && (
-              <div className="relative">
-                <button onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative text-slate-400 hover:text-slate-600 px-2 py-1">
-                  🔔
-                  {notifications.filter(n=>!n.read).length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
-                      {notifications.filter(n=>!n.read).length}
-                    </span>
-                  )}
-                </button>
-                {showNotifications && (
-                  <div className="absolute right-0 top-8 w-72 bg-white rounded-xl shadow-xl border border-slate-200 z-50">
-                    <div className="p-3 border-b border-slate-100 flex items-center justify-between">
-                      <span className="text-sm font-bold text-slate-700">Notifications</span>
-                      <button onClick={() => setNotifications(n => n.map(x=>({...x,read:true})))} className="text-xs text-emerald-600">Mark all read</button>
-                    </div>
-                    {notifications.length === 0
-                      ? <div className="p-4 text-xs text-slate-400 text-center">No notifications</div>
-                      : notifications.slice(0,8).map(n => (
-                        <div key={n.id} className={`p-3 border-b border-slate-50 text-xs ${n.read?"text-slate-400":"text-slate-700 font-semibold"}`}>
-                          {n.message}
-                          <div className="text-slate-400 font-normal mt-0.5">{new Date(n.createdAt).toLocaleDateString()}</div>
-                        </div>
-                      ))
-                    }
-                  </div>
-                )}
-              </div>
-            )}
-            <button onClick={onSignOut} className="text-emerald-300 hover:text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-white/10 transition-all" title="Sign out">Sign out</button>
           </div>
         </div>
       </div>
@@ -4104,13 +4110,13 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
         </div>
       )}
       {/* ── Tab Bar ── */}
-      <div className="bg-white border-b border-slate-200 shadow-sm px-6">
-        <div className="max-w-7xl mx-auto flex items-center gap-1 flex-wrap">
+      <div className="bg-white border-b border-slate-200 shadow-sm px-2 sm:px-6 overflow-x-auto">
+        <div className="max-w-7xl mx-auto flex items-center gap-0.5 sm:gap-1 flex-nowrap sm:flex-wrap min-w-max sm:min-w-0">
           {TABS.map(t=>(<button key={t} onClick={()=>setTab(t)} className={`px-2 py-1.5 sm:px-3 sm:py-2 text-xs font-bold transition-all border-b-2 -mb-px ${tab===t?"border-emerald-600 text-emerald-700":"border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"}`}><span className="hidden sm:inline">{TAB_LABELS[t as keyof typeof TAB_LABELS]}</span><span className="sm:hidden">{TAB_LABELS[t as keyof typeof TAB_LABELS].split(" ")[0]}</span></button>))}
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-5">
+      <div className="max-w-7xl mx-auto p-3 sm:p-5">
         {/* ── DASHBOARD ── */}
         {tab==="dashboard"&&(
           <div className="max-w-7xl mx-auto">
@@ -4140,7 +4146,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
             </div>
             {/* Filters */}
             <div className="flex flex-wrap gap-2 mb-4">
-              <input className="border rounded-lg px-3 py-1.5 text-sm flex-1 min-w-48" placeholder="Search loan # or borrower..." value={dashSearch} onChange={e=>setDashSearch(e.target.value)}/>
+              <input className="border rounded-lg px-3 py-1.5 text-sm flex-1 min-w-0 sm:min-w-48" placeholder="Search loan # or borrower..." value={dashSearch} onChange={e=>setDashSearch(e.target.value)}/>
               <select className="border rounded-lg px-3 py-1.5 text-sm" value={dashFilter} onChange={e=>setDashFilter(e.target.value)}>
                 <option value="all">All Types</option>
                 {["FHA","USDA","VA","FNMA","FHLMC"].map(t=><option key={t} value={t}>{t}</option>)}
@@ -4178,8 +4184,8 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
               : dashLoading
                 ? <div className="text-center py-10 text-slate-400">Loading...</div>
                 : (
-                  <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                    <table className="w-full text-sm">
+                  <div className="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
+                    <table className="w-full text-sm min-w-[600px]">
                       <thead className="bg-slate-50 border-b border-slate-200">
                         <tr>
                           {["Loan #","Borrower","Type","DLQ","Top Option","Status","Date","Actions"].map(h=>(
@@ -4277,11 +4283,11 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4">
             <div className="text-xs font-black text-blue-700 uppercase tracking-wide mb-2">📋 Quick LOS Import</div>
             <div className="flex flex-wrap gap-2 items-end">
-              <div><div className="text-[10px] text-blue-600 font-semibold mb-0.5">Loan #</div><input className="border border-blue-200 rounded-lg px-2 py-1.5 text-xs w-28" value={losLoanNum} onChange={e=>setLosLoanNum(e.target.value)} placeholder="1234567890"/></div>
-              <div><div className="text-[10px] text-blue-600 font-semibold mb-0.5">UPB ($)</div><input className="border border-blue-200 rounded-lg px-2 py-1.5 text-xs w-24" value={losUpb} onChange={e=>setLosUpb(e.target.value)} placeholder="250000"/></div>
-              <div><div className="text-[10px] text-blue-600 font-semibold mb-0.5">DLQ (mo)</div><input className="border border-blue-200 rounded-lg px-2 py-1.5 text-xs w-16" value={losDlq} onChange={e=>setLosDlq(e.target.value)} placeholder="4"/></div>
-              <div><div className="text-[10px] text-blue-600 font-semibold mb-0.5">PITI ($)</div><input className="border border-blue-200 rounded-lg px-2 py-1.5 text-xs w-20" value={losPiti} onChange={e=>setLosPiti(e.target.value)} placeholder="1800"/></div>
-              <div><div className="text-[10px] text-blue-600 font-semibold mb-0.5">GMI ($)</div><input className="border border-blue-200 rounded-lg px-2 py-1.5 text-xs w-20" value={losGmi} onChange={e=>setLosGmi(e.target.value)} placeholder="5200"/></div>
+              <div className="flex-1 min-w-[80px]"><div className="text-[10px] text-blue-600 font-semibold mb-0.5">Loan #</div><input className="border border-blue-200 rounded-lg px-2 py-1.5 text-xs w-full" value={losLoanNum} onChange={e=>setLosLoanNum(e.target.value)} placeholder="1234567890"/></div>
+              <div className="flex-1 min-w-[70px]"><div className="text-[10px] text-blue-600 font-semibold mb-0.5">UPB ($)</div><input className="border border-blue-200 rounded-lg px-2 py-1.5 text-xs w-full" value={losUpb} onChange={e=>setLosUpb(e.target.value)} placeholder="250000"/></div>
+              <div className="flex-1 min-w-[55px]"><div className="text-[10px] text-blue-600 font-semibold mb-0.5">DLQ (mo)</div><input className="border border-blue-200 rounded-lg px-2 py-1.5 text-xs w-full" value={losDlq} onChange={e=>setLosDlq(e.target.value)} placeholder="4"/></div>
+              <div className="flex-1 min-w-[65px]"><div className="text-[10px] text-blue-600 font-semibold mb-0.5">PITI ($)</div><input className="border border-blue-200 rounded-lg px-2 py-1.5 text-xs w-full" value={losPiti} onChange={e=>setLosPiti(e.target.value)} placeholder="1800"/></div>
+              <div className="flex-1 min-w-[65px]"><div className="text-[10px] text-blue-600 font-semibold mb-0.5">GMI ($)</div><input className="border border-blue-200 rounded-lg px-2 py-1.5 text-xs w-full" value={losGmi} onChange={e=>setLosGmi(e.target.value)} placeholder="5200"/></div>
               <button onClick={()=>{
                 if(losLoanNum) set("loanNumber",losLoanNum);
                 if(losUpb) set("upb",losUpb);
@@ -4294,7 +4300,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-5">
             {/* Col 1 */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 overflow-y-auto" style={{maxHeight:"82vh"}}>
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:overflow-y-auto md:max-h-[82vh]">
               <Sec title="📁 Loan Info">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1"><SrcBadge type="los"/><span className="text-[10px] text-slate-400 ml-1">Pull from servicing system</span></div>
@@ -4345,7 +4351,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
               </Sec>
             </div>
             {/* Col 2 */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 overflow-y-auto" style={{maxHeight:"82vh"}}>
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:overflow-y-auto md:max-h-[82vh]">
               <Sec title="📅 Loan Dates">
                 <div className="flex items-center gap-1 mb-1"><SrcBadge type="los"/><span className="text-[10px] text-slate-400 ml-1">Pull from servicing system</span></div>
                 <DateInput label="Note Date (Origination / Closing Date — for loan age)" value={loan.noteDate} onChange={v=>set("noteDate",v)}/>
@@ -4391,7 +4397,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
               </Sec>
             </div>
             {/* Col 3 - loan type specific */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 overflow-y-auto" style={{maxHeight:"82vh"}}>
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:overflow-y-auto md:max-h-[82vh]">
               <Sec title="🔧 Modification Flags">
                 <div className="flex items-center gap-1 mb-1"><SrcBadge type="borrower"/><span className="text-[10px] text-slate-400 ml-1">Requires borrower interview/docs</span></div>
                 <div className="mb-2">
