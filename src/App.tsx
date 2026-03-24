@@ -70,6 +70,11 @@ const OPTION_DOCS: Record<string, {required: string[], conditional: {doc: string
     conditional: [],
     timeline: "45 days from approval"
   },
+  "FHA OWL Modification": {
+    required: ["Servicer contact attempt documentation (showing borrower unresponsive after all required outreach attempts)","Signed Loan Modification Agreement (servicer executes on behalf of unresponsive borrower per ML 2025-14)"],
+    conditional: [],
+    timeline: "45 days from approval (no TPP required — borrower unresponsive)"
+  },
   "FHA 30-Year Standalone Modification": {
     required: ["Hardship affidavit","Verification of income (most recent 30-day paystubs + 2yr W-2s or tax returns)","Bank statements (2 most recent months)","Signed Loan Modification Agreement"],
     conditional: [{doc:"Trial Payment Plan completion", condition:"Required if income docs not provided upfront"}],
@@ -302,6 +307,7 @@ const OPTION_CITATIONS: Record<string, string> = {
   "FHA Reinstatement": "ML 2025-06 §IV.A; 24 C.F.R. §203.605",
   "FHA Standalone Partial Claim": "ML 2025-06 §IV.D; 24 C.F.R. §203.414",
   "FHA Payment Deferral": "ML 2025-06 §IV.C; ML 2025-12",
+  "FHA OWL Modification": "ML 2024-24; ML 2025-14 (supersedes ML 2024-24); HUD Handbook 4000.1 (Update 17); eff. Oct 1, 2025",
   "FHA 30-Year Standalone Modification": "ML 2025-06 §IV.E; 24 C.F.R. §203.616",
   "FHA 40-Year Combination Modification + Partial Claim": "ML 2025-06 §IV.F; ML 2025-12",
   "Payment Supplement": "ML 2025-06 §IV.G; ML 2025-12",
@@ -396,6 +402,7 @@ const initLoan = {
   ineligibleAllRetention:false, propertyListedForSale:false, assumptionInProcess:false,
   fhaBorrowerCanResumePreHardship:false, fhaHardshipResolved:false,
   fhaCumulativeDeferredMonths:"0", fhaPriorDeferralMonths:"0",
+  fhaOwlBorrowerUnresponsive:false,
   // USDA
   usdaUpbGe5000:true, usdaPaymentsMade12:true, usdaBankruptcyNotActive:true,
   usdaLitigationNotActive:true, usdaPriorFailedStreamlineTPP:false,
@@ -657,6 +664,33 @@ function calcApprovalTerms(optionName, l) {
       "PC Lien Type": "Non-interest bearing subordinate lien",
       "PC Payoff Trigger": "Due upon sale, refinance, or payoff of first mortgage",
       "Approval Notification": "2-day mail with enclosed 2-day return envelope",
+    };
+  }
+
+  // ── FHA OWL Modification (ML 2024-24 / ML 2025-14) ──
+  if (opt === "FHA OWL Modification") {
+    const owlRate = pmms > 0 ? Math.round((pmms + 0.25) / 0.125) * 0.125 : 0;
+    const currentPI_owl = n(l.currentPI);
+    const capAmt_owl = n(l.arrearagesToCapitalize) + n(l.escrowShortage) + n(l.legalFees);
+    const newUPB_owl = n(l.upb) + capAmt_owl;
+    const owlNewPI = owlRate > 0 && newUPB_owl > 0 ? (calcMonthlyPI(newUPB_owl, owlRate, 360) ?? 0) : null;
+    const owlReduction = owlNewPI != null && currentPI_owl > 0 ? currentPI_owl - owlNewPI : null;
+    const owlAchievesReduction = owlReduction != null ? owlReduction >= 1.00 : null;
+    return {
+      "Option": "FHA OWL Modification (Options When Late)",
+      "Authority": "ML 2024-24; ML 2025-14 (eff. Oct 1, 2025)",
+      "Trigger": "Borrower unresponsive after all required servicer contact attempts",
+      "TPP Required": "No — servicer executes modification on behalf of unresponsive borrower",
+      "New Interest Rate": owlRate > 0 ? `${owlRate.toFixed(3)}% (PMMS ${pmms.toFixed(3)}% + 25bps, rounded to nearest 0.125%)` : "Enter PMMS rate",
+      "New Term": "360 months (30 years)",
+      "New UPB (after capitalization)": newUPB_owl > 0 ? fmt$(newUPB_owl) : "Enter loan data",
+      "Capitalization": `Arrears ${fmt$(n(l.arrearagesToCapitalize))} + escrow shortage ${fmt$(n(l.escrowShortage))} + legal ${fmt$(n(l.legalFees))} = ${fmt$(capAmt_owl)}`,
+      "New P&I Payment": owlNewPI != null ? fmt$(owlNewPI) : "Enter PMMS & loan data",
+      "P&I Reduction": owlReduction != null ? `${fmt$(owlReduction)} (${currentPI_owl > 0 ? ((owlReduction/currentPI_owl)*100).toFixed(1)+"%" : "—"})` : "Enter current P&I & PMMS",
+      "Minimum Reduction Met (≥$1.00)": owlAchievesReduction != null ? (owlAchievesReduction ? "✅ Yes" : "❌ No — OWL not viable at current PMMS") : "Enter data to verify",
+      "Full Reinstatement": "Yes — mortgage reinstated in full upon execution",
+      "Escrow": currentEscrow > 0 ? fmt$(currentEscrow) + "/mo (unchanged)" : "Enter current escrow",
+      "⚠️ Note": "OWL is servicer-initiated for unresponsive borrowers. Servicer must document all required outreach attempts per ML 2025-14 contact timeline before executing.",
     };
   }
 
@@ -2134,6 +2168,29 @@ function evaluateFHA(l) {
   // FHA 40-Year Combination Modification + Partial Claim (step 6: 25% reduction with PC + 480 months)
   results.push({option:"FHA 40-Year Combination Modification + Partial Claim",eligible:hb&&!canAchieve360&&cok&&canAchieve480&&upbWithinOrig,nodes:[...hn,node("25% reduction NOT achievable by 360mo re-amortization",achieve360Label,!canAchieve360),node("PC within 30% cap",comboCapLabel,cok),node("25% reduction achievable by 480mo re-amortization",achieve480Label,canAchieve480),node("New UPB ≤ Original UPB",upbWithinOrigLabel,upbWithinOrig)],note:"ML 2025-06 — rate: PMMS+25bps; term: 480 months"});
 
+  // FHA OWL Modification (ML 2024-24 / ML 2025-14 — for unresponsive borrowers, no TPP, ≥$1 P&I reduction)
+  {
+    const owlRate = fhaPmms > 0 ? Math.round((fhaPmms + 0.25) / 0.125) * 0.125 : 0;
+    const owlNewPI = owlRate > 0 && newUPBFHA > 0 ? (calcMonthlyPI(newUPBFHA, owlRate, 360) ?? 0) : null;
+    const owlAchievesReduction = owlNewPI != null && currentPI_fha > 0 ? (currentPI_fha - owlNewPI) >= 1.00 : l.canAchieveTargetByReamort;
+    const owlReductionLabel = owlNewPI != null && currentPI_fha > 0
+      ? `$${(currentPI_fha - owlNewPI).toFixed(2)} reduction (new P&I $${owlNewPI.toFixed(2)} vs current $${currentPI_fha.toFixed(2)})`
+      : `Manual: ${owlAchievesReduction ? "Yes" : "No"}`;
+    const owlNodes = [
+      ...baseNodes,
+      node("Non-disaster hardship", l.hardshipType, !isDisaster),
+      node("DLQ ≥ 3 months (required servicer contact period exhausted)", dlq+"mo", dlq >= 3),
+      node("Borrower unresponsive after all required contact attempts (ML 2025-14)", l.fhaOwlBorrowerUnresponsive?"Yes":"No", l.fhaOwlBorrowerUnresponsive),
+      node("Rate achieves ≥$1.00 P&I reduction (PMMS+25bps → 360mo re-amortization)", owlReductionLabel, owlAchievesReduction),
+    ];
+    results.push({
+      option:"FHA OWL Modification",
+      eligible: owlNodes.every(nd=>nd.pass),
+      nodes: owlNodes,
+      note:"No TPP required — servicer executes modification for unresponsive borrowers. No hardship documentation or borrower income verification required. ML 2024-24; ML 2025-14 (eff. Oct 1, 2025)."
+    });
+  }
+
   // Payment Supplement (step 7: all eligible delinquent borrowers, not unemployed-only — ML 2025-06)
   results.push({option:"Payment Supplement",eligible:!isDisaster&&baseEligible&&dlq>0&&!canAchieve360&&comboPayLe40,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),...baseNodes,node("DLQ>0",dlq,dlq>0),node("25% P&I reduction NOT achievable by re-amortization",achieve360Label,!canAchieve360),node("Combo pmt≤40% GMI",comboPayLe40,comboPayLe40)],note:"ML 2025-06: Open to all eligible delinquent borrowers (not unemployed-only)"});
 
@@ -2770,6 +2827,7 @@ const WATERFALL_ORDER = {
     "FHA 30-Year Standalone Modification",
     "FHA 40-Year Combination Modification + Partial Claim",
     "Payment Supplement",
+    "FHA OWL Modification",
     "Repayment Plan",
     "Formal Forbearance",
     "Special Forbearance – Unemployment",
@@ -4397,6 +4455,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                   {_hasInputs
                     ? <div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">25% P&I reduction achievable (480mo re-amortization)</span><span className={`font-semibold ${_can480?"text-emerald-600":"text-red-500"}`}>{_can480?"✅ Yes":"❌ No"} — auto (PITI {fmt$(_piti480)} vs {fmt$(_tgt)})</span></div>
                     : <Tog label="Can achieve 25% P&I reduction via 480-month re-amortization (40-Year Combo) (manual — enter PMMS & current P&I to auto-compute)" value={loan.canAchieveTargetBy480Reamort} onChange={v=>set("canAchieveTargetBy480Reamort",v)}/>}
+                  <Tog label="Borrower unresponsive after all required contact attempts (OWL Modification — ML 2025-14)" value={loan.fhaOwlBorrowerUnresponsive} onChange={v=>set("fhaOwlBorrowerUnresponsive",v)}/>
                   <Tog label="Borrower can resume pre-hardship payment without modification (Standalone PC)" value={loan.fhaBorrowerCanResumePreHardship} onChange={v=>set("fhaBorrowerCanResumePreHardship",v)}/>
                   <Tog label="Hardship resolved (FHA Payment Deferral)" value={loan.fhaHardshipResolved} onChange={v=>set("fhaHardshipResolved",v)}/>
                   <F label="Cumulative FHA Deferred Months (lifetime cap: 12)"><Num value={loan.fhaCumulativeDeferredMonths} onChange={v=>set("fhaCumulativeDeferredMonths",v)} placeholder="0"/></F>
