@@ -2172,7 +2172,7 @@ function evaluateFHA(l) {
   {
     const owlRate = fhaPmms > 0 ? Math.round((fhaPmms + 0.25) / 0.125) * 0.125 : 0;
     const owlNewPI = owlRate > 0 && newUPBFHA > 0 ? (calcMonthlyPI(newUPBFHA, owlRate, 360) ?? 0) : null;
-    const owlAchievesReduction = owlNewPI != null && currentPI_fha > 0 ? (currentPI_fha - owlNewPI) >= 1.00 : l.canAchieveTargetByReamort;
+    const owlAchievesReduction = owlNewPI != null && currentPI_fha > 0 ? (currentPI_fha - owlNewPI) >= 1.00 : false;
     const owlReductionLabel = owlNewPI != null && currentPI_fha > 0
       ? `$${(currentPI_fha - owlNewPI).toFixed(2)} reduction (new P&I $${owlNewPI.toFixed(2)} vs current $${currentPI_fha.toFixed(2)})`
       : `Manual: ${owlAchievesReduction ? "Yes" : "No"}`;
