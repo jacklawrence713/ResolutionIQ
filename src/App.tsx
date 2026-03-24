@@ -150,12 +150,12 @@ const OPTION_DOCS: Record<string, {required: string[], conditional: {doc: string
   "USDA Informal Forbearance": {
     required: ["Hardship letter","Signed forbearance agreement"],
     conditional: [],
-    timeline: "Up to 180 days"
+    timeline: "1–3 months (HB-1-3555 §18.5); for borrowers in early stages of default"
   },
   "USDA Informal Repayment Plan": {
     required: ["Signed Repayment Plan Agreement","Verification of income"],
     conditional: [],
-    timeline: "Per plan agreement"
+    timeline: "Up to 3 months (HB-1-3555 §18.4); total monthly payment ≤ 200% of current PITI"
   },
   "USDA Special Forbearance": {
     required: ["Hardship documentation","Signed Special Forbearance Agreement"],
@@ -163,9 +163,14 @@ const OPTION_DOCS: Record<string, {required: string[], conditional: {doc: string
     timeline: "Up to 12 months (may include graduated payments or payment suspension)"
   },
   "USDA Streamline Loan Modification": {
-    required: ["Signed Loan Modification Agreement"],
-    conditional: [{doc:"Income verification", condition:"If borrower requests income-based review"}],
+    required: ["Signed Loan Modification Agreement","Income verification (paystubs, W-2s, tax returns)","Budget/financial worksheet (BRP)"],
+    conditional: [],
     timeline: "90-day Trial Payment Plan; permanent mod after successful completion"
+  },
+  "USDA Streamline Final Offer": {
+    required: ["Signed Loan Modification Agreement (sent to unresponsive borrower)"],
+    conditional: [],
+    timeline: "Final Offer sent after borrower is unresponsive; must achieve ≥10% P&I reduction; no income documentation required"
   },
   "USDA Modification + MRA Servicing Plan": {
     required: ["Signed Loan Modification Agreement","MRA Note and Subordinate Mortgage"],
@@ -355,6 +360,7 @@ const OPTION_CITATIONS: Record<string, string> = {
   "USDA Informal Repayment Plan": "RD Instruction 3555-C §3555.303(b)(2); HB-1-3555 Ch. 18 §18.4",
   "USDA Special Forbearance": "RD Instruction 3555-C §3555.303(b)(3); HB-1-3555 Ch. 18 §18.5; PN 637 (Apr 14, 2025)",
   "USDA Streamline Loan Modification": "RD Instruction 3555-C §3555.304; HB-1-3555 Ch. 18 §18.7; PN 637 (Apr 14, 2025 — renamed from Special Loan Modification)",
+  "USDA Streamline Final Offer": "RD Instruction 3555-C §3555.304(b)(2); HB-1-3555 Ch. 18 §18.7 — Streamline Final Offer (unresponsive borrower track; requires ≥10% P&I reduction)",
   "USDA Modification + MRA Servicing Plan": "RD Instruction 3555-C §3555.304(d); HB-1-3555 Ch. 18 §18.7; Final Rule Feb 11, 2025",
   "USDA Standalone Mortgage Recovery Advance (MRA)": "RD Instruction 3555-C §3555.306; HB-1-3555 Ch. 18 §18.8; PN 637 (Apr 14, 2025 — lien recording and ratio requirements waived)",
   "USDA Disaster Forbearance": "RD Instruction 3555-C §3555.303(c); HB-1-3555 Ch. 18 §18.12",
@@ -460,6 +466,7 @@ const initLoan = {
   usdaDLQLe60AndBRP:false, usdaDLQGe60AndDisposition:false,
   usdaPriorWorkoutCompSaleFailed:false,
   usdaStep3DeferralRequired:false,
+  usdaBorrowerUnresponsive:false,
   // FNMA
   fnmaLoanAge:"",
   fnmaPriorDeferredUPB:"0",
@@ -959,11 +966,12 @@ function calcApprovalTerms(optionName, l) {
 
 
   // ── USDA Streamline Loan Modification ──
-  if (opt === "USDA Streamline Loan Modification") {
-    // Per HB-1-3555 §18.7: rate = lesser of PMMS or current note rate
-    const newRate = pmms > 0 && currentRate > 0 ? Math.min(pmms, currentRate) : pmms;
+  if (opt === "USDA Streamline Loan Modification" || opt === "USDA Streamline Final Offer") {
+    // Per §3555.304: rate = lesser of current note rate or (PMMS + 50bps)
+    const pmmsPlus50 = pmms > 0 ? pmms + 0.50 : 0;
+    const newRate = pmms > 0 && currentRate > 0 ? Math.min(currentRate, pmmsPlus50) : (pmms > 0 ? pmmsPlus50 : currentRate);
     const rateLabel = newRate > 0
-      ? fmtPct(newRate) + (currentRate > 0 && currentRate < pmms ? " (Current Note Rate — below PMMS)" : " (PMMS)")
+      ? fmtPct(newRate) + (currentRate > 0 && currentRate <= pmmsPlus50 ? " (Current Note Rate — at or below PMMS+50bps cap)" : " (PMMS+50bps cap)")
       : "Enter PMMS rate";
     const newMat480 = newFirstPmt ? addMonths(newFirstPmt, 480) : null;
     // Step 1: re-amortize at new rate over remaining term
@@ -1003,8 +1011,9 @@ function calcApprovalTerms(optionName, l) {
       "  → Late Fees (EXCLUDED)": lateFees > 0 ? `${fmt$(lateFees)} — NOT capitalized` : "None",
       "New Interest Rate": rateLabel,
       "  → PMMS Rate": pmms > 0 ? fmtPct(pmms) : "Enter PMMS rate",
+      "  → PMMS + 50bps Cap": pmms > 0 ? fmtPct(pmms + 0.50) : "Enter PMMS rate",
       "  → Current Note Rate": currentRate > 0 ? fmtPct(currentRate) : "Enter current rate",
-      "  → Rate Applied (lesser)": newRate > 0 ? fmtPct(newRate) : "Enter rates",
+      "  → Rate Applied (lesser of current or PMMS+50bps)": newRate > 0 ? fmtPct(newRate) : "Enter rates",
       "Step 1 — Existing Term Re-amortization": "——",
       "Step 1 — Remaining Term": remainingTerm ? `${remainingTerm} months` : "Enter Note dates",
       "Step 1 — New P&I / PITI": newPI_existing != null ? fmt$(newPI_existing)+" P&I / "+fmt$(newPITI_existing)+" PITI" : "Enter inputs",
@@ -1028,9 +1037,11 @@ function calcApprovalTerms(optionName, l) {
 
   // ── USDA Modification + MRA Servicing Plan (Final Rule — eff. Feb 11, 2025) ──
   if (opt === "USDA Modification + MRA Servicing Plan") {
-    const newRate = pmms > 0 && currentRate > 0 ? Math.min(pmms, currentRate) : pmms;
+    // Per §3555.304: rate = lesser of current note rate or (PMMS + 50bps)
+    const pmmsPlus50_mra = pmms > 0 ? pmms + 0.50 : 0;
+    const newRate = pmms > 0 && currentRate > 0 ? Math.min(currentRate, pmmsPlus50_mra) : (pmms > 0 ? pmmsPlus50_mra : currentRate);
     const rateLabel = newRate > 0
-      ? fmtPct(newRate) + (currentRate > 0 && currentRate < pmms ? " (Current Note Rate — below PMMS)" : " (PMMS)")
+      ? fmtPct(newRate) + (currentRate > 0 && currentRate <= pmmsPlus50_mra ? " (Current Note Rate — at or below PMMS+50bps cap)" : " (PMMS+50bps cap)")
       : "Enter PMMS rate";
     const newMat480 = newFirstPmt ? addMonths(newFirstPmt, 480) : null;
     const newPI_extended = newRate > 0 && newUPB > 0 ? calcMonthlyPI(newUPB, newRate, 480) : null;
@@ -1174,13 +1185,13 @@ function calcApprovalTerms(optionName, l) {
   if (opt === "USDA Informal Repayment Plan") {
     const currentPITI = n(l.currentPITI);
     const totalArrears = arrears || (currentPITI * dlqMonths);
-    const rppMonths = Math.min(12, Math.max(1, n(l.repayMonths) || 6));
+    const rppMonths = Math.min(3, Math.max(1, n(l.repayMonths) || 3));
     const catchUp = totalArrears > 0 ? totalArrears / rppMonths : null;
     const total = catchUp != null ? currentPITI + catchUp : null;
     return {
       "Current Monthly PITI": fmt$(currentPITI || null),
       "Total Arrearages": fmt$(totalArrears || null),
-      "Plan Length": `${rppMonths} months (max 12 per HB-1-3555 §18.4)`,
+      "Plan Length": `${rppMonths} months (max 3 months per HB-1-3555 §18.4)`,
       "Monthly Catch-Up Amount": fmt$(catchUp || null),
       "Total Monthly RPP Payment": fmt$(total || null),
       "200% Cap": fmt$(currentPITI * 2 || null),
@@ -2252,9 +2263,9 @@ function evaluateUSDA(l) {
   // 1g: auto-compute usdaForbearancePeriodLt12 and usdaTotalDLQLt12
   const usdaFbLt12 = dlqM > 0 ? dlqM < 12 : l.usdaForbearancePeriodLt12;
   const usdaDLQLt12 = dlqM > 0 ? dlqM < 12 : l.usdaTotalDLQLt12;
-  // Informal Forbearance base: allows pre-default (dlqD >= 0) per HB-1-3555 §18.4
-  const ib=!isD&&dlqD>=0&&dlqD<360&&l.borrowerIntentRetention&&l.hardshipDuration==="Short Term"&&l.usdaHardshipNotExcluded&&l.lienPosition==="First"&&l.propertyCondition!=="Condemned"&&!l.occupancyAbandoned&&l.occupancyStatus==="Owner Occupied"&&(usdaFbLt12||usdaDLQLt12);
-  const iN=[node("Non-disaster hardship",l.hardshipType,!isD),node("DLQ<360d",dlqD,dlqD>=0&&dlqD<360),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Short Term hardship",l.hardshipDuration,l.hardshipDuration==="Short Term"),node("Not excluded type",l.usdaHardshipNotExcluded,l.usdaHardshipNotExcluded),node("Lien=First",l.lienPosition,l.lienPosition==="First"),node("Not Condemned",l.propertyCondition,l.propertyCondition!=="Condemned"),node("Not Abandoned",!l.occupancyAbandoned,!l.occupancyAbandoned),node("Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied"),node("Forbearance or DLQ<12mo",usdaFbLt12||usdaDLQLt12,usdaFbLt12||usdaDLQLt12)];
+  // Informal Forbearance base: for borrowers in early stages of default — HB-1-3555 §18.5 (not hardship-duration gated)
+  const ib=!isD&&dlqD>=0&&dlqD<90&&l.borrowerIntentRetention&&l.usdaHardshipNotExcluded&&l.lienPosition==="First"&&l.propertyCondition!=="Condemned"&&!l.occupancyAbandoned&&l.occupancyStatus==="Owner Occupied"&&(usdaFbLt12||usdaDLQLt12);
+  const iN=[node("Non-disaster hardship",l.hardshipType,!isD),node("Early-stage DLQ (<90d — 1–3 months; HB-1-3555 §18.5)",dlqD,dlqD>=0&&dlqD<90),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Not excluded type",l.usdaHardshipNotExcluded,l.usdaHardshipNotExcluded),node("Lien=First",l.lienPosition,l.lienPosition==="First"),node("Not Condemned",l.propertyCondition,l.propertyCondition!=="Condemned"),node("Not Abandoned",!l.occupancyAbandoned,!l.occupancyAbandoned),node("Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied"),node("Forbearance or DLQ<12mo",usdaFbLt12||usdaDLQLt12,usdaFbLt12||usdaDLQLt12)];
   // Repayment Plan base: hardship resolved (separate from forbearance base) per HB-1-3555 §18.4
   const rb=!isD&&dlqD>0&&dlqD<360&&l.borrowerIntentRetention&&l.hardshipDuration==="Resolved"&&l.usdaHardshipNotExcluded&&l.lienPosition==="First"&&l.propertyCondition!=="Condemned"&&!l.occupancyAbandoned&&l.occupancyStatus==="Owner Occupied";
   const rN=[node("Non-disaster hardship",l.hardshipType,!isD),node("DLQ>0&<360d",dlqD,dlqD>0&&dlqD<360),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Hardship=Resolved",l.hardshipDuration,l.hardshipDuration==="Resolved"),node("Not excluded type",l.usdaHardshipNotExcluded,l.usdaHardshipNotExcluded),node("Lien=First",l.lienPosition,l.lienPosition==="First"),node("Not Condemned",l.propertyCondition,l.propertyCondition!=="Condemned"),node("Not Abandoned",!l.occupancyAbandoned,!l.occupancyAbandoned),node("Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied")];
@@ -2270,7 +2281,7 @@ function evaluateUSDA(l) {
   const _usdaNet = usdaGMI > 0 && usdaCurrentPITI > 0 && l.monthlyExpenses !== "" ? usdaGMI - usdaCurrentPITI - usdaMonthlyExp : null;
   const posNetIncome = _usdaNet !== null ? _usdaNet > 0 : l.usdaBorrowerPositiveNetIncome;
   const usdaArrears = n(l.arrearagesToCapitalize);
-  const usdaRepayMos = Math.min(12, Math.max(1, n(l.repayMonths) || 6));
+  const usdaRepayMos = Math.min(3, Math.max(1, n(l.repayMonths) || 3));
   const usdaRppPayment = usdaCurrentPITI > 0 && usdaArrears > 0 ? usdaCurrentPITI + (usdaArrears / usdaRepayMos) : null;
   const rppWithin200 = usdaRppPayment != null ? usdaRppPayment <= usdaCurrentPITI * 2 : l.usdaNewPaymentLe200pct;
   const rppCapLabel = usdaRppPayment != null
@@ -2290,14 +2301,20 @@ function evaluateUSDA(l) {
   const _usdaSlCurrentPI = n(l.currentPI);
   const _usdaSlPmms = n(l.pmmsRate);
   const _usdaSlCurRate = n(l.currentInterestRate);
-  const _usdaSlRate = _usdaSlPmms > 0 && _usdaSlCurRate > 0 ? Math.min(_usdaSlPmms, _usdaSlCurRate) : (_usdaSlPmms > 0 ? _usdaSlPmms : _usdaSlCurRate);
+  // §3555.304: rate = lesser of current note rate or (PMMS + 50bps)
+  const _usdaSlPmmsPlus50 = _usdaSlPmms > 0 ? _usdaSlPmms + 0.50 : 0;
+  const _usdaSlRate = _usdaSlPmms > 0 && _usdaSlCurRate > 0 ? Math.min(_usdaSlCurRate, _usdaSlPmmsPlus50) : (_usdaSlPmms > 0 ? _usdaSlPmmsPlus50 : _usdaSlCurRate);
   const _usdaSlNewPI480 = _usdaSlRate > 0 && _usdaSlNewUPB > 0 ? (calcMonthlyPI(_usdaSlNewUPB, _usdaSlRate, 480) ?? null) : null;
+  // 10% P&I reduction is for Streamline Final Offer (unresponsive borrower) only — NOT the standard Streamline Mod
   const usdaAchieves10Pct = _usdaSlNewPI480 !== null && _usdaSlCurrentPI > 0 ? _usdaSlNewPI480 <= _usdaSlCurrentPI * 0.90 : true;
   const usdaAchieves10PctLabel = _usdaSlNewPI480 !== null && _usdaSlCurrentPI > 0
     ? `${usdaAchieves10Pct?"✅":"❌"} New P&I $${_usdaSlNewPI480.toFixed(2)} ${usdaAchieves10Pct?"≤":">"} $${(_usdaSlCurrentPI*0.90).toFixed(2)} (90% of current $${_usdaSlCurrentPI.toFixed(2)})`
     : "Enter PMMS, rate, UPB, and current P&I to auto-compute";
-  const sb=!isD&&br&&l.borrowerIntentRetention&&l.occupancyStatus==="Owner Occupied"&&nm<2&&!l.usdaPriorFailedStreamlineTPP&&dlqD>=90&&usdaUpb5k&&usdaPayments12&&l.usdaBankruptcyNotActive&&l.usdaLitigationNotActive&&l.usdaForeclosureSaleGe60Away&&notListedForSale&&usdaAchieves10Pct;
-  results.push({option:"USDA Streamline Loan Modification",eligible:sb,nodes:[node("Non-disaster hardship",l.hardshipType,!isD),node("≥90d DLQ",dlqD,dlqD>=90),node("UPB≥$5k",usdaUpb5k,usdaUpb5k),node("12+ payments since origination (loan age)",usdaPayments12,usdaPayments12),node("Bankruptcy≠Active",l.usdaBankruptcyNotActive,l.usdaBankruptcyNotActive),node("Litigation≠Active",l.usdaLitigationNotActive,l.usdaLitigationNotActive),node("No failed Streamline TPP",!l.usdaPriorFailedStreamlineTPP,!l.usdaPriorFailedStreamlineTPP),node("Not Abandoned/Condemned",br,br),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied"),node("Lien=First",l.lienPosition,l.lienPosition==="First"),node("Prior mods < 2 (max 1 Streamline mod lifetime — HB-1-3555 §18.7)",nm,nm<2),node("Foreclosure sale≥60d",l.usdaForeclosureSaleGe60Away,l.usdaForeclosureSaleGe60Away),node("Property not listed for sale",notListedForSale?"No":"Listed for sale",notListedForSale),node("≥10% P&I reduction achievable (480mo re-amortization — HB-1-3555 §18.7)",usdaAchieves10PctLabel,usdaAchieves10Pct)]});
+  // Standard Streamline Mod: full income documentation, targets 31% DTI — 10% P&I check does NOT apply
+  const sb=!isD&&br&&l.borrowerIntentRetention&&l.occupancyStatus==="Owner Occupied"&&nm<2&&!l.usdaPriorFailedStreamlineTPP&&dlqD>=90&&usdaUpb5k&&usdaPayments12&&l.usdaBankruptcyNotActive&&l.usdaLitigationNotActive&&l.usdaForeclosureSaleGe60Away&&notListedForSale;
+  results.push({option:"USDA Streamline Loan Modification",eligible:sb,nodes:[node("Non-disaster hardship",l.hardshipType,!isD),node("≥90d DLQ",dlqD,dlqD>=90),node("UPB≥$5k",usdaUpb5k,usdaUpb5k),node("12+ payments since origination (loan age)",usdaPayments12,usdaPayments12),node("Bankruptcy≠Active",l.usdaBankruptcyNotActive,l.usdaBankruptcyNotActive),node("Litigation≠Active",l.usdaLitigationNotActive,l.usdaLitigationNotActive),node("No failed Streamline TPP",!l.usdaPriorFailedStreamlineTPP,!l.usdaPriorFailedStreamlineTPP),node("Not Abandoned/Condemned",br,br),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied"),node("Lien=First",l.lienPosition,l.lienPosition==="First"),node("Prior mods < 2 (max 1 Streamline mod lifetime — HB-1-3555 §18.7)",nm,nm<2),node("Foreclosure sale≥60d",l.usdaForeclosureSaleGe60Away,l.usdaForeclosureSaleGe60Away),node("Property not listed for sale",notListedForSale?"No":"Listed for sale",notListedForSale)],note:"Full income documentation required (§3555.304); targets 31% front-end DTI; rate = lesser of current or PMMS+50bps"});
+  // Streamline Final Offer: unresponsive borrower track — no-doc, must achieve ≥10% P&I reduction (§3555.304(b)(2))
+  results.push({option:"USDA Streamline Final Offer",eligible:sb&&l.usdaBorrowerUnresponsive&&usdaAchieves10Pct,nodes:[...([node("Non-disaster hardship",l.hardshipType,!isD),node("≥90d DLQ",dlqD,dlqD>=90),node("UPB≥$5k",usdaUpb5k,usdaUpb5k),node("Bankruptcy≠Active",l.usdaBankruptcyNotActive,l.usdaBankruptcyNotActive),node("Litigation≠Active",l.usdaLitigationNotActive,l.usdaLitigationNotActive),node("No failed Streamline TPP",!l.usdaPriorFailedStreamlineTPP,!l.usdaPriorFailedStreamlineTPP),node("Not Abandoned/Condemned",br,br),node("Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied"),node("Prior mods < 2",nm,nm<2),node("Foreclosure sale≥60d",l.usdaForeclosureSaleGe60Away,l.usdaForeclosureSaleGe60Away)]),node("Borrower unresponsive to Streamline Mod offer",l.usdaBorrowerUnresponsive?"Yes":"No — not eligible for Final Offer",l.usdaBorrowerUnresponsive),node("≥10% P&I reduction achievable (480mo re-amortization — §3555.304(b)(2))",usdaAchieves10PctLabel,usdaAchieves10Pct)],note:"No income documentation required; ≥10% P&I reduction mandatory; for borrowers who failed to respond to standard Streamline Mod offer"});
   // USDA Modification + MRA Servicing Plan (Final Rule eff. Feb 11, 2025): when 480mo mod alone can't achieve target
   results.push({option:"USDA Modification + MRA Servicing Plan",eligible:sb&&l.usdaStep3DeferralRequired,nodes:[node("≥90d DLQ",dlqD,dlqD>=90),node("Streamline Mod base eligible",sb,sb),node("480mo re-amortization alone cannot achieve PITI target (Step 3 required)",l.usdaStep3DeferralRequired?"Yes":"No",l.usdaStep3DeferralRequired)],note:"Step 3: MRA principal deferral closes gap when mod + 480mo term still can't reach target — USDA RD Final Rule (Feb 11, 2025)"});
   results.push({option:"USDA Standalone Mortgage Recovery Advance (MRA)",eligible:!isD&&l.usdaBorrowerCanResumeCurrent&&(l.usdaHardshipDurationResolved||l.usdaLoanModIneligible)&&l.usdaBorrowerCannotCureDLQWithin12&&l.lienPosition==="First"&&l.propertyCondition!=="Condemned"&&!l.occupancyAbandoned&&dlqD>=30,nodes:[node("Non-disaster hardship",l.hardshipType,!isD),node("Can resume payment",l.usdaBorrowerCanResumeCurrent,l.usdaBorrowerCanResumeCurrent),node("Resolved OR Mod Ineligible",l.usdaHardshipDurationResolved||l.usdaLoanModIneligible,l.usdaHardshipDurationResolved||l.usdaLoanModIneligible),node("Cannot cure DLQ 12mo",l.usdaBorrowerCannotCureDLQWithin12,l.usdaBorrowerCannotCureDLQWithin12),node("Lien=First",l.lienPosition,l.lienPosition==="First"),node("Not Condemned",l.propertyCondition,l.propertyCondition!=="Condemned"),node("Not Abandoned",!l.occupancyAbandoned,!l.occupancyAbandoned),node("DLQ≥30d (≥1 installment)",dlqD,dlqD>=30)]});
@@ -2861,6 +2878,7 @@ const WATERFALL_ORDER = {
     "USDA Informal Repayment Plan",
     "USDA Special Forbearance",
     "USDA Streamline Loan Modification",
+    "USDA Streamline Final Offer",
     "USDA Modification + MRA Servicing Plan",
     "USDA Standalone Mortgage Recovery Advance (MRA)",
     "USDA Compromise Sale",
@@ -4547,6 +4565,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                   <Tog label="New RPP payment ≤ 200% of current" value={loan.usdaNewPaymentLe200pct} onChange={v=>set("usdaNewPaymentLe200pct",v)}/>
                   {(()=>{const _g=n(loan.grossMonthlyIncome),_p=n(loan.currentPITI),_e=n(loan.monthlyExpenses);const _net=_g>0&&_p>0&&loan.monthlyExpenses!==""?_g-_p-_e:null;return _net!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Borrower has positive net income</span><span className={`font-semibold ${_net>0?"text-emerald-600":"text-red-500"}`}>{_net>0?"✅ Yes":"❌ No"} — auto (GMI {fmt$(_g)} − PITI {fmt$(_p)} − exp {fmt$(_e)} = {fmt$(_net)})</span></div>:<Tog label="Borrower has positive net income (manual)" value={loan.usdaBorrowerPositiveNetIncome} onChange={v=>set("usdaBorrowerPositiveNetIncome",v)}/>;})()}
                   <Tog label="480-mo re-amortization alone cannot achieve PITI target (Step 3 MRA required)" value={loan.usdaStep3DeferralRequired} onChange={v=>set("usdaStep3DeferralRequired",v)}/>
+                  <Tog label="Borrower unresponsive to Streamline Mod offer (Final Offer track — §3555.304(b)(2))" value={loan.usdaBorrowerUnresponsive} onChange={v=>set("usdaBorrowerUnresponsive",v)}/>
                 </Sec>
                 <Sec title="USDA – MRA / Disaster">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700 mb-1">These fields reflect current workout status — pull from servicing system</div>
