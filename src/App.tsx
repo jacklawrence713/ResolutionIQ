@@ -127,7 +127,12 @@ const OPTION_DOCS: Record<string, {required: string[], conditional: {doc: string
     conditional: [],
     timeline: "Per plan agreement"
   },
-  "USDA Streamline Modification": {
+  "USDA Special Forbearance": {
+    required: ["Hardship documentation","Signed Special Forbearance Agreement"],
+    conditional: [],
+    timeline: "Up to 12 months (may include graduated payments or payment suspension)"
+  },
+  "USDA Streamline Loan Modification": {
     required: ["Signed Loan Modification Agreement"],
     conditional: [{doc:"Income verification", condition:"If borrower requests income-based review"}],
     timeline: "90-day Trial Payment Plan; permanent mod after successful completion"
@@ -313,9 +318,10 @@ const OPTION_CITATIONS: Record<string, string> = {
   "FHA Disaster Loan Modification": "ML 2025-06 §V; 24 C.F.R. §203.616",
   "FHA Disaster Standalone Partial Claim": "ML 2025-06 §V; 24 C.F.R. §203.414",
   // USDA
-  "USDA Informal Forbearance": "RD Instruction 3555-C §3555.302; Final Rule Feb 2025",
-  "USDA Informal Repayment Plan": "RD Instruction 3555-C §3555.303",
-  "USDA Streamline Modification": "RD Instruction 3555-C §3555.304; Final Rule Feb 2025",
+  "USDA Informal Forbearance": "RD Instruction 3555-C §3555.303(b)(1); HB-1-3555 Ch. 18; PN 637 (Apr 14, 2025)",
+  "USDA Informal Repayment Plan": "RD Instruction 3555-C §3555.303(b)(2); HB-1-3555 Ch. 18",
+  "USDA Special Forbearance": "RD Instruction 3555-C §3555.303(b)(3); HB-1-3555 Ch. 18; PN 637 (Apr 14, 2025)",
+  "USDA Streamline Loan Modification": "RD Instruction 3555-C §3555.304; HB-1-3555 Ch. 18; PN 637 (Apr 14, 2025 — renamed from Special Loan Modification)",
   "USDA Modification + MRA Servicing Plan": "RD Instruction 3555-C §3555.304(d); Final Rule Feb 2025",
   "USDA Standalone Mortgage Recovery Advance (MRA)": "RD Instruction 3555-C §3555.306",
   "USDA Compromise Sale": "RD Instruction 3555-C §3555.307",
@@ -2799,9 +2805,12 @@ const WATERFALL_ORDER = {
     "USDA Reinstatement",
     "USDA Informal Forbearance",
     "USDA Informal Repayment Plan",
+    "USDA Special Forbearance",
     "USDA Streamline Loan Modification",
     "USDA Modification + MRA Servicing Plan",
     "USDA Standalone Mortgage Recovery Advance (MRA)",
+    "USDA Compromise Sale",
+    "USDA Deed-in-Lieu",
   ],
   VA: [
     "VA Reinstatement",
@@ -2810,6 +2819,8 @@ const WATERFALL_ORDER = {
     "VA Traditional Modification",
     "VA 30-Year Loan Modification",
     "VA 40-Year Loan Modification",
+    "VA Compromise Sale",
+    "VA Deed-in-Lieu",
   ],
   FHLMC: [
     "FHLMC Reinstatement",
