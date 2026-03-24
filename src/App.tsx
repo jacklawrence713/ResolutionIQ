@@ -447,6 +447,7 @@ const initLoan = {
   ineligibleAllRetention:false, propertyListedForSale:false, assumptionInProcess:false,
   fhaBorrowerCanResumePreHardship:false,
   fhaOwlBorrowerUnresponsive:false,
+  fhaPaymentsMade12:false,           // ≥12 payments made — HUD 4000.1 §III.A.2.k (auto-computed from Note Date)
   // USDA
   usdaUpbGe5000:true, usdaPaymentsMade12:true, usdaBankruptcyNotActive:true,
   usdaLitigationNotActive:true, usdaPriorFailedStreamlineTPP:false,
@@ -2122,6 +2123,13 @@ function evaluateFHA(l) {
   const upbWithinOrigLabel = !origUpbEntered ? "Enter Original UPB to verify" : (newUPBFHA <= origUpbFHA ? `✅ ${newUPBFHA.toFixed(2)} ≤ ${origUpbFHA.toFixed(2)}` : `❌ ${newUPBFHA.toFixed(2)} > ${origUpbFHA.toFixed(2)}`);
 
   const isDisaster = l.hardshipType === "Disaster";
+  // Auto-compute FHA loan age ≥ 12 months (HUD 4000.1 §III.A.2.k — required for all mod/PC options)
+  const _fhaToday = new Date().toISOString().split("T")[0];
+  const _fhaEff = l.approvalEffectiveDate || _fhaToday;
+  const _fhaAgeSrc = l.noteDate || l.noteFirstPaymentDate;
+  const _fhaLoanAge = _fhaAgeSrc ? monthsBetween(_fhaAgeSrc, _fhaEff) : null;
+  const fhaLoanAge12 = _fhaLoanAge !== null ? _fhaLoanAge >= 12 : l.fhaPaymentsMade12;
+  const fhaLoanAge12Label = _fhaLoanAge !== null ? `${_fhaLoanAge} months` : "Enter Note Date to auto-compute";
   const baseNodes=[node("Occupancy=Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied"),node("Foreclosure≠Active",!l.foreclosureActive,!l.foreclosureActive),node("Property≠Condemned/Uninhabitable",l.propertyCondition,l.propertyCondition!=="Condemned"&&l.propertyCondition!=="Uninhabitable"),node("Property=Principal Residence",l.propertyDisposition,l.propertyDisposition==="Principal Residence"),node("Lien=First",l.lienPosition,l.lienPosition==="First")];
   const baseEligible=baseNodes.every(nd=>nd.pass);
 
@@ -2183,7 +2191,7 @@ function evaluateFHA(l) {
   results.push({option:"FHA Reinstatement",eligible:dlq>0,nodes:[node("Past-due amounts exist",dlq+"mo DLQ",dlq>0)],note:"Borrower pays all past-due P&I, escrow, fees, and charges to restore current status"});
 
   if (l.verifiedDisaster) {
-    const dn=[...baseNodes,node("In PDMA",l.propertyInPDMA,l.propertyInPDMA),node("Principal Residence pre-disaster",l.principalResidencePreDisaster,l.principalResidencePreDisaster),node("DLQ<12mo",dlq,dlq<12),node("Not damaged OR repairs done",l.propertySubstantiallyDamaged?l.repairsCompleted:"N/A",!l.propertySubstantiallyDamaged||l.repairsCompleted)];
+    const dn=[...baseNodes,node("In PDMA",l.propertyInPDMA,l.propertyInPDMA),node("Principal Residence pre-disaster",l.principalResidencePreDisaster,l.principalResidencePreDisaster),node("Loan age ≥ 12 months (HUD 4000.1 §III.A.2.k.vi)",fhaLoanAge12Label,fhaLoanAge12),node("DLQ<12mo",dlq,dlq<12),node("Not damaged OR repairs done",l.propertySubstantiallyDamaged?l.repairsCompleted:"N/A",!l.propertySubstantiallyDamaged||l.repairsCompleted)];
     const db=dn.every(nd=>nd.pass);
     results.push({option:"FHA Disaster Loan Modification",eligible:db&&canAchieve360&&(l.currentOrLe30DaysAtDisaster||l.incomeGePreDisaster||l.incomeDocProvided),nodes:[...dn,node("Target achievable by re-amortization",achieve360Label,canAchieve360),node("Income/DLQ condition",l.currentOrLe30DaysAtDisaster||l.incomeGePreDisaster||l.incomeDocProvided,l.currentOrLe30DaysAtDisaster||l.incomeGePreDisaster||l.incomeDocProvided)],note:!l.incomeDocProvided?"3-mo trial plan available":null});
     results.push({option:"FHA Disaster Standalone Partial Claim",eligible:db&&!canAchieve360&&comboCapPass,nodes:[...dn,node("Target NOT achievable by re-amortization",achieve360Label,!canAchieve360),node("PC within 30% cap",comboCapLabel,comboCapPass)]});
@@ -2197,10 +2205,12 @@ function evaluateFHA(l) {
 
   // ML 2025-12: home retention base — no continuousIncome req; 24-month cooldown
   const cooldownOK = priorHR === 0 || priorHR >= 24;
-  const hb = baseEligible && cooldownOK && dlq > 0 && STANDARD_HARDSHIPS.includes(l.hardshipType) && l.borrowerIntentRetention;
+  // HUD 4000.1 §III.A.2.k: DLQ ≥ 4 months (120 days) and loan age ≥ 12 months required for all mod/PC options
+  const hb = baseEligible && cooldownOK && dlq >= 4 && fhaLoanAge12 && STANDARD_HARDSHIPS.includes(l.hardshipType) && l.borrowerIntentRetention;
   const hn = [...baseNodes,
     node("Std hardship",l.hardshipType,STANDARD_HARDSHIPS.includes(l.hardshipType)),
-    node("DLQ>0",dlq,dlq>0),
+    node("DLQ ≥ 4 months (120 days minimum — HUD 4000.1 §III.A.2.k)",dlq+"mo",dlq>=4),
+    node("Loan age ≥ 12 months (≥12 payments made — HUD 4000.1 §III.A.2.k)",fhaLoanAge12Label,fhaLoanAge12),
     node("Prior home retention option ≥24mo ago or none (ML 2025-12)",priorHR===0?"None":priorHR+"mo",cooldownOK),
     node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention)
   ];
@@ -2240,7 +2250,7 @@ function evaluateFHA(l) {
 
   // Payment Supplement (step 7: all eligible delinquent borrowers, not unemployed-only — ML 2025-06)
   // Requires active borrower engagement (MoPR payments) — blocked if borrower is unresponsive (use OWL instead)
-  results.push({option:"Payment Supplement",eligible:!isDisaster&&baseEligible&&dlq>=3&&!canAchieve360&&comboPayLe40&&!l.fhaOwlBorrowerUnresponsive,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),...baseNodes,node("DLQ≥3mo (61+ days — ML 2025-06 minimum for Payment Supplement)",dlq,dlq>=3),node("25% P&I reduction NOT achievable by re-amortization",achieve360Label,!canAchieve360),node("Combo pmt≤40% GMI",comboPayLe40,comboPayLe40),node("Borrower responsive (Payment Supplement requires active borrower participation)",l.fhaOwlBorrowerUnresponsive?"Unresponsive — use OWL":"Responsive",!l.fhaOwlBorrowerUnresponsive)],note:"ML 2025-06: Open to all eligible delinquent borrowers (not unemployed-only); minimum 3 months delinquent (61+ days)"});
+  results.push({option:"Payment Supplement",eligible:!isDisaster&&baseEligible&&dlq>=3&&!canAchieve360&&!canAchieve480&&comboPayLe40&&!l.fhaOwlBorrowerUnresponsive,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),...baseNodes,node("DLQ≥3mo (61+ days — ML 2025-06 minimum for Payment Supplement)",dlq,dlq>=3),node("25% P&I reduction NOT achievable by 360mo re-amortization (30-yr mod fails)",achieve360Label,!canAchieve360),node("25% P&I reduction NOT achievable by 480mo re-amortization (40-yr Combo fails — ML 2024-02)",achieve480Label,!canAchieve480),node("Combo pmt≤40% GMI",comboPayLe40,comboPayLe40),node("Borrower responsive (Payment Supplement requires active borrower participation)",l.fhaOwlBorrowerUnresponsive?"Unresponsive — use OWL":"Responsive",!l.fhaOwlBorrowerUnresponsive)],note:"ML 2025-06 / ML 2024-02: Available only after full retention waterfall exhausted (30-yr mod AND 40-yr Combo both fail to achieve 25% P&I reduction target)"});
 
   // Special Forbearance – Unemployment
   results.push({option:"Special Forbearance – Unemployment",eligible:dlq<=12&&!l.foreclosureActive&&l.hardshipType==="Unemployment"&&l.occupancyStatus==="Owner Occupied"&&l.propertyDisposition==="Principal Residence"&&l.verifiedUnemployment&&!l.continuousIncome&&l.ineligibleAllRetention&&!l.propertyListedForSale&&!l.assumptionInProcess,nodes:[node("DLQ≤12mo",dlq,dlq<=12),node("Hardship=Unemployment",l.hardshipType,l.hardshipType==="Unemployment"),node("Verified unemployment",l.verifiedUnemployment,l.verifiedUnemployment),node("No continuous income",!l.continuousIncome,!l.continuousIncome),node("Ineligible all retention",l.ineligibleAllRetention,l.ineligibleAllRetention),node("Not listed for sale",!l.propertyListedForSale,!l.propertyListedForSale),node("No assumption",!l.assumptionInProcess,!l.assumptionInProcess)]});
@@ -4539,6 +4549,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                 <Sec title="FHA Home Retention (ML 2025-06)">
                   <div className="flex items-center gap-1 mb-1"><SrcBadge type="borrower"/><SrcBadge type="calc"/><span className="text-[10px] text-slate-400 ml-1">Mixed: borrower docs + auto-computed</span></div>
                   <F label="Prior Home Retention Option (months ago — 24-month cooldown)"><Num value={loan.priorFHAHAMPMonths} onChange={v=>set("priorFHAHAMPMonths",v)} placeholder="0 = none"/></F>
+                  {(()=>{const _today=new Date().toISOString().split("T")[0];const _eff=loan.approvalEffectiveDate||_today;const _ageSrc=loan.noteDate||loan.noteFirstPaymentDate;const _age=_ageSrc?monthsBetween(_ageSrc,_eff):null;return _age!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Loan age ≥ 12 months (HUD 4000.1 §III.A.2.k)</span><span className={`font-semibold ${_age>=12?"text-emerald-600":"text-red-500"}`}>{_age>=12?"✅ Yes":"❌ No — ineligible for all mod/PC options"} — auto ({_age} months)</span></div>:<Tog label="≥12 payments made / loan age ≥ 12 months (HUD 4000.1 §III.A.2.k — required for all mod/PC options; enter Note Date to auto-compute)" value={loan.fhaPaymentsMade12} onChange={v=>set("fhaPaymentsMade12",v)}/>;})()}
                   {_pmms>0&&<div className="bg-blue-50 rounded p-2 text-xs text-blue-800 mt-1">Mod rate: PMMS {_pmms.toFixed(3)}% + 25bps = <strong>{_modRate.toFixed(3)}%</strong> (rounded to nearest 0.125%)</div>}
                   {_pi>0&&<div className="bg-emerald-50 rounded p-2 text-xs text-emerald-800 mt-0.5">25% P&I target: {fmt$(_pi*0.75)} + {fmt$(_esc)} escrow = <strong>{fmt$(_tgtPITI)}</strong> PITI</div>}
                   {_hasInputs
