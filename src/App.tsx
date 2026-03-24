@@ -209,9 +209,9 @@ const OPTION_DOCS: Record<string, {required: string[], conditional: {doc: string
     timeline: "Up to 12 months"
   },
   "VA Traditional Modification": {
-    required: ["Hardship affidavit","Income verification (paystubs + W-2s)","Bank statements","Signed Loan Modification Agreement","VA prior approval (VA Form 26-8923)"],
-    conditional: [],
-    timeline: "VA approval required before execution; allow 30–60 days"
+    required: ["Hardship affidavit","Income verification (paystubs + W-2s)","Bank statements","Signed Loan Modification Agreement"],
+    conditional: [{doc:"VA prior approval (VALERI submission)", condition:"Required if any 38 C.F.R. §36.4315(a) condition is not met"}],
+    timeline: "VA advance consent available via Circular 26-24-8 if all §36.4315(a) conditions met; otherwise allow 30–60 days for VA prior approval"
   },
   "VA 30-Year Loan Modification": {
     required: ["Hardship affidavit","Income verification","Signed Loan Modification Agreement"],
@@ -373,9 +373,9 @@ const OPTION_CITATIONS: Record<string, string> = {
   "VA Reinstatement": "VA M26-4 Ch. 5 §2.A",
   "VA Repayment Plan": "VA M26-4 Ch. 5 §2.B; 38 C.F.R. §36.4319",
   "VA Special Forbearance": "VA M26-4 Ch. 5 §2.C; Circular 26-25-2",
-  "VA Traditional Modification": "VA M26-4 Ch. 5 §2.D; 38 C.F.R. §36.4315",
-  "VA 30-Year Loan Modification": "VA M26-4 Ch. 5 §2.E; Circular 26-25-2",
-  "VA 40-Year Loan Modification": "Circular 26-22-18; Circular 26-25-2 (10% req removed)",
+  "VA Traditional Modification": "VA M26-4 Ch. 5 §2.D; 38 C.F.R. §36.4315; Circular 26-24-8 (advance consent, Apr 2024)",
+  "VA 30-Year Loan Modification": "VA M26-4 Ch. 5 §2.E; 38 C.F.R. §36.4315; Circular 26-24-8 (advance consent, Apr 2024); Circular 26-25-2 (10% req removed, May 2025)",
+  "VA 40-Year Loan Modification": "38 C.F.R. §36.4315; Federal Register 2023-04284 (480-mo term authority, Mar 2023); Circular 26-24-8 (advance consent, Apr 2024); Circular 26-25-2 (10% req removed, May 2025)",
   "VA Compromise Sale": "VA M26-4 Ch. 5 §3.A; 38 C.F.R. §36.4324",
   "VA Deed-in-Lieu": "VA M26-4 Ch. 5 §3.B; 38 C.F.R. §36.4327",
   // FHLMC
@@ -546,6 +546,7 @@ const initLoan = {
   dlqGe12ContractualPayments:false, borrowerIntentDisposition:false,
   completeBRP:false, priorWorkoutCompromiseSaleFailed:false,
   calculatedRPPGt0:true, forbearancePeriodLt12:true, totalDLQLt12:true,
+  vaPriorModCount:"0",
 };
 
 // ─── MATH HELPERS ─────────────────────────────────────────────────────────────
@@ -1290,13 +1291,13 @@ function calcApprovalTerms(optionName, l) {
   if (opt === "VA Repayment Plan") {
     const currentPITI = n(l.currentPITI);
     const totalArrears = arrears || (currentPITI * dlqMonths);
-    const planMonths = Math.min(18, dlqMonths || 6); // VA allows up to 18 months per M26-4
+    const planMonths = Math.min(12, dlqMonths || 6); // VA M26-4 Ch. 5: standard max 12 months; plans 9+ months require VA consultation
     const catchUp = planMonths > 0 ? totalArrears / planMonths : null;
     const totalPmt = catchUp != null ? currentPITI + catchUp : null;
     return {
       "Current Monthly PITI": fmt$(currentPITI || null),
       "Total Arrearages (Reinstatement Amount)": fmt$(totalArrears || null),
-      "Plan Length": planMonths+" months (max 18 per VA M26-4; exact terms from FHLMC RPP Calculator)",
+      "Plan Length": planMonths+" months (max 12 per VA M26-4 Ch. 5; plans 9+ months require VA consultation)",
       "Monthly Catch-Up Amount": fmt$(catchUp),
       "Total Monthly Plan Payment (PITI + Catch-Up)": fmt$(totalPmt),
       "Late Fees During Plan": "NOT assessed while performing under Repayment Plan",
@@ -1310,9 +1311,12 @@ function calcApprovalTerms(optionName, l) {
     const is40yr = opt === "VA 40-Year Loan Modification";
     const isTraditional = opt === "VA Traditional Modification";
     const termMonths = is40yr ? 480 : 360;
-    // Per Circular 26-21-12: PMMS rounded UP to nearest 0.125% for all VA modifications
-    const roundedPMMS = pmms > 0 ? Math.ceil(pmms * 8) / 8 : pmms;
-    const rateToUse = isTraditional ? currentRate : roundedPMMS;
+    // Per 38 CFR §36.4315(a)(8)(i) / Circular 26-24-8: new rate = PMMS rounded to nearest 0.125%,
+    // subject to two caps: (1) must not exceed PMMS + 50bps, AND (2) must not exceed current rate + 1%
+    const roundedPMMS = pmms > 0 ? Math.round(pmms / 0.125) * 0.125 : pmms;
+    const maxAllowedRate = pmms > 0 && currentRate > 0 ? Math.min(roundedPMMS + 0.50, currentRate + 1.0) : roundedPMMS;
+    // For 30/40yr mods: use PMMS (rounded nearest), capped at currentRate+1% if needed
+    const rateToUse = isTraditional ? currentRate : (roundedPMMS <= (currentRate > 0 ? currentRate + 1.0 : Infinity) ? roundedPMMS : currentRate + 1.0);
 
     // Maturity logic:
     // 30-year / Traditional: lesser of (360mo from mod first installment) OR (120mo past original maturity)
@@ -1371,9 +1375,16 @@ function calcApprovalTerms(optionName, l) {
       "  → Legal Fees": fmt$(legal),
       "  → Late Fees (EXCLUDED)": lateFees > 0 ? `${fmt$(lateFees)} — NOT capitalized` : "None",
       "New Interest Rate": rateToUse > 0
-        ? fmtPct(rateToUse) + (isTraditional ? " (negotiated — VA approval required)" : " (PMMS rounded up to nearest 0.125% — Circular 26-21-12)")
+        ? fmtPct(rateToUse) + (isTraditional ? " (negotiated — per §36.4315 conditions)" : (currentRate > 0 && roundedPMMS > currentRate + 1.0 ? " (PMMS capped at current+1% — §36.4315(a)(8)(i))" : " (PMMS rounded to nearest 0.125% — §36.4315(a)(8)(i))"))
         : (isTraditional ? "Enter negotiated rate" : "Enter PMMS rate"),
-      ...(!isTraditional && pmms > 0 ? {"  → PMMS (raw)": fmtPct(pmms), "  → PMMS (rounded up ⅛%)": fmtPct(roundedPMMS)} : {}),
+      ...(!isTraditional && pmms > 0 ? {
+        "  → PMMS (raw)": fmtPct(pmms),
+        "  → PMMS (rounded nearest ⅛%)": fmtPct(roundedPMMS),
+        "  → Max Cap (PMMS+50bps)": fmtPct(roundedPMMS + 0.50),
+        "  → Max Cap (current+1%)": currentRate > 0 ? fmtPct(currentRate + 1.0) : "Enter current rate",
+        "  → Effective Max Rate": currentRate > 0 ? fmtPct(maxAllowedRate)+" (lower of both caps)" : "Enter current rate",
+        "  → Rate Requires VA Pre-Approval?": currentRate > 0 ? (roundedPMMS > currentRate + 1.0 ? "⚠️ Yes — PMMS exceeds current+1%; VA approval required" : "✅ No — within advance consent parameters") : "Enter current rate",
+      } : {}),
       "New Loan Term": termMonths+" months ("+(termMonths/12)+" years)",
       "New Monthly P&I": fmt$(newPI),
       "New Monthly Escrow": fmt$(currentEscrow || null),
@@ -2359,7 +2370,7 @@ function evaluateVA(l) {
   const vaEscrow = n(l.currentEscrow);
   const vaArrears = n(l.arrearagesToCapitalize);
   const vaMonthlyExp = n(l.monthlyExpenses);
-  const vaRepayMo = Math.min(24, Math.max(1, n(l.repayMonths) || 12));
+  const vaRepayMo = Math.min(12, Math.max(1, n(l.repayMonths) || 6));
   const _vaRPP = vaArrears > 0 && vaPITI > 0 && vaGMI > 0 ? (vaPITI + vaArrears/vaRepayMo + vaMonthlyExp) / vaGMI : null;
   const borrowerCanAffordRPP = _vaRPP !== null ? _vaRPP <= 0.41 : l.borrowerCanAffordReinstateOrRepay;
   const vaModPITI = vaModPI > 0 ? vaModPI + vaEscrow : 0;
@@ -2367,6 +2378,15 @@ function evaluateVA(l) {
   const borrowerCanAffordMod = _vaModDTI !== null ? _vaModDTI <= 0.41 : l.borrowerCanAffordModifiedPayment;
   const _vaCurrDTI = vaPITI > 0 && vaGMI > 0 && l.monthlyExpenses !== "" ? (vaPITI + vaMonthlyExp) / vaGMI : null;
   const borrowerCanAffordCurrent = _vaCurrDTI !== null ? _vaCurrDTI <= 0.41 : l.borrowerCanAffordCurrentMonthly;
+  // Auto-compute loan age and prior mod count for §36.4315(a)(3),(10) checks
+  const _vaToday = new Date().toISOString().split("T")[0];
+  const _vaEff = l.approvalEffectiveDate || _vaToday;
+  const _vaAgeSrc = l.noteDate || l.noteFirstPaymentDate;
+  const _vaLoanAge = _vaAgeSrc ? monthsBetween(_vaAgeSrc, _vaEff) : null;
+  const vaLoanAge12 = _vaLoanAge !== null ? _vaLoanAge >= 12 : true; // default true when unknown
+  const vaLoanAgeLabel = _vaLoanAge !== null ? `${_vaLoanAge} months` : "Enter Note Date to auto-compute";
+  const vaPriorMods = parseInt(l.vaPriorModCount) || 0;
+  const vaPriorModOK = vaPriorMods < 3; // §36.4315(a)(10): max 3 total lifetime mods
   if (isD){
     // Disaster forbearance: triggered by disaster declaration, no minimum DLQ threshold
     results.push({option:"VA Disaster Forbearance",eligible:vb&&l.dlqAtDisasterLt30&&(l.forbearancePeriodLt12||l.totalDLQLt12),nodes:[...vN,node("<30d DLQ at Declaration",l.dlqAtDisasterLt30,l.dlqAtDisasterLt30),node("Forbearance/DLQ<12mo",l.forbearancePeriodLt12||l.totalDLQLt12,l.forbearancePeriodLt12||l.totalDLQLt12)]});
@@ -2377,17 +2397,17 @@ function evaluateVA(l) {
   //    Servicers must offer best option for borrower's circumstances per 38 C.F.R. §36.4319; preferred order still considered. ──
   // 1. Reinstatement — VA M26-4 §2.A: first option; borrower pays all arrears in one lump sum
   results.push({option:"VA Reinstatement",eligible:vb&&dlqD>=1&&borrowerCanAffordRPP,nodes:[...vN,node("DLQ>0",dlqD,dlqD>=1),node("Can afford reinstatement",borrowerCanAffordRPP,borrowerCanAffordRPP)]});
-  // 2. Repayment Plan — resolved hardship, borrower can make regular payment + catch-up
-  results.push({option:"VA Repayment Plan",eligible:vb&&sH&&rH&&dlqD>=30&&l.calculatedRPPGt0&&borrowerCanAffordRPP&&l.borrowerIntentRetention&&oo,nodes:[...vN,node("Non-disaster hardship",l.hardshipType,sH),node("Hardship=Resolved",l.hardshipDuration,rH),node("DLQ≥30d (≥1 installment)",dlqD,dlqD>=30),node("RPP Plans>0",l.calculatedRPPGt0,l.calculatedRPPGt0),node("Can afford RPP",borrowerCanAffordRPP,borrowerCanAffordRPP),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,oo)]});
-  // 3. Special Forbearance — active/temporary hardship (Long Term, not Resolved and not Permanent)
-  results.push({option:"VA Special Forbearance",eligible:vb&&l.hardshipDuration==="Long Term"&&sH&&(l.forbearancePeriodLt12||l.totalDLQLt12)&&l.borrowerIntentRetention&&oo,nodes:[...vN,node("Hardship=Long Term (active)",l.hardshipDuration,l.hardshipDuration==="Long Term"),node("Std hardship",l.hardshipType,sH),node("Forbearance/DLQ<12mo",l.forbearancePeriodLt12||l.totalDLQLt12,l.forbearancePeriodLt12||l.totalDLQLt12),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,oo)]});
-  // 4a. Traditional Modification — negotiated terms, requires VA approval
-  results.push({option:"VA Traditional Modification",eligible:vb&&sH&&dlqD>=61&&l.borrowerConfirmedCannotAffordCurrent&&borrowerCanAffordMod&&l.borrowerIntentRetention&&oo&&vaArrearsWithin25&&vaUPBWithinOrig,nodes:[...vN,node("Std hardship",l.hardshipType,sH),node("DLQ≥61d",dlqD,dlqD>=61),node("Confirmed cannot afford current",l.borrowerConfirmedCannotAffordCurrent,l.borrowerConfirmedCannotAffordCurrent),node("CAN afford modified",borrowerCanAffordMod,borrowerCanAffordMod),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,oo),node("Arrearages ≤25% of orig UPB",vaArrearsPct!=null?vaArrearsPct.toFixed(1)+"%":"N/A",vaArrearsWithin25),node("New UPB ≤ Orig UPB",vaUPBWithinOrig?"Yes":"No — exceeds cap",vaUPBWithinOrig)]});
-  // 4b. 30-Year Loan Modification — rate = PMMS rounded up to nearest 0.125%, 360-month term
-  results.push({option:"VA 30-Year Loan Modification",eligible:vb&&sH&&dlqD>=61&&l.borrowerConfirmedCannotAffordCurrent&&!borrowerCanAffordCurrent&&l.borrowerIntentRetention&&oo&&vaArrearsWithin25&&vaUPBWithinOrig,nodes:[...vN,node("Std hardship",l.hardshipType,sH),node("DLQ≥61d",dlqD,dlqD>=61),node("Confirmed cannot afford current",l.borrowerConfirmedCannotAffordCurrent,l.borrowerConfirmedCannotAffordCurrent),node("Cannot afford current monthly",!borrowerCanAffordCurrent,!borrowerCanAffordCurrent),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,oo),node("Arrearages ≤25% of orig UPB",vaArrearsPct!=null?vaArrearsPct.toFixed(1)+"%":"N/A",vaArrearsWithin25),node("New UPB ≤ Orig UPB",vaUPBWithinOrig?"Yes":"No — exceeds cap",vaUPBWithinOrig)]});
-  // 4c. 40-Year Loan Modification — Circular 26-22-18; rate=PMMS, 480-month term
+  // 2. Repayment Plan — resolved hardship, borrower can make regular payment + catch-up (38 CFR §36.4301)
+  results.push({option:"VA Repayment Plan",eligible:vb&&sH&&rH&&dlqD>=61&&l.calculatedRPPGt0&&borrowerCanAffordRPP&&l.borrowerIntentRetention&&oo,nodes:[...vN,node("Non-disaster hardship",l.hardshipType,sH),node("Hardship=Resolved",l.hardshipDuration,rH),node("DLQ≥61d (38 CFR §36.4301 — min for Special Forbearance/RPP)",dlqD,dlqD>=61),node("RPP Plans>0",l.calculatedRPPGt0,l.calculatedRPPGt0),node("Can afford RPP",borrowerCanAffordRPP,borrowerCanAffordRPP),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,oo)]});
+  // 3. Special Forbearance — active/ongoing hardship, NOT resolved; min 61d DLQ per 38 CFR §36.4301 definition
+  results.push({option:"VA Special Forbearance",eligible:vb&&l.hardshipDuration!=="Resolved"&&sH&&dlqD>=61&&(l.forbearancePeriodLt12||l.totalDLQLt12)&&l.borrowerIntentRetention&&oo,nodes:[...vN,node("Hardship active (not resolved — 38 CFR §36.4301)",l.hardshipDuration,l.hardshipDuration!=="Resolved"),node("Std hardship",l.hardshipType,sH),node("DLQ≥61d (regulatory minimum — 38 CFR §36.4301)",dlqD,dlqD>=61),node("Forbearance/DLQ<12mo",l.forbearancePeriodLt12||l.totalDLQLt12,l.forbearancePeriodLt12||l.totalDLQLt12),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,oo)]});
+  // 4a. Traditional Modification — negotiated terms; advance consent per Circular 26-24-8 if all §36.4315(a) conditions met
+  results.push({option:"VA Traditional Modification",eligible:vb&&sH&&dlqD>=61&&l.borrowerConfirmedCannotAffordCurrent&&borrowerCanAffordMod&&l.borrowerIntentRetention&&oo&&vaArrearsWithin25&&vaUPBWithinOrig&&vaLoanAge12&&vaPriorModOK,nodes:[...vN,node("Std hardship",l.hardshipType,sH),node("DLQ≥61d",dlqD,dlqD>=61),node("Confirmed cannot afford current",l.borrowerConfirmedCannotAffordCurrent,l.borrowerConfirmedCannotAffordCurrent),node("CAN afford modified",borrowerCanAffordMod,borrowerCanAffordMod),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,oo),node("Arrearages ≤25% of orig UPB",vaArrearsPct!=null?vaArrearsPct.toFixed(1)+"%":"N/A",vaArrearsWithin25),node("New UPB ≤ Orig UPB",vaUPBWithinOrig?"Yes":"No — exceeds cap",vaUPBWithinOrig),node("≥12 payments since origination/last mod (§36.4315(a)(3))",vaLoanAgeLabel,vaLoanAge12),node("Prior mods < 3 lifetime (§36.4315(a)(10))",vaPriorMods,vaPriorModOK)]});
+  // 4b. 30-Year Loan Modification — rate = PMMS rounded to nearest 0.125%, capped at current+1% (38 CFR §36.4315(a)(8)(i))
+  results.push({option:"VA 30-Year Loan Modification",eligible:vb&&sH&&dlqD>=61&&l.borrowerConfirmedCannotAffordCurrent&&!borrowerCanAffordCurrent&&l.borrowerIntentRetention&&oo&&vaArrearsWithin25&&vaUPBWithinOrig&&vaLoanAge12&&vaPriorModOK,nodes:[...vN,node("Std hardship",l.hardshipType,sH),node("DLQ≥61d",dlqD,dlqD>=61),node("Confirmed cannot afford current",l.borrowerConfirmedCannotAffordCurrent,l.borrowerConfirmedCannotAffordCurrent),node("Cannot afford current monthly",!borrowerCanAffordCurrent,!borrowerCanAffordCurrent),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,oo),node("Arrearages ≤25% of orig UPB",vaArrearsPct!=null?vaArrearsPct.toFixed(1)+"%":"N/A",vaArrearsWithin25),node("New UPB ≤ Orig UPB",vaUPBWithinOrig?"Yes":"No — exceeds cap",vaUPBWithinOrig),node("≥12 payments since origination/last mod (§36.4315(a)(3))",vaLoanAgeLabel,vaLoanAge12),node("Prior mods < 3 lifetime (§36.4315(a)(10))",vaPriorMods,vaPriorModOK)]});
+  // 4c. 40-Year Loan Modification — 480-month; rate = PMMS rounded to nearest 0.125%, capped at current+1%
   //     NOTE: 10% P&I reduction requirement REMOVED by Circular 26-25-2 (effective May 1, 2025)
-  results.push({option:"VA 40-Year Loan Modification",eligible:vb&&sH&&dlqD>=61&&l.borrowerConfirmedCannotAffordCurrent&&oo&&l.borrowerIntentRetention,nodes:[...vN,node("Std hardship",l.hardshipType,sH),node("DLQ≥61d",dlqD,dlqD>=61),node("Confirmed cannot afford",l.borrowerConfirmedCannotAffordCurrent,l.borrowerConfirmedCannotAffordCurrent),node("Owner Occupied",l.occupancyStatus,oo),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention)]});
+  results.push({option:"VA 40-Year Loan Modification",eligible:vb&&sH&&dlqD>=61&&l.borrowerConfirmedCannotAffordCurrent&&oo&&l.borrowerIntentRetention&&vaLoanAge12&&vaPriorModOK,nodes:[...vN,node("Std hardship",l.hardshipType,sH),node("DLQ≥61d",dlqD,dlqD>=61),node("Confirmed cannot afford",l.borrowerConfirmedCannotAffordCurrent,l.borrowerConfirmedCannotAffordCurrent),node("Owner Occupied",l.occupancyStatus,oo),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("≥12 payments since origination/last mod (§36.4315(a)(3))",vaLoanAgeLabel,vaLoanAge12),node("Prior mods < 3 lifetime (§36.4315(a)(10))",vaPriorMods,vaPriorModOK)]});
   // 5. VASP — DISCONTINUED May 1, 2025 per Circular 26-25-2.
   //    VA Home Loan Program Reform Act (signed July 30, 2025) authorized a NEW partial claim program;
   //    implementation guidance from VA is PENDING — no new submissions until guidance issued.
@@ -4598,7 +4618,9 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
               </>)}
               {loan.loanType==="VA"&&(<>
                 <Sec title="VA – Forbearance / Repayment">
-                  {(()=>{const _g=n(loan.grossMonthlyIncome),_p=n(loan.currentPITI),_a=n(loan.arrearagesToCapitalize),_e=n(loan.monthlyExpenses),_rm=Math.min(24,Math.max(1,n(loan.repayMonths)||12));const _r=_a>0&&_p>0&&_g>0?(_p+_a/_rm+_e)/_g:null;return _r!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Can afford reinstatement or RPP (41% DTI)</span><span className={`font-semibold ${_r<=0.41?"text-emerald-600":"text-red-500"}`}>{_r<=0.41?"✅ Yes":"❌ No"} — auto ({(_r*100).toFixed(1)}% total DTI)</span></div>:<Tog label="Borrower can afford reinstatement or repayment plan (manual)" value={loan.borrowerCanAffordReinstateOrRepay} onChange={v=>set("borrowerCanAffordReinstateOrRepay",v)}/>;})()}
+                  {(()=>{const _today=new Date().toISOString().split("T")[0];const _eff=loan.approvalEffectiveDate||_today;const _ageSrc=loan.noteDate||loan.noteFirstPaymentDate;const _age=_ageSrc?monthsBetween(_ageSrc,_eff):null;return _age!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">≥12 payments since origination (§36.4315(a)(3))</span><span className={`font-semibold ${_age>=12?"text-emerald-600":"text-red-500"}`}>{_age>=12?"✅ Yes":"❌ No"} — auto ({_age} months)</span></div>:<div className="text-xs text-slate-500 py-1">Enter Note Date to auto-compute loan age (12-payment minimum requirement)</div>;})()}
+                  <F label="Prior VA Modifications (lifetime count — §36.4315(a)(10) max 3)"><Num value={loan.vaPriorModCount} onChange={v=>set("vaPriorModCount",v)} placeholder="0"/></F>
+                  {(()=>{const _g=n(loan.grossMonthlyIncome),_p=n(loan.currentPITI),_a=n(loan.arrearagesToCapitalize),_e=n(loan.monthlyExpenses),_rm=Math.min(12,Math.max(1,n(loan.repayMonths)||6));const _r=_a>0&&_p>0&&_g>0?(_p+_a/_rm+_e)/_g:null;return _r!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Can afford reinstatement or RPP (41% DTI)</span><span className={`font-semibold ${_r<=0.41?"text-emerald-600":"text-red-500"}`}>{_r<=0.41?"✅ Yes":"❌ No"} — auto ({(_r*100).toFixed(1)}% total DTI)</span></div>:<Tog label="Borrower can afford reinstatement or repayment plan (manual)" value={loan.borrowerCanAffordReinstateOrRepay} onChange={v=>set("borrowerCanAffordReinstateOrRepay",v)}/>;})()}
                   <Tog label="Borrower confirmed cannot afford current payment" value={loan.borrowerConfirmedCannotAffordCurrent} onChange={v=>set("borrowerConfirmedCannotAffordCurrent",v)}/>
                   {(()=>{const _g=n(loan.grossMonthlyIncome),_mp=n(loan.modifiedPI),_esc=n(loan.currentEscrow),_e=n(loan.monthlyExpenses);const _mPITI=_mp>0?_mp+_esc:0;const _d=_mPITI>0&&_g>0&&loan.monthlyExpenses!==""?(_mPITI+_e)/_g:null;return _d!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Can afford modified payment (41% DTI)</span><span className={`font-semibold ${_d<=0.41?"text-emerald-600":"text-red-500"}`}>{_d<=0.41?"✅ Yes":"❌ No"} — auto (mod PITI {fmt$(_mPITI)} + exp {fmt$(_e)}, {(_d*100).toFixed(1)}% DTI)</span></div>:<Tog label="Borrower can afford modified payment (manual)" value={loan.borrowerCanAffordModifiedPayment} onChange={v=>set("borrowerCanAffordModifiedPayment",v)}/>;})()}
                   {(()=>{const _g=n(loan.grossMonthlyIncome),_p=n(loan.currentPITI),_e=n(loan.monthlyExpenses);const _d=_p>0&&_g>0&&loan.monthlyExpenses!==""?(_p+_e)/_g:null;return _d!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Can afford current monthly (41% DTI)</span><span className={`font-semibold ${_d<=0.41?"text-emerald-600":"text-red-500"}`}>{_d<=0.41?"✅ Yes":"❌ No"} — auto ({(_d*100).toFixed(1)}% total DTI)</span></div>:<Tog label="Borrower can afford current monthly payment (manual)" value={loan.borrowerCanAffordCurrentMonthly} onChange={v=>set("borrowerCanAffordCurrentMonthly",v)}/>;})()}
