@@ -527,6 +527,7 @@ const initLoan = {
   fhlmcHousingExpenseRatio:"", // % — pre-mod housing expense / GMI
   fhlmcPropertyValue:"", // for MTMLTV calculation
   fhlmcPostedModRate:"", // Freddie Mac posted modification interest rate
+  fhlmcQRPCAchieved:false,          // Qualified Right Party Contact achieved
   fhlmcRecourse:false,
   fhlmcStepRateMortgage:false,
   fhlmcRateAdjustedWithin12Mo:false,
@@ -1642,12 +1643,12 @@ function calcApprovalTerms(optionName, l) {
     const fhlmcPrelimRate = fhlmcIsARM && fhlmcFullyIndexed != null ? Math.min(currentRate, fhlmcFullyIndexed) : currentRate;
     // Escrow shortage 60-month spread (§9206.6: not capitalizable, spread over analysis period)
     const fhlmcEscShortageSpread = escShortage > 0 ? escShortage / 60 : 0;
-    // Step 3: Interest rate relief — per §9206.6, only if MTMLTV ≥ 80%
-    const canReduceRate = mtmltv == null || mtmltv >= 80;
+    // Step 3: Interest rate relief — per §9206.6 as updated by Bulletin 2024-E (eff. 12/01/2024): only if MTMLTV ≥ 50%
+    const canReduceRate = mtmltv == null || mtmltv >= 50;
     const rateFloor = fmModRate > 0 ? fmModRate : null;
     // Step 4: Term extension to 480 months from modification effective date
-    // Step 5: Principal forbearance — per §9206.6, only if MTMLTV > 80%, up to 30% of post-cap UPB
-    const canForbearPrincipal = mtmltv == null || mtmltv > 80;
+    // Step 5: Principal forbearance — per §9206.6 / Bulletin 2024-E: only if MTMLTV > 50%, up to 30% of post-cap UPB
+    const canForbearPrincipal = mtmltv == null || mtmltv > 50;
     const maxForbearance = flexNewUPB * 0.30;
     // Target: P&I reduction EXCEEDING 20%
     const target20Plus = currentPI_val > 0 ? currentPI_val * 0.799 : null; // just under 80% = just over 20% reduction
@@ -1721,7 +1722,7 @@ function calcApprovalTerms(optionName, l) {
       "Step 2 (Preliminary Rate)": fhlmcIsARM
         ? `${fmtPct(fhlmcPrelimRate)} — ${fhlmcFullyIndexed != null && fhlmcFullyIndexed < currentRate ? "fully-indexed rate (lower than note rate)" : "current note rate (lower than fully-indexed)"}`
         : "Fixed-rate loan — preliminary rate equals current note rate (no change in Step 2)",
-      "Rate Relief Applied? (Step 3)": canReduceRate ? (rateFloor && rateFloor < currentRate ? `✅ Yes — MTMLTV ${mtmltv != null ? mtmltv.toFixed(1)+"%" : "(unknown)"} ≥ 80% (§9206.6)` : "Rate already at or below FM posted rate") : `❌ No — MTMLTV ${mtmltv != null ? mtmltv.toFixed(1)+"%" : "unknown"} < 80% required (§9206.6)`,
+      "Rate Relief Applied? (Step 3)": canReduceRate ? (rateFloor && rateFloor < currentRate ? `✅ Yes — MTMLTV ${mtmltv != null ? mtmltv.toFixed(1)+"%" : "(unknown)"} ≥ 50% (§9206.6; Bulletin 2024-E)` : "Rate already at or below FM posted rate") : `❌ No — MTMLTV ${mtmltv != null ? mtmltv.toFixed(1)+"%" : "unknown"} < 50% required (§9206.6; Bulletin 2024-E eff. 12/01/2024)`,
       "New Interest Rate": achievedRate2 > 0 ? fmtPct(achievedRate2) : "N/A",
       "New Term": achievedTerm2 ? `${achievedTerm2} months (${(achievedTerm2/12).toFixed(1)} years)` : "N/A",
       ...(achievedForbear > 0 ? {
@@ -2516,6 +2517,7 @@ function evaluateFHLMC(l) {
       node("Can resume full contractual payment", l.fhlmcCanResumeFull?"Yes":"No", l.fhlmcCanResumeFull),
       node("Cumulative deferred months < 12 (lifetime, non-disaster)", fhlmcCumDeferred+"mo", eligCumCap),
       node("Prior non-disaster deferral ≥ 12 months ago (or never)", fhlmcPriorDeferral===0?"None":fhlmcPriorDeferral+"mo ago", eligPriorDeferral),
+      node("QRPC (Qualified Right Party Contact) achieved (§9201 / §9203.23)", l.fhlmcQRPCAchieved?"Yes":"No", l.fhlmcQRPCAchieved),
       node("No approved liquidation option active", l.fhlmcApprovedLiquidationOption?"Active":"None", noActiveLiquidation),
       node("No active/performing TPP", l.fhlmcActiveTPP?"Active":"None", noActiveTPP),
       node("No unexpired offer for another workout option", l.fhlmcUnexpiredOffer?"Yes":"No", noUnexpiredOffer),
@@ -2593,6 +2595,7 @@ function evaluateFHLMC(l) {
       node("Long-term/permanent hardship (unemployment OK post-forbearance)", l.fhlmcLongTermHardship?"Yes":"No", eligHardship),
       node("Verified income", l.fhlmcVerifiedIncome?"Yes":"No", l.fhlmcVerifiedIncome),
       node("Investment property: current/<60 DLQ hard stop", l.fhlmcPropertyType, !investmentHardStop),
+      node("QRPC (Qualified Right Party Contact) achieved (§9206.1)", l.fhlmcQRPCAchieved?"Yes":"No", l.fhlmcQRPCAchieved),
       node("Prior modifications < 3", priorMods, priorMods < 3),
       node("No failed Flex Mod TPP within 12 months", l.fhlmcFailedFlexTPP12Mo?"Yes":"No", !l.fhlmcFailedFlexTPP12Mo),
       node("No prior Flex Mod re-default within 12mo (not cured)", l.fhlmcPriorFlexMod60DLQ?"Yes":"No", !l.fhlmcPriorFlexMod60DLQ),
@@ -4757,11 +4760,12 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                   {n(loan.fhlmcPropertyValue)>0&&n(loan.upb)>0&&<div className="bg-teal-50 rounded p-2 text-xs text-teal-800 space-y-0.5 mt-1">
                     <div>Current MTMLTV: <strong>{(n(loan.upb)/n(loan.fhlmcPropertyValue)*100).toFixed(1)}%</strong></div>
                     <div>Post-Cap MTMLTV: <strong>{((n(loan.upb)+n(loan.arrearagesToCapitalize)+n(loan.legalFees))/n(loan.fhlmcPropertyValue)*100).toFixed(1)}%</strong></div>
-                    <div className="text-slate-500">≥80% → rate relief eligible (§9206.6); &gt;80% → principal forbearance eligible</div>
+                    <div className="text-slate-500">≥50% → rate relief eligible (§9206.6; Bulletin 2024-E); &gt;50% → principal forbearance eligible</div>
                   </div>}
                   <Tog label="Hardship resolved (temporary, no longer a problem)" value={loan.fhlmcHardshipResolved} onChange={v=>set("fhlmcHardshipResolved",v)}/>
                   <Tog label="Can resume full contractual monthly payment" value={loan.fhlmcCanResumeFull} onChange={v=>set("fhlmcCanResumeFull",v)}/>
                   {(()=>{const _cash=n(loan.cashReservesAmount),_piti=n(loan.currentPITI),_gmi=n(loan.grossMonthlyIncome),_fico=n(loan.fhlmcFICO);const _hr=_piti>0&&_gmi>0?_piti/_gmi*100:n(loan.fhlmcHousingExpenseRatio);const _hasInputs=_cash>0&&_piti>0&&_gmi>0&&_fico>0&&loan.fhlmcPropertyType!=="";const _cashLt25k=_cash>0?_cash<25000:loan.fhlmcCashReservesLt25k;const _isPrimary=loan.fhlmcPropertyType==="Primary Residence";const _r1=_cashLt25k&&_isPrimary&&loan.fhlmcLongTermHardship;const _r2=_fico<=620||loan.fhlmcPrior30DayDLQ6Mo||_hr>40;const _autoID=_hasInputs?(_r1&&_r2):null;return _autoID!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Servicer imminent default determination</span><span className={`font-semibold ${_autoID?"text-amber-600":"text-emerald-600"}`}>{_autoID?"⚠️ Yes (auto)":"✅ No (auto)"} — R1:{_r1?"✓":"✗"} R2:{_r2?"✓":"✗"}</span></div>:<Tog label="Servicer imminent default determination (manual — enter cash, PITI, GMI, FICO to auto-compute)" value={loan.fhlmcImminentDefault} onChange={v=>set("fhlmcImminentDefault",v)}/>;})()}
+                  <Tog label="QRPC (Qualified Right Party Contact) achieved" value={loan.fhlmcQRPCAchieved} onChange={v=>set("fhlmcQRPCAchieved",v)}/>
                   <Tog label="Long-term/permanent hardship (NOT unemployment)" value={loan.fhlmcLongTermHardship} onChange={v=>set("fhlmcLongTermHardship",v)}/>
                   <Tog label="Unemployed borrower (→ forbearance, not Flex Mod)" value={loan.fhlmcUnemployed} onChange={v=>set("fhlmcUnemployed",v)}/>
                   <Tog label="Verified income" value={loan.fhlmcVerifiedIncome} onChange={v=>set("fhlmcVerifiedIncome",v)}/>
