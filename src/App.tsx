@@ -123,9 +123,29 @@ const OPTION_DOCS: Record<string, {required: string[], conditional: {doc: string
   },
   // USDA
   "USDA Reinstatement": {
-    required: ["Payoff/reinstatement quote","Certified funds"],
+    required: ["Payoff/reinstatement quote from servicer","Certified funds (cashier's check or wire)"],
     conditional: [],
-    timeline: "Prior to foreclosure sale"
+    timeline: "Prior to foreclosure sale date"
+  },
+  "USDA Disaster Forbearance": {
+    required: ["FEMA/presidential disaster declaration reference","Borrower hardship statement","Signed Forbearance Agreement"],
+    conditional: [],
+    timeline: "Up to 12 months; borrower must have been current or <30 days DLQ at disaster declaration"
+  },
+  "USDA Disaster Term Extension Modification": {
+    required: ["FEMA disaster declaration reference","Prior disaster forbearance documentation","Signed Loan Modification Agreement"],
+    conditional: [],
+    timeline: "Term extended to cure disaster-related arrears; no income documentation required"
+  },
+  "USDA Disaster Modification": {
+    required: ["FEMA disaster declaration reference","Hardship affidavit (hardship resolved)","Signed Loan Modification Agreement"],
+    conditional: [],
+    timeline: "45 days from approval; post-mod PITI must not exceed pre-mod PITI"
+  },
+  "USDA Disaster Mortgage Recovery Advance (MRA)": {
+    required: ["FEMA disaster declaration reference","Hardship affidavit","MRA Note and Subordinate Mortgage"],
+    conditional: [],
+    timeline: "45 days from approval; disaster mod and term extension must be ineligible before evaluating"
   },
   "USDA Informal Forbearance": {
     required: ["Hardship letter","Signed forbearance agreement"],
@@ -330,14 +350,19 @@ const OPTION_CITATIONS: Record<string, string> = {
   "Pre-Foreclosure Sale (PFS)": "ML 2025-06 §IV.H; HUD Handbook 4000.1 §III.A.2.m; 24 C.F.R. §203.675",
   "Deed-in-Lieu (DIL)": "ML 2025-06 §IV.I; HUD Handbook 4000.1 §III.A.2.n; 24 C.F.R. §203.677",
   // USDA
-  "USDA Informal Forbearance": "RD Instruction 3555-C §3555.303(b)(1); HB-1-3555 Ch. 18; PN 637 (Apr 14, 2025)",
-  "USDA Informal Repayment Plan": "RD Instruction 3555-C §3555.303(b)(2); HB-1-3555 Ch. 18",
-  "USDA Special Forbearance": "RD Instruction 3555-C §3555.303(b)(3); HB-1-3555 Ch. 18; PN 637 (Apr 14, 2025)",
-  "USDA Streamline Loan Modification": "RD Instruction 3555-C §3555.304; HB-1-3555 Ch. 18; PN 637 (Apr 14, 2025 — renamed from Special Loan Modification)",
-  "USDA Modification + MRA Servicing Plan": "RD Instruction 3555-C §3555.304(d); Final Rule Feb 2025",
-  "USDA Standalone Mortgage Recovery Advance (MRA)": "RD Instruction 3555-C §3555.306",
-  "USDA Compromise Sale": "RD Instruction 3555-C §3555.307",
-  "USDA Deed-in-Lieu": "RD Instruction 3555-C §3555.308",
+  "USDA Reinstatement": "RD Instruction 3555-C §3555.301; HB-1-3555 Ch. 18 §18.3",
+  "USDA Informal Forbearance": "RD Instruction 3555-C §3555.303(b)(1); HB-1-3555 Ch. 18 §18.5; PN 637 (Apr 14, 2025)",
+  "USDA Informal Repayment Plan": "RD Instruction 3555-C §3555.303(b)(2); HB-1-3555 Ch. 18 §18.4",
+  "USDA Special Forbearance": "RD Instruction 3555-C §3555.303(b)(3); HB-1-3555 Ch. 18 §18.5; PN 637 (Apr 14, 2025)",
+  "USDA Streamline Loan Modification": "RD Instruction 3555-C §3555.304; HB-1-3555 Ch. 18 §18.7; PN 637 (Apr 14, 2025 — renamed from Special Loan Modification)",
+  "USDA Modification + MRA Servicing Plan": "RD Instruction 3555-C §3555.304(d); HB-1-3555 Ch. 18 §18.7; Final Rule Feb 11, 2025",
+  "USDA Standalone Mortgage Recovery Advance (MRA)": "RD Instruction 3555-C §3555.306; HB-1-3555 Ch. 18 §18.8; PN 637 (Apr 14, 2025 — lien recording and ratio requirements waived)",
+  "USDA Disaster Forbearance": "RD Instruction 3555-C §3555.303(c); HB-1-3555 Ch. 18 §18.12",
+  "USDA Disaster Term Extension Modification": "RD Instruction 3555-C §3555.302(d); HB-1-3555 Ch. 18 §18.12",
+  "USDA Disaster Modification": "RD Instruction 3555-C §3555.302(c); HB-1-3555 Ch. 18 §18.12",
+  "USDA Disaster Mortgage Recovery Advance (MRA)": "RD Instruction 3555-C §3555.306(c); HB-1-3555 Ch. 18 §18.12",
+  "USDA Compromise Sale": "RD Instruction 3555-C §3555.307; HB-1-3555 Ch. 18 §18.9",
+  "USDA Deed-in-Lieu": "RD Instruction 3555-C §3555.308; HB-1-3555 Ch. 18 §18.10",
   // VA
   "VA Reinstatement": "VA M26-4 Ch. 5 §2.A",
   "VA Repayment Plan": "VA M26-4 Ch. 5 §2.B; 38 C.F.R. §36.4319",
