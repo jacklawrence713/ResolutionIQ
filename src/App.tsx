@@ -506,6 +506,7 @@ const initLoan = {
   fnmaCashReservesLt3Mo:false,     // cash reserves < 3 months PITIA (ID Rule 1)
   fnmaLongTermHardship:false,      // long-term/permanent hardship (ID Rule 1)
   fnmaPrior30DLQ12Mo:false,        // 2+ 30-day DLQ in past 12 months (ID Rule 2)
+  fnmaModifiedWithin12Mo:false,    // modified within previous 12 months (D2-3.2-06 — blocks Standard Flex Mod)
   // FHLMC
   fhlmcHardshipResolved:false,
   fhlmcCanResumeFull:false,
@@ -529,6 +530,7 @@ const initLoan = {
   fhlmcPropertyValue:"", // for MTMLTV calculation
   fhlmcPostedModRate:"", // Freddie Mac posted modification interest rate
   fhlmcQRPCAchieved:false,          // Qualified Right Party Contact achieved
+  fhlmcModifiedWithin12Mo:false,    // modified within preceding 12 months (§9206.5 — blocks Standard Flex Mod)
   fhlmcRecourse:false,
   fhlmcStepRateMortgage:false,
   fhlmcRateAdjustedWithin12Mo:false,
@@ -551,6 +553,7 @@ const initLoan = {
   completeBRP:false, priorWorkoutCompromiseSaleFailed:false,
   calculatedRPPGt0:true, forbearancePeriodLt12:true, totalDLQLt12:true,
   vaPriorModCount:"0",
+  vaLastModDate:"",                // date of most recent VA modification (for §36.4315(a)(3) 12-month seasoning)
 };
 
 // ─── MATH HELPERS ─────────────────────────────────────────────────────────────
@@ -2413,6 +2416,15 @@ function evaluateVA(l) {
   const vaLoanAgeLabel = _vaLoanAge !== null ? `${_vaLoanAge} months` : "Enter Note Date to auto-compute";
   const vaPriorMods = parseInt(l.vaPriorModCount) || 0;
   const vaPriorModOK = vaPriorMods < 3; // §36.4315(a)(10): max 3 total lifetime mods
+  // §36.4315(a)(3): ≥12 payments since origination (first mod) OR ≥12 months since last mod (subsequent mods)
+  const vaLastModDate = l.vaLastModDate || "";
+  const _vaLastModAge = vaLastModDate && vaPriorMods > 0 ? monthsBetween(vaLastModDate, _vaEff) : null;
+  const vaModSeasoningOK = vaPriorMods === 0
+    ? vaLoanAge12
+    : (_vaLastModAge !== null ? _vaLastModAge >= 12 : true);
+  const vaModSeasoningLabel = vaPriorMods === 0
+    ? vaLoanAgeLabel
+    : (_vaLastModAge !== null ? `${_vaLastModAge} months since last mod` : "Enter Last Mod Date to auto-compute");
   if (isD){
     // Disaster forbearance: triggered by disaster declaration, no minimum DLQ threshold
     results.push({option:"VA Disaster Forbearance",eligible:vb&&l.dlqAtDisasterLt30&&(l.forbearancePeriodLt12||l.totalDLQLt12),nodes:[...vN,node("<30d DLQ at Declaration",l.dlqAtDisasterLt30,l.dlqAtDisasterLt30),node("Forbearance/DLQ<12mo",l.forbearancePeriodLt12||l.totalDLQLt12,l.forbearancePeriodLt12||l.totalDLQLt12)]});
@@ -2428,12 +2440,12 @@ function evaluateVA(l) {
   // 3. Special Forbearance — active/ongoing hardship, NOT resolved; min 61d DLQ per 38 CFR §36.4301 definition
   results.push({option:"VA Special Forbearance",eligible:vb&&l.hardshipDuration!=="Resolved"&&sH&&dlqD>=61&&(l.forbearancePeriodLt12||l.totalDLQLt12)&&l.borrowerIntentRetention&&oo,nodes:[...vN,node("Hardship active (not resolved — 38 CFR §36.4301)",l.hardshipDuration,l.hardshipDuration!=="Resolved"),node("Std hardship",l.hardshipType,sH),node("DLQ≥61d (regulatory minimum — 38 CFR §36.4301)",dlqD,dlqD>=61),node("Forbearance/DLQ<12mo",l.forbearancePeriodLt12||l.totalDLQLt12,l.forbearancePeriodLt12||l.totalDLQLt12),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,oo)]});
   // 4a. Traditional Modification — negotiated terms; advance consent per Circular 26-24-8 if all §36.4315(a) conditions met
-  results.push({option:"VA Traditional Modification",eligible:vb&&sH&&dlqD>=61&&l.borrowerConfirmedCannotAffordCurrent&&borrowerCanAffordMod&&l.borrowerIntentRetention&&oo&&vaArrearsWithin25&&vaUPBWithinOrig&&vaLoanAge12&&vaPriorModOK,nodes:[...vN,node("Std hardship",l.hardshipType,sH),node("DLQ≥61d",dlqD,dlqD>=61),node("Confirmed cannot afford current",l.borrowerConfirmedCannotAffordCurrent,l.borrowerConfirmedCannotAffordCurrent),node("CAN afford modified",borrowerCanAffordMod,borrowerCanAffordMod),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,oo),node("Arrearages ≤25% of orig UPB",vaArrearsPct!=null?vaArrearsPct.toFixed(1)+"%":"N/A",vaArrearsWithin25),node("New UPB ≤ Orig UPB",vaUPBWithinOrig?"Yes":"No — exceeds cap",vaUPBWithinOrig),node("≥12 payments since origination/last mod (§36.4315(a)(3))",vaLoanAgeLabel,vaLoanAge12),node("Prior mods < 3 lifetime (§36.4315(a)(10))",vaPriorMods,vaPriorModOK)]});
+  results.push({option:"VA Traditional Modification",eligible:vb&&sH&&dlqD>=61&&l.borrowerConfirmedCannotAffordCurrent&&borrowerCanAffordMod&&l.borrowerIntentRetention&&oo&&vaArrearsWithin25&&vaUPBWithinOrig&&vaModSeasoningOK&&vaPriorModOK,nodes:[...vN,node("Std hardship",l.hardshipType,sH),node("DLQ≥61d",dlqD,dlqD>=61),node("Confirmed cannot afford current",l.borrowerConfirmedCannotAffordCurrent,l.borrowerConfirmedCannotAffordCurrent),node("CAN afford modified",borrowerCanAffordMod,borrowerCanAffordMod),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,oo),node("Arrearages ≤25% of orig UPB",vaArrearsPct!=null?vaArrearsPct.toFixed(1)+"%":"N/A",vaArrearsWithin25),node("New UPB ≤ Orig UPB",vaUPBWithinOrig?"Yes":"No — exceeds cap",vaUPBWithinOrig),node("≥12 payments since origination OR ≥12 months since last mod (§36.4315(a)(3))",vaModSeasoningLabel,vaModSeasoningOK),node("Prior mods < 3 lifetime (§36.4315(a)(10))",vaPriorMods,vaPriorModOK)]});
   // 4b. 30-Year Loan Modification — rate = PMMS rounded to nearest 0.125%, capped at current+1% (38 CFR §36.4315(a)(8)(i))
-  results.push({option:"VA 30-Year Loan Modification",eligible:vb&&sH&&dlqD>=61&&l.borrowerConfirmedCannotAffordCurrent&&!borrowerCanAffordCurrent&&l.borrowerIntentRetention&&oo&&vaArrearsWithin25&&vaUPBWithinOrig&&vaLoanAge12&&vaPriorModOK,nodes:[...vN,node("Std hardship",l.hardshipType,sH),node("DLQ≥61d",dlqD,dlqD>=61),node("Confirmed cannot afford current",l.borrowerConfirmedCannotAffordCurrent,l.borrowerConfirmedCannotAffordCurrent),node("Cannot afford current monthly",!borrowerCanAffordCurrent,!borrowerCanAffordCurrent),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,oo),node("Arrearages ≤25% of orig UPB",vaArrearsPct!=null?vaArrearsPct.toFixed(1)+"%":"N/A",vaArrearsWithin25),node("New UPB ≤ Orig UPB",vaUPBWithinOrig?"Yes":"No — exceeds cap",vaUPBWithinOrig),node("≥12 payments since origination/last mod (§36.4315(a)(3))",vaLoanAgeLabel,vaLoanAge12),node("Prior mods < 3 lifetime (§36.4315(a)(10))",vaPriorMods,vaPriorModOK)]});
+  results.push({option:"VA 30-Year Loan Modification",eligible:vb&&sH&&dlqD>=61&&l.borrowerConfirmedCannotAffordCurrent&&!borrowerCanAffordCurrent&&l.borrowerIntentRetention&&oo&&vaArrearsWithin25&&vaUPBWithinOrig&&vaModSeasoningOK&&vaPriorModOK,nodes:[...vN,node("Std hardship",l.hardshipType,sH),node("DLQ≥61d",dlqD,dlqD>=61),node("Confirmed cannot afford current",l.borrowerConfirmedCannotAffordCurrent,l.borrowerConfirmedCannotAffordCurrent),node("Cannot afford current monthly",!borrowerCanAffordCurrent,!borrowerCanAffordCurrent),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,oo),node("Arrearages ≤25% of orig UPB",vaArrearsPct!=null?vaArrearsPct.toFixed(1)+"%":"N/A",vaArrearsWithin25),node("New UPB ≤ Orig UPB",vaUPBWithinOrig?"Yes":"No — exceeds cap",vaUPBWithinOrig),node("≥12 payments since origination OR ≥12 months since last mod (§36.4315(a)(3))",vaModSeasoningLabel,vaModSeasoningOK),node("Prior mods < 3 lifetime (§36.4315(a)(10))",vaPriorMods,vaPriorModOK)]});
   // 4c. 40-Year Loan Modification — 480-month; rate = PMMS rounded to nearest 0.125%, capped at current+1%
   //     NOTE: 10% P&I reduction requirement REMOVED by Circular 26-25-2 (effective May 1, 2025)
-  results.push({option:"VA 40-Year Loan Modification",eligible:vb&&sH&&dlqD>=61&&l.borrowerConfirmedCannotAffordCurrent&&oo&&l.borrowerIntentRetention&&vaLoanAge12&&vaPriorModOK,nodes:[...vN,node("Std hardship",l.hardshipType,sH),node("DLQ≥61d",dlqD,dlqD>=61),node("Confirmed cannot afford",l.borrowerConfirmedCannotAffordCurrent,l.borrowerConfirmedCannotAffordCurrent),node("Owner Occupied",l.occupancyStatus,oo),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("≥12 payments since origination/last mod (§36.4315(a)(3))",vaLoanAgeLabel,vaLoanAge12),node("Prior mods < 3 lifetime (§36.4315(a)(10))",vaPriorMods,vaPriorModOK)]});
+  results.push({option:"VA 40-Year Loan Modification",eligible:vb&&sH&&dlqD>=61&&l.borrowerConfirmedCannotAffordCurrent&&oo&&l.borrowerIntentRetention&&vaModSeasoningOK&&vaPriorModOK,nodes:[...vN,node("Std hardship",l.hardshipType,sH),node("DLQ≥61d",dlqD,dlqD>=61),node("Confirmed cannot afford",l.borrowerConfirmedCannotAffordCurrent,l.borrowerConfirmedCannotAffordCurrent),node("Owner Occupied",l.occupancyStatus,oo),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("≥12 payments since origination OR ≥12 months since last mod (§36.4315(a)(3))",vaModSeasoningLabel,vaModSeasoningOK),node("Prior mods < 3 lifetime (§36.4315(a)(10))",vaPriorMods,vaPriorModOK)]});
   // 5. VASP — DISCONTINUED May 1, 2025 per Circular 26-25-2.
   //    VA Home Loan Program Reform Act (signed July 30, 2025) authorized a NEW partial claim program;
   //    implementation guidance from VA is PENDING — no new submissions until guidance issued.
@@ -2582,6 +2594,7 @@ function evaluateFHLMC(l) {
     const eligForbearance = isUnemployed || isTemporary;
     const nodes = [
       node("Non-disaster hardship", l.hardshipType, !isDisaster),
+      node("Primary residence (§9203.3)", l.fhlmcPropertyType, isPrimaryRes),
       node("Temporary hardship or unemployment", eligForbearance ? (isUnemployed ? "Unemployment" : "Temporary hardship") : "Long-term/permanent — use Flex Mod", eligForbearance),
       node("Property not condemned/abandoned", l.propertyCondition, propertyOK),
       node("No approved liquidation option active", l.fhlmcApprovedLiquidationOption?"Active":"None", noActiveLiquidation),
@@ -2609,6 +2622,7 @@ function evaluateFHLMC(l) {
       node("Prior modifications < 3", priorMods, priorMods < 3),
       node("No failed Flex Mod TPP within 12 months", l.fhlmcFailedFlexTPP12Mo?"Yes":"No", !l.fhlmcFailedFlexTPP12Mo),
       node("No prior Flex Mod re-default within 12mo (not cured)", l.fhlmcPriorFlexMod60DLQ?"Yes":"No", !l.fhlmcPriorFlexMod60DLQ),
+      node("Not modified within preceding 12 months (§9206.5)", l.fhlmcModifiedWithin12Mo?"Modified within 12mo — not eligible":"OK", !l.fhlmcModifiedWithin12Mo),
       node("No approved liquidation option active", l.fhlmcApprovedLiquidationOption?"Active":"None", noActiveLiquidation),
       node("Not under active TPP/forbearance/repayment plan", (l.fhlmcActiveTPP||l.fhlmcActiveForbearance||l.fhlmcActiveRepayPlan)?"Active":"None", noActiveTPP&&noActiveForbearance&&noActiveRepay),
       node("No unexpired offer for another workout option", l.fhlmcUnexpiredOffer?"Yes":"No", noUnexpiredOffer),
@@ -2838,6 +2852,7 @@ function evaluateFNMA(l) {
       node("Prior modifications < 3 (payment deferrals excluded)", priorModCount, eligPriorMods),
       node("No failed Flex Mod TPP within 12 months", l.fnmaFailedTPP12Months?"Yes":"No", eligNoFailedTPP),
       node("No 60-day re-default within 12mo of last Flex Mod", l.fnmaReDefaulted12Months?"Yes":"No", eligNoReDefault),
+      node("Not modified within previous 12 months (D2-3.2-06)", l.fnmaModifiedWithin12Mo?"Modified within 12mo — not eligible":"OK", !l.fnmaModifiedWithin12Mo),
       node("QRPC (Qualified Right Party Contact) achieved (D2-3.2-06)", l.fnmaQRPCAchieved?"Yes":"No", l.fnmaQRPCAchieved),
       ...(l.fnmaHasMI ? [node("MI/PMI insurer approval confirmed (LM.R1074)", l.fnmaMIApprovalConfirmed?"Confirmed":"Not confirmed", l.fnmaMIApprovalConfirmed, "Servicer must obtain prior written approval from MI insurer if insurer lacks FNMA delegated authority")] : []),
       ...commonBlockers,
@@ -4651,6 +4666,8 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                 <Sec title="VA – Forbearance / Repayment">
                   {(()=>{const _today=new Date().toISOString().split("T")[0];const _eff=loan.approvalEffectiveDate||_today;const _ageSrc=loan.noteDate||loan.noteFirstPaymentDate;const _age=_ageSrc?monthsBetween(_ageSrc,_eff):null;return _age!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">≥12 payments since origination (§36.4315(a)(3))</span><span className={`font-semibold ${_age>=12?"text-emerald-600":"text-red-500"}`}>{_age>=12?"✅ Yes":"❌ No"} — auto ({_age} months)</span></div>:<div className="text-xs text-slate-500 py-1">Enter Note Date to auto-compute loan age (12-payment minimum requirement)</div>;})()}
                   <F label="Prior VA Modifications (lifetime count — §36.4315(a)(10) max 3)"><Num value={loan.vaPriorModCount} onChange={v=>set("vaPriorModCount",v)} placeholder="0"/></F>
+                  {(parseInt(loan.vaPriorModCount)||0)>0&&<DateInput label="Date of Last VA Modification (§36.4315(a)(3) — 12-month seasoning required since last mod)" value={loan.vaLastModDate} onChange={v=>set("vaLastModDate",v)}/>}
+                  {(parseInt(loan.vaPriorModCount)||0)>0&&loan.vaLastModDate&&(()=>{const _today=new Date().toISOString().split("T")[0];const _eff=loan.approvalEffectiveDate||_today;const _mo=monthsBetween(loan.vaLastModDate,_eff);return _mo!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Months since last mod (§36.4315(a)(3))</span><span className={`font-semibold ${_mo>=12?"text-emerald-600":"text-red-500"}`}>{_mo>=12?"✅ OK":"❌ Ineligible"} — {_mo} months (need ≥12)</span></div>:null;})()}
                   {(()=>{const _g=n(loan.grossMonthlyIncome),_p=n(loan.currentPITI),_a=n(loan.arrearagesToCapitalize),_e=n(loan.monthlyExpenses),_rm=Math.min(12,Math.max(1,n(loan.repayMonths)||6));const _r=_a>0&&_p>0&&_g>0?(_p+_a/_rm+_e)/_g:null;return _r!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Can afford reinstatement or RPP (41% DTI)</span><span className={`font-semibold ${_r<=0.41?"text-emerald-600":"text-red-500"}`}>{_r<=0.41?"✅ Yes":"❌ No"} — auto ({(_r*100).toFixed(1)}% total DTI)</span></div>:<Tog label="Borrower can afford reinstatement or repayment plan (manual)" value={loan.borrowerCanAffordReinstateOrRepay} onChange={v=>set("borrowerCanAffordReinstateOrRepay",v)}/>;})()}
                   <Tog label="Borrower confirmed cannot afford current payment" value={loan.borrowerConfirmedCannotAffordCurrent} onChange={v=>set("borrowerConfirmedCannotAffordCurrent",v)}/>
                   {(()=>{const _g=n(loan.grossMonthlyIncome),_mp=n(loan.modifiedPI),_esc=n(loan.currentEscrow),_e=n(loan.monthlyExpenses);const _mPITI=_mp>0?_mp+_esc:0;const _d=_mPITI>0&&_g>0&&loan.monthlyExpenses!==""?(_mPITI+_e)/_g:null;return _d!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Can afford modified payment (41% DTI)</span><span className={`font-semibold ${_d<=0.41?"text-emerald-600":"text-red-500"}`}>{_d<=0.41?"✅ Yes":"❌ No"} — auto (mod PITI {fmt$(_mPITI)} + exp {fmt$(_e)}, {(_d*100).toFixed(1)}% DTI)</span></div>:<Tog label="Borrower can afford modified payment (manual)" value={loan.borrowerCanAffordModifiedPayment} onChange={v=>set("borrowerCanAffordModifiedPayment",v)}/>;})()}
@@ -4698,6 +4715,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                   {(()=>{const _cash=n(loan.cashReservesAmount),_piti=n(loan.currentPITI),_gmi=n(loan.grossMonthlyIncome),_fico=n(loan.fnmaFICO);const _hr=_piti>0&&_gmi>0?_piti/_gmi*100:n(loan.fnmaHousingRatio);const _hasInputs=_cash>0&&_piti>0&&_gmi>0&&_fico>0&&loan.fnmaPropertyType!=="";const _cashLt3Mo=_cash>0&&_piti>0?_cash<_piti*3:loan.fnmaCashReservesLt3Mo;const _isPrimary=loan.fnmaPropertyType==="Principal Residence";const _r1=_isPrimary&&loan.fnmaLongTermHardship&&_cashLt3Mo;const _r2=_fico<=620||loan.fnmaPrior30DLQ12Mo||_hr>55;const _autoID=_hasInputs?(_r1&&_r2):null;return _autoID!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Servicer imminent default determination</span><span className={`font-semibold ${_autoID?"text-amber-600":"text-emerald-600"}`}>{_autoID?"⚠️ Yes (auto)":"✅ No (auto)"} — R1:{_r1?"✓":"✗"} R2:{_r2?"✓":"✗"}</span></div>:<Tog label="Servicer imminent default determination (manual — enter cash, PITI, GMI, FICO to auto-compute)" value={loan.fnmaImminentDefault} onChange={v=>set("fnmaImminentDefault",v)}/>;})()}
                   {(()=>{const _today=new Date().toISOString().split("T")[0];const _eff=loan.approvalEffectiveDate||_today;const _origMat=loan.originalMaturityDate||(loan.noteFirstPaymentDate&&loan.noteTerm?calcOriginalMaturity(loan.noteFirstPaymentDate,loan.noteTerm):null);const _mo=_origMat?monthsBetween(_eff,_origMat):null;return _mo!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Within 36 months of maturity</span><span className={`font-semibold ${_mo<=36?"text-red-500":"text-emerald-600"}`}>{_mo<=36?"⚠️ Yes — within 36mo":"✅ No"} — auto ({_mo} mo remaining)</span></div>:<Tog label="Within 36 months of maturity or projected payoff (manual — enter Maturity Date to auto-compute)" value={loan.fnmaWithin36MonthsMaturity} onChange={v=>set("fnmaWithin36MonthsMaturity",v)}/>;})()}
                   <Tog label="QRPC (Qualified Right Party Contact) achieved" value={loan.fnmaQRPCAchieved} onChange={v=>set("fnmaQRPCAchieved",v)}/>
+                  <Tog label="Modified within previous 12 months (D2-3.2-06 — blocks Standard Flex Mod if Yes)" value={loan.fnmaModifiedWithin12Mo} onChange={v=>set("fnmaModifiedWithin12Mo",v)}/>
                   <F label="FNMA Modification Interest Rate (%) — from current FNMA Servicing Guide exhibit"><Num value={loan.fnmaModificationRate} onChange={v=>set("fnmaModificationRate",v)} placeholder="e.g. 6.5 (check FNMA exhibit)"/></F>
                   <F label="Estimated Property Value (for MTMLTV — LL-2024-02)"><Num value={loan.fnmaPropertyValue} onChange={v=>set("fnmaPropertyValue",v)} placeholder="e.g. 300000" prefix="$"/></F>
                   {n(loan.fnmaPropertyValue)>0&&n(loan.upb)>0&&<div className="bg-teal-50 rounded p-2 text-xs text-teal-800 space-y-0.5 mt-1">
@@ -4777,6 +4795,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                   <Tog label="Can resume full contractual monthly payment" value={loan.fhlmcCanResumeFull} onChange={v=>set("fhlmcCanResumeFull",v)}/>
                   {(()=>{const _cash=n(loan.cashReservesAmount),_piti=n(loan.currentPITI),_gmi=n(loan.grossMonthlyIncome),_fico=n(loan.fhlmcFICO);const _hr=_piti>0&&_gmi>0?_piti/_gmi*100:n(loan.fhlmcHousingExpenseRatio);const _hasInputs=_cash>0&&_piti>0&&_gmi>0&&_fico>0&&loan.fhlmcPropertyType!=="";const _cashLt25k=_cash>0?_cash<25000:loan.fhlmcCashReservesLt25k;const _isPrimary=loan.fhlmcPropertyType==="Primary Residence";const _r1=_cashLt25k&&_isPrimary&&loan.fhlmcLongTermHardship;const _r2=_fico<=620||loan.fhlmcPrior30DayDLQ6Mo||_hr>40;const _autoID=_hasInputs?(_r1&&_r2):null;return _autoID!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Servicer imminent default determination</span><span className={`font-semibold ${_autoID?"text-amber-600":"text-emerald-600"}`}>{_autoID?"⚠️ Yes (auto)":"✅ No (auto)"} — R1:{_r1?"✓":"✗"} R2:{_r2?"✓":"✗"}</span></div>:<Tog label="Servicer imminent default determination (manual — enter cash, PITI, GMI, FICO to auto-compute)" value={loan.fhlmcImminentDefault} onChange={v=>set("fhlmcImminentDefault",v)}/>;})()}
                   <Tog label="QRPC (Qualified Right Party Contact) achieved" value={loan.fhlmcQRPCAchieved} onChange={v=>set("fhlmcQRPCAchieved",v)}/>
+                  <Tog label="Modified within preceding 12 months (§9206.5 — blocks Standard Flex Mod if Yes)" value={loan.fhlmcModifiedWithin12Mo} onChange={v=>set("fhlmcModifiedWithin12Mo",v)}/>
                   <Tog label="Long-term/permanent hardship (NOT unemployment)" value={loan.fhlmcLongTermHardship} onChange={v=>set("fhlmcLongTermHardship",v)}/>
                   <Tog label="Unemployed borrower (→ forbearance, not Flex Mod)" value={loan.fhlmcUnemployed} onChange={v=>set("fhlmcUnemployed",v)}/>
                   <Tog label="Verified income" value={loan.fhlmcVerifiedIncome} onChange={v=>set("fhlmcVerifiedIncome",v)}/>
