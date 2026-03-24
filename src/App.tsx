@@ -65,11 +65,7 @@ const OPTION_DOCS: Record<string, {required: string[], conditional: {doc: string
     conditional: [{doc:"BRP (Budget/Financial Statement)", condition:"Required if arrears > 6 months"}],
     timeline: "45 days from approval"
   },
-  "FHA Payment Deferral": {
-    required: ["Hardship affidavit","COVID/hardship resolution documentation"],
-    conditional: [],
-    timeline: "45 days from approval"
-  },
+
   "FHA OWL Modification": {
     required: ["Servicer contact attempt documentation (showing borrower unresponsive after all required outreach attempts)","Signed Loan Modification Agreement (servicer executes on behalf of unresponsive borrower per ML 2025-14)"],
     conditional: [],
@@ -306,7 +302,7 @@ const OPTION_CITATIONS: Record<string, string> = {
   // FHA
   "FHA Reinstatement": "ML 2025-06 §IV.A; 24 C.F.R. §203.605",
   "FHA Standalone Partial Claim": "ML 2025-06 §IV.D; 24 C.F.R. §203.414",
-  "FHA Payment Deferral": "ML 2025-06 §IV.C; ML 2025-12",
+
   "FHA OWL Modification": "ML 2024-24; ML 2025-14 (supersedes ML 2024-24); HUD Handbook 4000.1 (Update 17); eff. Oct 1, 2025",
   "FHA 30-Year Standalone Modification": "ML 2025-06 §IV.E; 24 C.F.R. §203.616",
   "FHA 40-Year Combination Modification + Partial Claim": "ML 2025-06 §IV.F; ML 2025-12",
@@ -400,8 +396,7 @@ const initLoan = {
   canAchieveTargetBy480Reamort:false,
   requestedForbearance:false, verifiedUnemployment:false,
   ineligibleAllRetention:false, propertyListedForSale:false, assumptionInProcess:false,
-  fhaBorrowerCanResumePreHardship:false, fhaHardshipResolved:false,
-  fhaCumulativeDeferredMonths:"0", fhaPriorDeferralMonths:"0",
+  fhaBorrowerCanResumePreHardship:false,
   fhaOwlBorrowerUnresponsive:false,
   // USDA
   usdaUpbGe5000:true, usdaPaymentsMade12:true, usdaBankruptcyNotActive:true,
@@ -751,31 +746,6 @@ function calcApprovalTerms(optionName, l) {
     };
   }
 
-  // ── FHA Payment Deferral (ML 2025-06, step 4) ──
-  if (opt === "FHA Payment Deferral") {
-    const currentPITI_calc = n(l.currentPITI);
-    const deferMonths = Math.min(Math.max(2, n(l.delinquencyMonths)), 6);
-    const cumUsed = n(l.fhaCumulativeDeferredMonths);
-    const cumRemaining = Math.max(0, 12 - cumUsed);
-    const effectiveDefer = Math.min(deferMonths, cumRemaining);
-    const estPIDeferred = n(l.currentPI) > 0 ? effectiveDefer * n(l.currentPI) : null;
-    const cumulativeAfter = cumUsed + effectiveDefer;
-    return {
-      "Deferred Amount (Est.)": estPIDeferred != null ? fmt$(estPIDeferred) : "Enter current P&I",
-      "  → Months Deferred": `${effectiveDefer} months (DLQ: ${n(l.delinquencyMonths)}mo; cap remaining: ${cumRemaining}mo)`,
-      "  → Escrow Shortage": n(l.escrowShortage) > 0 ? `${fmt$(n(l.escrowShortage))} — NOT deferred; resolved separately` : "None",
-      "Cumulative FHA Deferral Cap": `${cumUsed}mo used → ${cumulativeAfter}mo after this deferral / 12-month lifetime cap`,
-      "Deferral Per Event": "2–6 months",
-      "Spacing Requirement": "≥12 months between FHA deferral events",
-      "First Mortgage Rate": "UNCHANGED — "+fmtPct(currentRate || null),
-      "First Mortgage Term": "UNCHANGED",
-      "Payment After Deferral": currentPITI_calc > 0 ? fmt$(currentPITI_calc)+" — full contractual payment resumes" : "Full contractual payment — no change",
-      "Interest on Deferred Balance": "None — non-interest-bearing",
-      "Deferred Balance Due": "At maturity, sale, refinance, or payoff",
-      "No Financial Documentation Required": "ML 2025-06 — streamlined review",
-      "Authority": "HUD ML 2025-06 / ML 2025-12 — effective October 1, 2025",
-    };
-  }
 
   // ── FHA 40-Year Combination Modification + Partial Claim (ML 2025-06, step 6) ──
   if (opt === "FHA 40-Year Combination Modification + Partial Claim") {
@@ -2154,13 +2124,6 @@ function evaluateFHA(l) {
   // FHA Standalone Partial Claim (step 3: borrower resumes pre-hardship payment; PC covers arrears)
   results.push({option:"FHA Standalone Partial Claim",eligible:hb&&l.fhaBorrowerCanResumePreHardship&&comboCapPass,nodes:[...hn,node("Borrower can resume pre-hardship payment without modification",l.fhaBorrowerCanResumePreHardship?"Yes":"No",l.fhaBorrowerCanResumePreHardship),node("PC within 30% cap",comboCapLabel,comboCapPass)],note:"PC covers arrears only; no modification to rate, term, or payment — ML 2025-06"});
 
-  // FHA Payment Deferral (step 4: 3–12 months DLQ, hardship resolved, 12-month lifetime cap)
-  const fhaDeferCumUsed = n(l.fhaCumulativeDeferredMonths);
-  const fhaDeferPrior = n(l.fhaPriorDeferralMonths);
-  const fhaDeferDlqOK = dlq >= 3 && dlq <= 12;
-  const fhaDeferCumOK = fhaDeferCumUsed < 12;
-  const fhaDeferSpacingOK = fhaDeferPrior === 0 || fhaDeferPrior >= 12;
-  results.push({option:"FHA Payment Deferral",eligible:!isDisaster&&baseEligible&&fhaDeferDlqOK&&l.fhaHardshipResolved&&fhaDeferCumOK&&fhaDeferSpacingOK,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),...baseNodes,node("DLQ 3–12 months",dlq+"mo",fhaDeferDlqOK),node("Hardship resolved",l.fhaHardshipResolved?"Yes":"No",l.fhaHardshipResolved),node("Cumulative FHA deferrals < 12 months",fhaDeferCumUsed+"mo",fhaDeferCumOK),node("Prior FHA deferral ≥12 months ago (or never)",fhaDeferPrior===0?"None":fhaDeferPrior+"mo ago",fhaDeferSpacingOK)],note:"2–6 months per event; ≥12 months between events; 12-month lifetime cap — ML 2025-06"});
 
   // FHA 30-Year Standalone Modification (step 5: 25% P&I reduction, PMMS+25bps, 360 months)
   results.push({option:"FHA 30-Year Standalone Modification",eligible:hb&&canAchieve360,nodes:[...hn,node("25% P&I reduction achievable by 360mo re-amortization",achieve360Label,canAchieve360)],note:fhaPmms>0?`Rate: PMMS ${fhaPmms.toFixed(3)}% + 25bps = ${fhaModRate.toFixed(3)}% — ML 2025-06`:null});
@@ -2824,7 +2787,6 @@ const WATERFALL_ORDER = {
   FHA: [
     "FHA Reinstatement",
     "FHA Standalone Partial Claim",
-    "FHA Payment Deferral",
     "FHA 30-Year Standalone Modification",
     "FHA 40-Year Combination Modification + Partial Claim",
     "Payment Supplement",
@@ -4458,9 +4420,6 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                     : <Tog label="Can achieve 25% P&I reduction via 480-month re-amortization (40-Year Combo) (manual — enter PMMS & current P&I to auto-compute)" value={loan.canAchieveTargetBy480Reamort} onChange={v=>set("canAchieveTargetBy480Reamort",v)}/>}
                   <Tog label="Borrower unresponsive after all required contact attempts (OWL Modification — ML 2025-14)" value={loan.fhaOwlBorrowerUnresponsive} onChange={v=>set("fhaOwlBorrowerUnresponsive",v)}/>
                   <Tog label="Borrower can resume pre-hardship payment without modification (Standalone PC)" value={loan.fhaBorrowerCanResumePreHardship} onChange={v=>set("fhaBorrowerCanResumePreHardship",v)}/>
-                  <Tog label="Hardship resolved (FHA Payment Deferral)" value={loan.fhaHardshipResolved} onChange={v=>set("fhaHardshipResolved",v)}/>
-                  <F label="Cumulative FHA Deferred Months (lifetime cap: 12)"><Num value={loan.fhaCumulativeDeferredMonths} onChange={v=>set("fhaCumulativeDeferredMonths",v)} placeholder="0"/></F>
-                  <F label="Months since prior FHA deferral (0 = never)"><Num value={loan.fhaPriorDeferralMonths} onChange={v=>set("fhaPriorDeferralMonths",v)} placeholder="0 = never"/></F>
                   {(()=>{const _origUpb=n(loan.originalUpb),_arr=n(loan.arrearagesToCapitalize);const _auto=_origUpb>0&&_arr>0?(_arr/_origUpb)>0.30:null;return _auto!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Arrears exceed 30% statutory limit</span><span className={`font-semibold ${_auto?"text-red-500":"text-emerald-600"}`}>{_auto?"⚠️ Yes":"✅ No"} — auto ({((_arr/_origUpb)*100).toFixed(1)}% of orig UPB)</span></div>:<Tog label="Arrears exceed 30% statutory limit (manual — enter Original UPB & Arrears to auto-compute)" value={loan.arrearsExceed30PctLimit} onChange={v=>set("arrearsExceed30PctLimit",v)}/>;})()}
                   {(()=>{const _origUpb=n(loan.originalUpb),_arr=n(loan.arrearagesToCapitalize),_gmi=n(loan.grossMonthlyIncome);const _arrearsAuto=_origUpb>0&&_arr>0?(_arr/_origUpb)>0.30:loan.arrearsExceed30PctLimit;if(!_arrearsAuto)return null;const _pmms=n(loan.pmmsRate),_esc=n(loan.currentEscrow),_pi=n(loan.currentPI);const _modRate=_pmms>0?Math.round((_pmms+0.25)/0.125)*0.125:0;const _tgtPITI=_pi>0?(_pi*0.75)+_esc:0;const _tgt=n(loan.targetPayment)||_tgtPITI;const _auto=_gmi>0&&_tgt>0?_tgt/_gmi<=0.40:null;return _auto!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Modified payment ≤ 40% GMI (arrears exceed 30% override)</span><span className={`font-semibold ${_auto?"text-emerald-600":"text-red-500"}`}>{_auto?"✅ Yes":"❌ No"} — auto (target {fmt$(_tgt)}, {(_tgt/_gmi*100).toFixed(1)}% GMI)</span></div>:<Tog label="Modified payment ≤ 40% GMI (manual)" value={loan.modPaymentLe40PctGMI} onChange={v=>set("modPaymentLe40PctGMI",v)}/>;})()}
                   <div className="border border-slate-200 rounded-lg overflow-hidden mt-1">
