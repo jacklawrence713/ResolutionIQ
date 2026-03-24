@@ -61,9 +61,9 @@ const OPTION_DOCS: Record<string, {required: string[], conditional: {doc: string
     timeline: "Prior to foreclosure sale date"
   },
   "FHA Standalone Partial Claim": {
-    required: ["Hardship affidavit","Verification of income (paystubs, tax returns, or SSA letter)","Executed Partial Claim Note and Subordinate Mortgage"],
-    conditional: [{doc:"BRP (Budget/Financial Statement)", condition:"Required if arrears > 6 months"}],
-    timeline: "45 days from approval"
+    required: ["Hardship affidavit","Executed Partial Claim Note and Subordinate Mortgage"],
+    conditional: [],
+    timeline: "45 days from approval — no income or financial documentation required (ML 2025-06 streamlined review)"
   },
 
   "FHA OWL Modification": {
@@ -72,19 +72,19 @@ const OPTION_DOCS: Record<string, {required: string[], conditional: {doc: string
     timeline: "45 days from approval (no TPP required — borrower unresponsive)"
   },
   "FHA 30-Year Standalone Modification": {
-    required: ["Hardship affidavit","Verification of income (most recent 30-day paystubs + 2yr W-2s or tax returns)","Bank statements (2 most recent months)","Signed Loan Modification Agreement"],
-    conditional: [{doc:"Trial Payment Plan completion", condition:"Required if income docs not provided upfront"}],
-    timeline: "Trial: 3 months; Permanent mod: 45 days after TPP"
+    required: ["Hardship affidavit","Signed Loan Modification Agreement"],
+    conditional: [{doc:"Trial Payment Plan (3 months at new PITI)", condition:"Always required prior to permanent modification (4 months if imminent default; 6 months if successor-in-interest)"}],
+    timeline: "TPP: 3 months; Permanent mod: 45 days after TPP — no income or financial documentation required (ML 2025-06 streamlined review)"
   },
   "FHA 40-Year Combination Modification + Partial Claim": {
-    required: ["Hardship affidavit","Verification of income","Bank statements (2 months)","Signed Loan Modification Agreement","Executed Partial Claim Note and Subordinate Mortgage"],
-    conditional: [],
-    timeline: "Trial: 3 months; Permanent mod: 45 days after TPP"
+    required: ["Hardship affidavit","Signed Loan Modification Agreement","Executed Partial Claim Note and Subordinate Mortgage"],
+    conditional: [{doc:"Trial Payment Plan (3 months at new PITI)", condition:"Always required prior to permanent modification"}],
+    timeline: "TPP: 3 months; Permanent mod: 45 days after TPP — no income or financial documentation required (ML 2025-06 streamlined review)"
   },
   "Payment Supplement": {
-    required: ["Hardship affidavit","Verification of income","Bank statements (2 months)"],
+    required: ["Hardship affidavit","Verification of income (paystubs or equivalent)"],
     conditional: [],
-    timeline: "45 days from approval; supplement paid monthly for up to 36 months"
+    timeline: "45 days from approval; supplement paid monthly for up to 36 months; permanent loss mitigation required before supplement expires"
   },
   "Repayment Plan": {
     required: ["Signed Repayment Plan Agreement"],
@@ -110,6 +110,16 @@ const OPTION_DOCS: Record<string, {required: string[], conditional: {doc: string
     required: ["FEMA disaster declaration reference","Hardship affidavit","Executed Partial Claim Note and Subordinate Mortgage"],
     conditional: [],
     timeline: "45 days from approval"
+  },
+  "Pre-Foreclosure Sale (PFS)": {
+    required: ["Hardship affidavit","Borrower Response Package (BRP)","FHA appraisal (to establish Net Value)","Listing agreement with licensed real estate agent","Purchase contract (when received)"],
+    conditional: [{doc:"Verification of income", condition:"Required as part of BRP package"},{doc:"HUD-approved housing counseling certificate", condition:"Recommended prior to PFS execution"}],
+    timeline: "120-day initial listing period (may extend to 12 months total); net proceeds ≥ 88% of appraised value (FHA Net Value)"
+  },
+  "Deed-in-Lieu (DIL)": {
+    required: ["Hardship affidavit","Borrower Response Package (BRP)","Title report (clear title required)","Property condition inspection","Signed Deed-in-Lieu Agreement"],
+    conditional: [{doc:"PFS documentation", condition:"Required — DIL only available after PFS has been attempted and failed (or borrower is ineligible for PFS)"}],
+    timeline: "45–90 days; borrower must vacate prior to deed conveyance; property must be unencumbered"
   },
   // USDA
   "USDA Reinstatement": {
@@ -312,11 +322,13 @@ const OPTION_CITATIONS: Record<string, string> = {
   "FHA 30-Year Standalone Modification": "ML 2025-06 §IV.E; 24 C.F.R. §203.616",
   "FHA 40-Year Combination Modification + Partial Claim": "ML 2025-06 §IV.F; ML 2025-12",
   "Payment Supplement": "ML 2025-06 §IV.G; ML 2025-12",
-  "Repayment Plan": "ML 2025-06 §IV.A; HUD Handbook 4000.1 §III.A.2.m",
-  "Formal Forbearance": "ML 2025-06 §IV.A; HUD Handbook 4000.1 §III.A.2.l",
-  "Special Forbearance – Unemployment": "ML 2025-06 §IV.A; HUD Handbook 4000.1 §III.A.2.n",
+  "Repayment Plan": "ML 2025-06 §IV.B; HUD Handbook 4000.1 §III.A.2.j",
+  "Formal Forbearance": "ML 2025-06 §IV.B; HUD Handbook 4000.1 §III.A.2.k",
+  "Special Forbearance – Unemployment": "ML 2025-06 §IV.C; HUD Handbook 4000.1 §III.A.2.l",
   "FHA Disaster Loan Modification": "ML 2025-06 §V; 24 C.F.R. §203.616",
   "FHA Disaster Standalone Partial Claim": "ML 2025-06 §V; 24 C.F.R. §203.414",
+  "Pre-Foreclosure Sale (PFS)": "ML 2025-06 §IV.H; HUD Handbook 4000.1 §III.A.2.m; 24 C.F.R. §203.675",
+  "Deed-in-Lieu (DIL)": "ML 2025-06 §IV.I; HUD Handbook 4000.1 §III.A.2.n; 24 C.F.R. §203.677",
   // USDA
   "USDA Informal Forbearance": "RD Instruction 3555-C §3555.303(b)(1); HB-1-3555 Ch. 18; PN 637 (Apr 14, 2025)",
   "USDA Informal Repayment Plan": "RD Instruction 3555-C §3555.303(b)(2); HB-1-3555 Ch. 18",
@@ -2812,6 +2824,8 @@ const WATERFALL_ORDER = {
     "Formal Forbearance",
     "Special Forbearance – Unemployment",
     "FHA OWL Modification",
+    "Pre-Foreclosure Sale (PFS)",
+    "Deed-in-Lieu (DIL)",
   ],
   USDA: [
     "USDA Reinstatement",
