@@ -395,9 +395,9 @@ const OPTION_CITATIONS: Record<string, string> = {
   "FNMA Payment Deferral": "Fannie Mae Servicing Guide D2-3.2-04; LL 2021-07",
   "FNMA Disaster Payment Deferral": "Fannie Mae Servicing Guide D2-3.2-05",
   "FNMA Streamlined Payment Deferral": "Fannie Mae Servicing Guide D2-3.2-04; Campaign MODNRC20200001 (Solicitation — No Borrower Response Required)",
-  "Fannie Mae Flex Modification": "Fannie Mae Servicing Guide D2-3.2-06",
-  "Fannie Mae Flex Modification (Disaster)": "Fannie Mae Servicing Guide D2-3.2-06 (Disaster — Reduced Eligibility Criteria)",
-  "Fannie Mae Flex Modification (Streamlined)": "Fannie Mae Servicing Guide D2-3.2-06 (Streamlined — 90+ DLQ, No BRP)",
+  "Fannie Mae Flex Modification": "Fannie Mae Servicing Guide D2-3.2-06; LL-2024-02 (Flex Mod term waterfall update, mandatory Dec 1, 2024)",
+  "Fannie Mae Flex Modification (Disaster)": "Fannie Mae Servicing Guide D2-3.2-06 (Disaster — Reduced Eligibility Criteria); LL-2024-02",
+  "Fannie Mae Flex Modification (Streamlined)": "Fannie Mae Servicing Guide D2-3.2-06 (Streamlined — 90+ DLQ, No BRP); LL-2024-02",
   "FNMA Short Sale / Mortgage Release": "Fannie Mae Servicing Guide D2-3.3-01",
   "FNMA Deed-in-Lieu": "Fannie Mae Servicing Guide D2-3.3-02",
   "FNMA Forbearance Plan": "Fannie Mae Servicing Guide D2-3.2-01",
@@ -498,6 +498,8 @@ const initLoan = {
   fnmaCurrentIndex:"",             // current index rate % (ARM only, e.g. SOFR)
   fnmaMargin:"",                   // margin % (ARM only)
   fnmaQRPCAchieved:false,          // Qualified Right Party Contact achieved
+  fnmaPropertyValue:"",            // estimated property value for MTMLTV calculation
+  fnmaModificationRate:"",         // FNMA published Modification Interest Rate (check Servicing Guide exhibit)
   fnmaFICO:"",                     // FICO score for imminent default Rule 2
   fnmaHousingRatio:"",             // pre-mod housing expense / GMI % for ID Rule 2
   fnmaCashReservesLt3Mo:false,     // cash reserves < 3 months PITIA (ID Rule 1)
@@ -1952,11 +1954,19 @@ function calcApprovalTerms(optionName, l) {
     const preliminaryRate = isARM && fullyIndexedRate != null ? Math.min(currentRate, fullyIndexedRate) : currentRate;
     // Escrow shortage 60-month spread (per D2-3.2-06: spread over escrow analysis, not capitalized)
     const escShortageMonthlySpread = escShortage > 0 ? escShortage / 60 : 0;
-    // FNMA modification rate = PMMS rounded to nearest 0.125% (min 4.625%) — published weekly by FNMA
-    const fnmaModRate = pmms > 0 ? Math.max(Math.round(pmms / 0.125) * 0.125, 4.625) : 4.625;
+    // FNMA Modification Interest Rate: use servicer-entered published rate if available; else PMMS proxy
+    // NOTE: The actual rate is published by FNMA in the Servicing Guide exhibit — NOT a simple PMMS formula
+    const postedModRate_fnma = n(l.fnmaModificationRate);
+    const fnmaModRate = postedModRate_fnma > 0 ? postedModRate_fnma : (pmms > 0 ? Math.max(Math.round(pmms / 0.125) * 0.125, 4.625) : 4.625);
+    const fnmaModRateSource = postedModRate_fnma > 0 ? "Published FNMA exhibit" : "PMMS proxy — enter FNMA Modification Rate for exact calculation";
+    // MTMLTV: per LL-2024-02 — rate reduction (Step 3) requires MTMLTV ≥ 50%; forbearance (Step 5) requires MTMLTV > 50%
+    const propValueFNMA = n(l.fnmaPropertyValue);
+    const mtmltvFNMA = propValueFNMA > 0 ? (flexNewUPB / propValueFNMA * 100) : null;
+    const canReduceRateFNMA = mtmltvFNMA !== null ? mtmltvFNMA >= 50 : true;  // default permissive when unknown
+    const canForbearFNMA = mtmltvFNMA !== null ? mtmltvFNMA > 50 : true;
     // For ARMs: mandatory product conversion to FRM at FNMA mod rate (LM.R1108; can exceed current ARM rate)
-    // For FRMs: rate can only be REDUCED — cap at current rate
-    const effectiveRate = isARM ? fnmaModRate : (currentRate > 0 ? Math.min(fnmaModRate, currentRate) : fnmaModRate);
+    // For FRMs: rate can only be REDUCED (Step 3 skipped if MTMLTV < 50%)
+    const effectiveRate = isARM ? fnmaModRate : (currentRate > 0 ? (canReduceRateFNMA ? Math.min(fnmaModRate, currentRate) : currentRate) : fnmaModRate);
     const rateAtFloor = !isARM && currentRate > 0 && currentRate <= fnmaModRate;
     // Step 1: Re-amortize at preliminary rate for remaining term (for ARMs: lower of note rate / fully-indexed rate)
     const step1PI = remainingTerm && preliminaryRate > 0 && flexNewUPB > 0 ? calcMonthlyPI(flexNewUPB, preliminaryRate, remainingTerm) : null;
@@ -1975,11 +1985,11 @@ function calcApprovalTerms(optionName, l) {
     const step3PI = effectiveRate > 0 && flexNewUPB > 0 ? calcMonthlyPI(flexNewUPB, effectiveRate, step3Term) : null;
     // Target: 20% reduction from pre-mod P&I
     const targetPI20 = currentPI_val > 0 ? currentPI_val * 0.80 : null;
-    // Step 4: Principal Forbearance — applied when steps 1–3 fail to achieve 20% reduction
-    // Forbearance = UPB needed to reach target at step3 terms; capped at 30% of post-cap UPB
+    // Step 5 (guide): Principal Forbearance — only if MTMLTV > 50% (LL-2024-02); applied when steps 1–4 fail to achieve 20% reduction
+    // Forbearance = UPB needed to reach target at 480mo terms; capped at 30% of post-cap UPB
     const r480 = effectiveRate / 100 / 12;
     const factor480 = r480 > 0 ? (r480 * Math.pow(1+r480, 480)) / (Math.pow(1+r480, 480) - 1) : (1/480);
-    const targetUPBForPF = targetPI20 != null && factor480 > 0 ? targetPI20 / factor480 : null;
+    const targetUPBForPF = canForbearFNMA && targetPI20 != null && factor480 > 0 ? targetPI20 / factor480 : null;
     const rawForbearance = targetUPBForPF != null ? Math.max(0, flexNewUPB - targetUPBForPF) : null;
     const maxForbearance = flexNewUPB * 0.30;
     const principalForbearance = rawForbearance != null ? Math.min(rawForbearance, maxForbearance) : null;
@@ -2034,8 +2044,12 @@ function calcApprovalTerms(optionName, l) {
         "ARM Fully-Indexed Rate (nearest 0.125%)": fullyIndexedRate != null ? fmtPct(fullyIndexedRate) : "Enter index and margin",
         "Step 1 Preliminary Rate": fmtPct(preliminaryRate) + (isARM && fullyIndexedRate != null && fullyIndexedRate < currentRate ? " (fully-indexed rate — lower than note rate)" : " (current note rate — lower than fully-indexed)"),
       } : { "Loan Type": "Fixed Rate Mortgage" }),
-      "FNMA Modification Rate (PMMS, nearest 0.125%)": pmms > 0 ? fmtPct(fnmaModRate) : "Enter PMMS rate",
-      "Rate Note": isARM ? `ARM converts to FRM at FNMA mod rate ${fmtPct(fnmaModRate)} (LM.R1108 — mandatory product conversion)` : (rateAtFloor && currentRate > 0 ? `Current rate ${fmtPct(currentRate)} is at or below floor — rate stays unchanged` : `Current rate ${currentRate > 0 ? fmtPct(currentRate) : "N/A"} → reduced to FNMA mod rate if above floor`),
+      "FNMA Modification Interest Rate": fnmaModRate > 0 ? `${fmtPct(fnmaModRate)} — ${fnmaModRateSource}` : "Enter FNMA Modification Rate or PMMS",
+      "  → Source": fnmaModRateSource,
+      "Rate Note": isARM ? `ARM converts to FRM at FNMA mod rate ${fmtPct(fnmaModRate)} (LM.R1108 — mandatory product conversion)` : (canReduceRateFNMA ? (rateAtFloor && currentRate > 0 ? `Current rate ${fmtPct(currentRate)} is at or below floor — rate stays unchanged` : `Current rate ${currentRate > 0 ? fmtPct(currentRate) : "N/A"} → reduced to FNMA mod rate if above floor`) : `MTMLTV < 50% — rate reduction step skipped (LL-2024-02); rate stays at ${fmtPct(currentRate)}`),
+      "MTMLTV (Post-Cap)": mtmltvFNMA != null ? `${mtmltvFNMA.toFixed(1)}% (${fmt$(flexNewUPB)} ÷ ${fmt$(propValueFNMA)})` : "Enter property value for MTMLTV (affects rate reduction and forbearance steps)",
+      "  → Rate Reduction Step (≥50% MTMLTV)": mtmltvFNMA != null ? (canReduceRateFNMA ? "✅ Available" : "❌ Not available — MTMLTV < 50%; term extension only") : "⚠️ Enter property value",
+      "  → Forbearance Step (>50% MTMLTV)": mtmltvFNMA != null ? (canForbearFNMA ? "✅ Available" : "❌ Not available — MTMLTV ≤ 50%; mod granted even if <20% target") : "⚠️ Enter property value",
       "New Interest Rate": achievedRate > 0 ? fmtPct(achievedRate) : "N/A",
       "New Term": achievedTerm ? `${achievedTerm} months (${(achievedTerm/12).toFixed(1)} years)` : "N/A",
       "Principal Forbearance (Step 4)": appliedForbearance > 0 ? `${fmt$(appliedForbearance)} — non-interest-bearing; due at payoff/sale/maturity/refinance` : "Not required (target met in Steps 1–3)",
@@ -2049,6 +2063,7 @@ function calcApprovalTerms(optionName, l) {
       "New Monthly PITI": fmt$(achievedPITI),
       "P&I Reduction": piReductionPct != null ? `${piReductionPct.toFixed(1)}% (${fmt$(currentPI_val)} → ${fmt$(achievedPI)})` : "Enter current P&I",
       "P&I Reduction ≥ 20%?": piReductionPct != null ? (piReductionPct >= 20 ? `✅ Yes — ${piReductionPct.toFixed(1)}%` : `❌ No — ${piReductionPct.toFixed(1)}%`) : "Enter current P&I",
+      "Post-Mod Housing Expense Ratio (HTI)": gmi > 0 && achievedPITI != null ? `${(achievedPITI / gmi * 100).toFixed(1)}% (${fmt$(achievedPITI)} ÷ ${fmt$(gmi)})${dlqMonths < 3 ? " — target ≤40% for <90 DLQ (BRP required path, D2-3.2-06)" : ""}` : "Enter GMI for HTI",
       "New Maturity Date": fmtDate(newMaturity),
       "  → Maturity Basis": `${achievedTerm} months from modified first payment date (D2-3.2-06)${achievedTerm < 480 ? " — minimum term needed; full 480-month extension not required" : ""}`,
       "New First Payment Date": fmtDate(newFirstPmt),
@@ -2739,6 +2754,7 @@ function evaluateFNMA(l) {
       node("Prior non-disaster deferral ≥ 12 months ago (or never)", priorDeferralMonths===0?"None":priorDeferralMonths+"mo ago", eligPriorDeferral),
       node("Not within 36 months of maturity", fnmaWithin36Mo?"Within 36mo":"OK", eligNotNearMaturity),
       node("No failed Flex Mod TPP within 12 months", l.fnmaFailedTPP12Months?"Yes":"No", eligNoFailedTPP),
+      node("QRPC (Qualified Right Party Contact) achieved (D2-3.2-01)", l.fnmaQRPCAchieved?"Yes":"No", l.fnmaQRPCAchieved),
       ...commonBlockers,
     ];
     results.push({ option:"FNMA Payment Deferral", eligible:nodes.every(nd=>nd.pass), nodes });
@@ -2809,6 +2825,7 @@ function evaluateFNMA(l) {
       node("Prior modifications < 3 (payment deferrals excluded)", priorModCount, eligPriorMods),
       node("No failed Flex Mod TPP within 12 months", l.fnmaFailedTPP12Months?"Yes":"No", eligNoFailedTPP),
       node("No 60-day re-default within 12mo of last Flex Mod", l.fnmaReDefaulted12Months?"Yes":"No", eligNoReDefault),
+      node("QRPC (Qualified Right Party Contact) achieved (D2-3.2-06)", l.fnmaQRPCAchieved?"Yes":"No", l.fnmaQRPCAchieved),
       ...(l.fnmaHasMI ? [node("MI/PMI insurer approval confirmed (LM.R1074)", l.fnmaMIApprovalConfirmed?"Confirmed":"Not confirmed", l.fnmaMIApprovalConfirmed, "Servicer must obtain prior written approval from MI insurer if insurer lacks FNMA delegated authority")] : []),
       ...commonBlockers,
     ];
@@ -4667,6 +4684,13 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                   {(()=>{const _cash=n(loan.cashReservesAmount),_piti=n(loan.currentPITI),_gmi=n(loan.grossMonthlyIncome),_fico=n(loan.fnmaFICO);const _hr=_piti>0&&_gmi>0?_piti/_gmi*100:n(loan.fnmaHousingRatio);const _hasInputs=_cash>0&&_piti>0&&_gmi>0&&_fico>0&&loan.fnmaPropertyType!=="";const _cashLt3Mo=_cash>0&&_piti>0?_cash<_piti*3:loan.fnmaCashReservesLt3Mo;const _isPrimary=loan.fnmaPropertyType==="Principal Residence";const _r1=_isPrimary&&loan.fnmaLongTermHardship&&_cashLt3Mo;const _r2=_fico<=620||loan.fnmaPrior30DLQ12Mo||_hr>55;const _autoID=_hasInputs?(_r1&&_r2):null;return _autoID!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Servicer imminent default determination</span><span className={`font-semibold ${_autoID?"text-amber-600":"text-emerald-600"}`}>{_autoID?"⚠️ Yes (auto)":"✅ No (auto)"} — R1:{_r1?"✓":"✗"} R2:{_r2?"✓":"✗"}</span></div>:<Tog label="Servicer imminent default determination (manual — enter cash, PITI, GMI, FICO to auto-compute)" value={loan.fnmaImminentDefault} onChange={v=>set("fnmaImminentDefault",v)}/>;})()}
                   {(()=>{const _today=new Date().toISOString().split("T")[0];const _eff=loan.approvalEffectiveDate||_today;const _origMat=loan.originalMaturityDate||(loan.noteFirstPaymentDate&&loan.noteTerm?calcOriginalMaturity(loan.noteFirstPaymentDate,loan.noteTerm):null);const _mo=_origMat?monthsBetween(_eff,_origMat):null;return _mo!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Within 36 months of maturity</span><span className={`font-semibold ${_mo<=36?"text-red-500":"text-emerald-600"}`}>{_mo<=36?"⚠️ Yes — within 36mo":"✅ No"} — auto ({_mo} mo remaining)</span></div>:<Tog label="Within 36 months of maturity or projected payoff (manual — enter Maturity Date to auto-compute)" value={loan.fnmaWithin36MonthsMaturity} onChange={v=>set("fnmaWithin36MonthsMaturity",v)}/>;})()}
                   <Tog label="QRPC (Qualified Right Party Contact) achieved" value={loan.fnmaQRPCAchieved} onChange={v=>set("fnmaQRPCAchieved",v)}/>
+                  <F label="FNMA Modification Interest Rate (%) — from current FNMA Servicing Guide exhibit"><Num value={loan.fnmaModificationRate} onChange={v=>set("fnmaModificationRate",v)} placeholder="e.g. 6.5 (check FNMA exhibit)"/></F>
+                  <F label="Estimated Property Value (for MTMLTV — LL-2024-02)"><Num value={loan.fnmaPropertyValue} onChange={v=>set("fnmaPropertyValue",v)} placeholder="e.g. 300000" prefix="$"/></F>
+                  {n(loan.fnmaPropertyValue)>0&&n(loan.upb)>0&&<div className="bg-teal-50 rounded p-2 text-xs text-teal-800 space-y-0.5 mt-1">
+                    <div>Current MTMLTV: <strong>{(n(loan.upb)/n(loan.fnmaPropertyValue)*100).toFixed(1)}%</strong></div>
+                    <div>Post-Cap MTMLTV (est.): <strong>{((n(loan.upb)+n(loan.arrearagesToCapitalize)+n(loan.legalFees))/n(loan.fnmaPropertyValue)*100).toFixed(1)}%</strong></div>
+                    <div className="text-slate-500">≥50% → rate reduction eligible (LL-2024-02); &gt;50% → principal forbearance eligible</div>
+                  </div>}
                 </Sec>
                 {loan.fnmaImminentDefault && (
                   <Sec title="FNMA – Imminent Default Business Rules">
