@@ -1523,7 +1523,8 @@ function calcApprovalTerms(optionName, l) {
     const incentiveNote = dlqMonths >= 2 ? "Servicer eligible for $500 incentive (≥60 DLQ at plan entry)" : "Servicer incentive requires ≥60 DLQ at plan entry";
     return {
       "Plan Type": "Freddie Mac Repayment Plan — Reinstatement via Installments",
-      "Installment Cap": monthlyContractual > 0 ? `Reasonable installment; borrower must demonstrate ability to pay (150% guideline per Freddie Mac)` : "Enter current P&I and escrow",
+      "Maximum Duration": "12 months (§9203.2 — Freddie Mac RPP may not exceed 12 months)",
+      "Installment Cap": monthlyContractual > 0 ? `Total monthly payment (PITI + catch-up) must be reasonable; 150% of contractual PITI guideline` : "Enter current P&I and escrow",
       "Combined P&I + Escrow (Contractual)": fmt$(monthlyContractual),
       "Borrower Eligibility": "Temporary hardship now resolved; borrower can resume full payment + catch-up",
       "Late Charges": "May be included in repayment plan; must be waived upon completion",
@@ -2187,6 +2188,12 @@ function evaluateFHA(l) {
   const canRepayWithin24 = _rpp24Pct !== null ? _rpp24Pct <= 0.40 : l.canRepayWithin24Months;
   const _rpp6Pct = fhaArrears > 0 && fhaCurrentPITI > 0 && gmi > 0 ? (fhaCurrentPITI + fhaArrears/6) / gmi : null;
   const canRepayWithin6 = _rpp6Pct !== null ? _rpp6Pct <= 0.40 : l.canRepayWithin6Months;
+  // HUD 4000.1 §III.A.2.f: RPP total payment (PITI + catch-up) must not exceed 150% of current PITI
+  const _rpp150check = fhaArrears > 0 && fhaCurrentPITI > 0 ? (fhaCurrentPITI + fhaArrears/24) <= fhaCurrentPITI * 1.5 : null;
+  const rppWithin150Pct = _rpp150check !== null ? _rpp150check : true;
+  const rpp150Label = _rpp150check !== null
+    ? `${fmt$(fhaCurrentPITI + fhaArrears/24)} ${_rpp150check?"≤":">"} 150% cap ${fmt$(fhaCurrentPITI * 1.5)}`
+    : "Enter PITI and arrears to auto-compute";
   const _comboPct = fhaCurrentPITI > 0 && gmi > 0 ? fhaCurrentPITI / gmi : null;
   const comboPayLe40 = _comboPct !== null ? _comboPct <= 0.40 : l.comboPaymentLe40PctIncome;
 
@@ -2201,7 +2208,7 @@ function evaluateFHA(l) {
   }
 
   // Repayment Plan — requires borrower agreement; blocked if unresponsive (use OWL instead)
-  results.push({option:"Repayment Plan",eligible:!isDisaster&&dlq<=12&&canRepayWithin24&&!l.failedTPP&&!l.fhaOwlBorrowerUnresponsive,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("DLQ≤12mo",dlq,dlq<=12),node("Can repay 24mo",canRepayWithin24,canRepayWithin24),node("No failed TPP",!l.failedTPP,!l.failedTPP),node("Borrower responsive (Repayment Plan requires borrower agreement)",l.fhaOwlBorrowerUnresponsive?"Unresponsive — use OWL":"Responsive",!l.fhaOwlBorrowerUnresponsive)]});
+  results.push({option:"Repayment Plan",eligible:!isDisaster&&dlq<=12&&canRepayWithin24&&rppWithin150Pct&&!l.failedTPP&&!l.fhaOwlBorrowerUnresponsive,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("DLQ≤12mo",dlq,dlq<=12),node("Can repay within 24mo (total DTI ≤40% — §III.A.2.f)",canRepayWithin24,canRepayWithin24),node("Total RPP payment ≤ 150% of current PITI (§III.A.2.f)",rpp150Label,rppWithin150Pct),node("No failed TPP",!l.failedTPP,!l.failedTPP),node("Borrower responsive (Repayment Plan requires borrower agreement)",l.fhaOwlBorrowerUnresponsive?"Unresponsive — use OWL":"Responsive",!l.fhaOwlBorrowerUnresponsive)]});
 
   // Formal Forbearance — requires borrower request; blocked if unresponsive (use OWL instead)
   results.push({option:"Formal Forbearance",eligible:!isDisaster&&dlq<12&&(canRepayWithin6||l.requestedForbearance)&&!l.fhaOwlBorrowerUnresponsive,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("DLQ<12mo",dlq,dlq<12),node("Repay 6mo OR requested",canRepayWithin6||l.requestedForbearance,canRepayWithin6||l.requestedForbearance),node("Borrower responsive (Formal Forbearance requires borrower request)",l.fhaOwlBorrowerUnresponsive?"Unresponsive — use OWL":"Responsive",!l.fhaOwlBorrowerUnresponsive)]});
@@ -2209,10 +2216,12 @@ function evaluateFHA(l) {
   // ML 2025-12: home retention base — no continuousIncome req; 24-month cooldown
   const cooldownOK = priorHR === 0 || priorHR >= 24;
   // HUD 4000.1 §III.A.2.k: DLQ ≥ 4 months (120 days) and loan age ≥ 12 months required for all mod/PC options
-  const hb = baseEligible && cooldownOK && dlq >= 4 && fhaLoanAge12 && STANDARD_HARDSHIPS.includes(l.hardshipType) && l.borrowerIntentRetention;
+  // HUD 4000.1 §III.A.2.k: DLQ must be ≥ 4 months AND ≤ 12 months for all HAMP home retention options
+  const hb = baseEligible && cooldownOK && dlq >= 4 && dlq <= 12 && fhaLoanAge12 && STANDARD_HARDSHIPS.includes(l.hardshipType) && l.borrowerIntentRetention;
   const hn = [...baseNodes,
     node("Std hardship",l.hardshipType,STANDARD_HARDSHIPS.includes(l.hardshipType)),
     node("DLQ ≥ 4 months (120 days minimum — HUD 4000.1 §III.A.2.k)",dlq+"mo",dlq>=4),
+    node("DLQ ≤ 12 months (maximum — HUD 4000.1 §III.A.2.k)",dlq+"mo",dlq<=12),
     node("Loan age ≥ 12 months (≥12 payments made — HUD 4000.1 §III.A.2.k)",fhaLoanAge12Label,fhaLoanAge12),
     node("Prior home retention option ≥24mo ago or none (ML 2025-12)",priorHR===0?"None":priorHR+"mo",cooldownOK),
     node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention)
@@ -2514,9 +2523,11 @@ function evaluateFHLMC(l) {
   }
   // ── 1. Repayment Plan ─────────────────────────────────────────────────────────
   {
+    const rppDlqWithin12 = dlq <= 12; // §9203.2: max 12-month plan means DLQ > 12 is not repayable
     const nodes = [
       node("Non-disaster hardship", l.hardshipType, !isDisaster),
       node("Conventional 1st lien", l.lienPosition, isConventional && isFirstLien),
+      node("DLQ ≤ 12 months (§9203.2 — maximum 12-month plan duration)", dlq+"mo", rppDlqWithin12),
       node("Hardship resolved (temporary, no longer a problem)", l.fhlmcHardshipResolved?"Yes":"No", l.fhlmcHardshipResolved),
       node("Property not condemned/abandoned", l.propertyCondition, propertyOK),
     ];
@@ -2622,7 +2633,6 @@ function evaluateFHLMC(l) {
       node("Prior modifications < 3", priorMods, priorMods < 3),
       node("No failed Flex Mod TPP within 12 months", l.fhlmcFailedFlexTPP12Mo?"Yes":"No", !l.fhlmcFailedFlexTPP12Mo),
       node("No prior Flex Mod re-default within 12mo (not cured)", l.fhlmcPriorFlexMod60DLQ?"Yes":"No", !l.fhlmcPriorFlexMod60DLQ),
-      node("Not modified within preceding 12 months (§9206.5)", l.fhlmcModifiedWithin12Mo?"Modified within 12mo — not eligible":"OK", !l.fhlmcModifiedWithin12Mo),
       node("No approved liquidation option active", l.fhlmcApprovedLiquidationOption?"Active":"None", noActiveLiquidation),
       node("Not under active TPP/forbearance/repayment plan", (l.fhlmcActiveTPP||l.fhlmcActiveForbearance||l.fhlmcActiveRepayPlan)?"Active":"None", noActiveTPP&&noActiveForbearance&&noActiveRepay),
       node("No unexpired offer for another workout option", l.fhlmcUnexpiredOffer?"Yes":"No", noUnexpiredOffer),
@@ -2764,7 +2774,7 @@ function evaluateFNMA(l) {
     const eligLienPos = l.lienPosition === "First";
     const eligLoanAge = loanAge >= 12;
     const eligDlqRange = dlq >= 2 && dlq <= 6;
-    const eligCumCap = cumulativeDeferred < 12;
+    const eligCumCap = (cumulativeDeferred + dlq) <= 12; // D2-3.2-04: prior + this event must not exceed 12 months lifetime
     const eligPriorDeferral = priorDeferralMonths === 0 || priorDeferralMonths >= 12;
     const eligNotNearMaturity = !fnmaWithin36Mo;
     const eligNoFailedTPP = !l.fnmaFailedTPP12Months;
@@ -2777,7 +2787,7 @@ function evaluateFNMA(l) {
       node("Hardship resolved OR servicer imminent default determination", l.fnmaHardshipResolved?"Resolved":fnmaImminentDefaultAuto?"Imminent Default":"Neither", eligHardship),
       node("Can resume full contractual payment", l.fnmaCanResumeFull?"Yes":"No", l.fnmaCanResumeFull),
       node("Cannot reinstate or afford repayment plan", l.fnmaCannotReinstate?"Yes":"No", l.fnmaCannotReinstate),
-      node("Cumulative deferred months < 12 (lifetime)", cumulativeDeferred+"mo", eligCumCap),
+      node("Prior deferred + current DLQ ≤ 12 months (lifetime cap — D2-3.2-04)", `${cumulativeDeferred}mo prior + ${dlq}mo = ${cumulativeDeferred+dlq}mo`, eligCumCap),
       node("Prior non-disaster deferral ≥ 12 months ago (or never)", priorDeferralMonths===0?"None":priorDeferralMonths+"mo ago", eligPriorDeferral),
       node("Not within 36 months of maturity", fnmaWithin36Mo?"Within 36mo":"OK", eligNotNearMaturity),
       node("No failed Flex Mod TPP within 12 months", l.fnmaFailedTPP12Months?"Yes":"No", eligNoFailedTPP),
@@ -4795,7 +4805,6 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                   <Tog label="Can resume full contractual monthly payment" value={loan.fhlmcCanResumeFull} onChange={v=>set("fhlmcCanResumeFull",v)}/>
                   {(()=>{const _cash=n(loan.cashReservesAmount),_piti=n(loan.currentPITI),_gmi=n(loan.grossMonthlyIncome),_fico=n(loan.fhlmcFICO);const _hr=_piti>0&&_gmi>0?_piti/_gmi*100:n(loan.fhlmcHousingExpenseRatio);const _hasInputs=_cash>0&&_piti>0&&_gmi>0&&_fico>0&&loan.fhlmcPropertyType!=="";const _cashLt25k=_cash>0?_cash<25000:loan.fhlmcCashReservesLt25k;const _isPrimary=loan.fhlmcPropertyType==="Primary Residence";const _r1=_cashLt25k&&_isPrimary&&loan.fhlmcLongTermHardship;const _r2=_fico<=620||loan.fhlmcPrior30DayDLQ6Mo||_hr>40;const _autoID=_hasInputs?(_r1&&_r2):null;return _autoID!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Servicer imminent default determination</span><span className={`font-semibold ${_autoID?"text-amber-600":"text-emerald-600"}`}>{_autoID?"⚠️ Yes (auto)":"✅ No (auto)"} — R1:{_r1?"✓":"✗"} R2:{_r2?"✓":"✗"}</span></div>:<Tog label="Servicer imminent default determination (manual — enter cash, PITI, GMI, FICO to auto-compute)" value={loan.fhlmcImminentDefault} onChange={v=>set("fhlmcImminentDefault",v)}/>;})()}
                   <Tog label="QRPC (Qualified Right Party Contact) achieved" value={loan.fhlmcQRPCAchieved} onChange={v=>set("fhlmcQRPCAchieved",v)}/>
-                  <Tog label="Modified within preceding 12 months (§9206.5 — blocks Standard Flex Mod if Yes)" value={loan.fhlmcModifiedWithin12Mo} onChange={v=>set("fhlmcModifiedWithin12Mo",v)}/>
                   <Tog label="Long-term/permanent hardship (NOT unemployment)" value={loan.fhlmcLongTermHardship} onChange={v=>set("fhlmcLongTermHardship",v)}/>
                   <Tog label="Unemployed borrower (→ forbearance, not Flex Mod)" value={loan.fhlmcUnemployed} onChange={v=>set("fhlmcUnemployed",v)}/>
                   <Tog label="Verified income" value={loan.fhlmcVerifiedIncome} onChange={v=>set("fhlmcVerifiedIncome",v)}/>
