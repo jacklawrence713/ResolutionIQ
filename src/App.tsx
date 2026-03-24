@@ -2135,11 +2135,11 @@ function evaluateFHA(l) {
     results.push({option:"FHA Disaster Standalone Partial Claim",eligible:db&&!canAchieve360&&comboCapPass,nodes:[...dn,node("Target NOT achievable by re-amortization",achieve360Label,!canAchieve360),node("PC within 30% cap",comboCapLabel,comboCapPass)]});
   }
 
-  // Repayment Plan
-  results.push({option:"Repayment Plan",eligible:!isDisaster&&dlq<=12&&canRepayWithin24&&!l.failedTPP,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("DLQ≤12mo",dlq,dlq<=12),node("Can repay 24mo",canRepayWithin24,canRepayWithin24),node("No failed TPP",!l.failedTPP,!l.failedTPP)]});
+  // Repayment Plan — requires borrower agreement; blocked if unresponsive (use OWL instead)
+  results.push({option:"Repayment Plan",eligible:!isDisaster&&dlq<=12&&canRepayWithin24&&!l.failedTPP&&!l.fhaOwlBorrowerUnresponsive,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("DLQ≤12mo",dlq,dlq<=12),node("Can repay 24mo",canRepayWithin24,canRepayWithin24),node("No failed TPP",!l.failedTPP,!l.failedTPP),node("Borrower responsive (Repayment Plan requires borrower agreement)",l.fhaOwlBorrowerUnresponsive?"Unresponsive — use OWL":"Responsive",!l.fhaOwlBorrowerUnresponsive)]});
 
-  // Formal Forbearance
-  results.push({option:"Formal Forbearance",eligible:!isDisaster&&dlq<12&&(canRepayWithin6||l.requestedForbearance),nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("DLQ<12mo",dlq,dlq<12),node("Repay 6mo OR requested",canRepayWithin6||l.requestedForbearance,canRepayWithin6||l.requestedForbearance)]});
+  // Formal Forbearance — requires borrower request; blocked if unresponsive (use OWL instead)
+  results.push({option:"Formal Forbearance",eligible:!isDisaster&&dlq<12&&(canRepayWithin6||l.requestedForbearance)&&!l.fhaOwlBorrowerUnresponsive,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("DLQ<12mo",dlq,dlq<12),node("Repay 6mo OR requested",canRepayWithin6||l.requestedForbearance,canRepayWithin6||l.requestedForbearance),node("Borrower responsive (Formal Forbearance requires borrower request)",l.fhaOwlBorrowerUnresponsive?"Unresponsive — use OWL":"Responsive",!l.fhaOwlBorrowerUnresponsive)]});
 
   // ML 2025-12: home retention base — no continuousIncome req; 24-month cooldown
   const cooldownOK = priorHR === 0 || priorHR >= 24;
@@ -2192,7 +2192,8 @@ function evaluateFHA(l) {
   }
 
   // Payment Supplement (step 7: all eligible delinquent borrowers, not unemployed-only — ML 2025-06)
-  results.push({option:"Payment Supplement",eligible:!isDisaster&&baseEligible&&dlq>0&&!canAchieve360&&comboPayLe40,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),...baseNodes,node("DLQ>0",dlq,dlq>0),node("25% P&I reduction NOT achievable by re-amortization",achieve360Label,!canAchieve360),node("Combo pmt≤40% GMI",comboPayLe40,comboPayLe40)],note:"ML 2025-06: Open to all eligible delinquent borrowers (not unemployed-only)"});
+  // Requires active borrower engagement (MoPR payments) — blocked if borrower is unresponsive (use OWL instead)
+  results.push({option:"Payment Supplement",eligible:!isDisaster&&baseEligible&&dlq>0&&!canAchieve360&&comboPayLe40&&!l.fhaOwlBorrowerUnresponsive,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),...baseNodes,node("DLQ>0",dlq,dlq>0),node("25% P&I reduction NOT achievable by re-amortization",achieve360Label,!canAchieve360),node("Combo pmt≤40% GMI",comboPayLe40,comboPayLe40),node("Borrower responsive (Payment Supplement requires active borrower participation)",l.fhaOwlBorrowerUnresponsive?"Unresponsive — use OWL":"Responsive",!l.fhaOwlBorrowerUnresponsive)],note:"ML 2025-06: Open to all eligible delinquent borrowers (not unemployed-only)"});
 
   // Special Forbearance – Unemployment
   results.push({option:"Special Forbearance – Unemployment",eligible:dlq<=12&&!l.foreclosureActive&&l.hardshipType==="Unemployment"&&l.occupancyStatus==="Owner Occupied"&&l.propertyDisposition==="Principal Residence"&&l.verifiedUnemployment&&!l.continuousIncome&&l.ineligibleAllRetention&&!l.propertyListedForSale&&!l.assumptionInProcess,nodes:[node("DLQ≤12mo",dlq,dlq<=12),node("Hardship=Unemployment",l.hardshipType,l.hardshipType==="Unemployment"),node("Verified unemployment",l.verifiedUnemployment,l.verifiedUnemployment),node("No continuous income",!l.continuousIncome,!l.continuousIncome),node("Ineligible all retention",l.ineligibleAllRetention,l.ineligibleAllRetention),node("Not listed for sale",!l.propertyListedForSale,!l.propertyListedForSale),node("No assumption",!l.assumptionInProcess,!l.assumptionInProcess)]});
@@ -2827,10 +2828,10 @@ const WATERFALL_ORDER = {
     "FHA 30-Year Standalone Modification",
     "FHA 40-Year Combination Modification + Partial Claim",
     "Payment Supplement",
-    "FHA OWL Modification",
     "Repayment Plan",
     "Formal Forbearance",
     "Special Forbearance – Unemployment",
+    "FHA OWL Modification",
   ],
   USDA: [
     "USDA Reinstatement",
