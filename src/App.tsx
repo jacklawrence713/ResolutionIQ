@@ -3420,19 +3420,25 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
   // Test runner
   const [testResults,setTestResults]=useState<{tc:any,actual:Record<string,boolean>,pass:boolean}[]>([]);
   const [testRan,setTestRan]=useState(false);
+  const [testError,setTestError]=useState("");
   const [testFilter,setTestFilter]=useState("all");
   const [testInvestorFilter,setTestInvestorFilter]=useState("all");
   const runTests=useCallback(()=>{
-    const evalMap:{[k:string]:(l:any)=>any[]}={FHA:evaluateFHA,USDA:evaluateUSDA,VA:evaluateVA,FNMA:evaluateFNMA,FHLMC:evaluateFHLMC};
-    const res=TEST_CASES.map(tc=>{
-      const raw=evalMap[tc.investor](tc.loan);
-      const actual:Record<string,boolean>={};
-      raw.forEach((r:any)=>{actual[r.option]=r.eligible;});
-      const pass=Object.entries(tc.expected).every(([k,v])=>actual[k]===v);
-      return {tc,actual,pass};
-    });
-    setTestResults(res);
-    setTestRan(true);
+    try {
+      const evalMap:{[k:string]:(l:any)=>any[]}={FHA:evaluateFHA,USDA:evaluateUSDA,VA:evaluateVA,FNMA:evaluateFNMA,FHLMC:evaluateFHLMC};
+      const res=TEST_CASES.map(tc=>{
+        const raw=evalMap[tc.investor](tc.loan);
+        const actual:Record<string,boolean>={};
+        raw.forEach((r:any)=>{actual[r.option]=r.eligible;});
+        const pass=Object.entries(tc.expected).every(([k,v])=>actual[k]===v);
+        return {tc,actual,pass};
+      });
+      setTestError("");
+      setTestResults(res);
+      setTestRan(true);
+    } catch(e:any) {
+      setTestError(e?.message||String(e));
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
   // Quick LOS Import state
@@ -4109,6 +4115,22 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
       </div>
     </div>
   );
+
+  // ── Test tab derived values ─────────────────────────────────────────────────
+  const testInvestors=["all","FHA","USDA","VA","FNMA","FHLMC"];
+  const testFiltered=testResults.filter(r=>{
+    if(testFilter==="pass"&&!r.pass) return false;
+    if(testFilter==="fail"&&r.pass) return false;
+    if(testInvestorFilter!=="all"&&r.tc.investor!==testInvestorFilter) return false;
+    return true;
+  });
+  const testTotal=testResults.length;
+  const testPassed=testResults.filter(r=>r.pass).length;
+  const testFailed=testTotal-testPassed;
+  const testInvestorStats=["FHA","USDA","VA","FNMA","FHLMC"].map(inv=>{
+    const cs=testResults.filter(r=>r.tc.investor===inv);
+    return {inv,total:cs.length,passed:cs.filter(r=>r.pass).length};
+  });
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -5736,140 +5758,130 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
           </div>
         )}
 
-        {tab==="tests" && (()=>{
-          const investors=["all","FHA","USDA","VA","FNMA","FHLMC"];
-          const filtered=testResults.filter(r=>{
-            if(testFilter==="pass"&&!r.pass) return false;
-            if(testFilter==="fail"&&r.pass) return false;
-            if(testInvestorFilter!=="all"&&r.tc.investor!==testInvestorFilter) return false;
-            return true;
-          });
-          const total=testResults.length, passed=testResults.filter(r=>r.pass).length, failed=total-passed;
-          const investorStats=["FHA","USDA","VA","FNMA","FHLMC"].map(inv=>{
-            const inv_cases=testResults.filter(r=>r.tc.investor===inv);
-            return {inv,total:inv_cases.length,passed:inv_cases.filter(r=>r.pass).length};
-          });
-          return (
-            <div className="p-4 max-w-5xl mx-auto">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <div className="text-lg font-black text-slate-800">🧪 Engine Test Suite</div>
-                  <div className="text-xs text-slate-500 mt-0.5">50 representative test cases · 5 investors · live evaluation against coded rules</div>
-                </div>
-                <button onClick={runTests}
-                  className="bg-[#1e3a5f] text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-[#162d4a] active:scale-95 transition-all shadow">
-                  ▶ Run All Tests
-                </button>
+        {tab==="tests" && (
+          <div className="p-4 max-w-5xl mx-auto">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="text-lg font-black text-slate-800">🧪 Engine Test Suite</div>
+                <div className="text-xs text-slate-500 mt-0.5">50 representative test cases · 5 investors · live evaluation against coded rules</div>
               </div>
+              <button onClick={runTests}
+                className="bg-[#1e3a5f] text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-[#162d4a] active:scale-95 transition-all shadow">
+                ▶ Run All Tests
+              </button>
+            </div>
 
-              {testRan && (
-                <>
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    <div className="bg-white rounded-2xl border border-slate-200 p-4 text-center">
-                      <div className="text-2xl font-black text-slate-800">{total}</div>
-                      <div className="text-xs text-slate-500 mt-1">Total Cases</div>
-                    </div>
-                    <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-4 text-center">
-                      <div className="text-2xl font-black text-emerald-700">{passed}</div>
-                      <div className="text-xs text-emerald-600 mt-1">Passed ✓</div>
-                    </div>
-                    <div className={`${failed>0?"bg-red-50 border-red-200":"bg-slate-50 border-slate-200"} rounded-2xl border p-4 text-center`}>
-                      <div className={`text-2xl font-black ${failed>0?"text-red-700":"text-slate-400"}`}>{failed}</div>
-                      <div className={`text-xs mt-1 ${failed>0?"text-red-600":"text-slate-400"}`}>Failed {failed>0?"✗":""}</div>
-                    </div>
+            {testError && (
+              <div className="bg-red-50 border border-red-300 rounded-xl p-4 mb-4 text-xs text-red-700 font-mono">{testError}</div>
+            )}
+
+            {testRan && !testError && (
+              <>
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="bg-white rounded-2xl border border-slate-200 p-4 text-center">
+                    <div className="text-2xl font-black text-slate-800">{testTotal}</div>
+                    <div className="text-xs text-slate-500 mt-1">Total Cases</div>
                   </div>
+                  <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-4 text-center">
+                    <div className="text-2xl font-black text-emerald-700">{testPassed}</div>
+                    <div className="text-xs text-emerald-600 mt-1">Passed ✓</div>
+                  </div>
+                  <div className={`${testFailed>0?"bg-red-50 border-red-200":"bg-slate-50 border-slate-200"} rounded-2xl border p-4 text-center`}>
+                    <div className={`text-2xl font-black ${testFailed>0?"text-red-700":"text-slate-400"}`}>{testFailed}</div>
+                    <div className={`text-xs mt-1 ${testFailed>0?"text-red-600":"text-slate-400"}`}>Failed {testFailed>0?"✗":""}</div>
+                  </div>
+                </div>
 
-                  <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-4">
-                    <div className="text-xs font-bold text-slate-600 mb-3">Pass Rate by Investor</div>
-                    <div className="grid grid-cols-5 gap-2">
-                      {investorStats.map(({inv,total:t,passed:p})=>(
-                        <div key={inv} className="text-center">
-                          <div className={`text-sm font-black ${p===t?"text-emerald-700":"text-red-600"}`}>{t>0?Math.round(p/t*100):0}%</div>
-                          <div className="w-full bg-slate-100 rounded-full h-1.5 my-1">
-                            <div className={`h-1.5 rounded-full ${p===t?"bg-emerald-500":"bg-red-500"}`} style={{width:t>0?`${p/t*100}%`:"0%"}}/>
-                          </div>
-                          <div className="text-[10px] text-slate-500 font-semibold">{inv}</div>
-                          <div className="text-[10px] text-slate-400">{p}/{t}</div>
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-4">
+                  <div className="text-xs font-bold text-slate-600 mb-3">Pass Rate by Investor</div>
+                  <div className="grid grid-cols-5 gap-2">
+                    {testInvestorStats.map(({inv,total:t,passed:p})=>(
+                      <div key={inv} className="text-center">
+                        <div className={`text-sm font-black ${p===t?"text-emerald-700":"text-red-600"}`}>{t>0?Math.round(p/t*100):0}%</div>
+                        <div className="w-full bg-slate-100 rounded-full h-1.5 my-1">
+                          <div className={`h-1.5 rounded-full ${p===t?"bg-emerald-500":"bg-red-500"}`} style={{width:t>0?`${p/t*100}%`:"0%"}}/>
                         </div>
-                      ))}
-                    </div>
+                        <div className="text-[10px] text-slate-500 font-semibold">{inv}</div>
+                        <div className="text-[10px] text-slate-400">{p}/{t}</div>
+                      </div>
+                    ))}
                   </div>
+                </div>
 
-                  <div className="bg-white rounded-2xl border border-slate-200 p-4">
-                    <div className="flex items-center gap-3 mb-3 flex-wrap">
-                      <div className="text-xs font-bold text-slate-600">Filter:</div>
-                      {(["all","pass","fail"] as const).map(f=>(
-                        <button key={f} onClick={()=>setTestFilter(f)}
-                          className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${testFilter===f?"bg-[#1e3a5f] text-white border-[#1e3a5f]":"bg-white text-slate-600 border-slate-300 hover:border-slate-400"}`}>
-                          {f==="all"?"All":(f==="pass"?`✓ Pass (${passed})`:`✗ Fail (${failed})`)}
+                <div className="bg-white rounded-2xl border border-slate-200 p-4">
+                  <div className="flex items-center gap-3 mb-3 flex-wrap">
+                    <div className="text-xs font-bold text-slate-600">Filter:</div>
+                    {["all","pass","fail"].map(f=>(
+                      <button key={f} onClick={()=>setTestFilter(f)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${testFilter===f?"bg-[#1e3a5f] text-white border-[#1e3a5f]":"bg-white text-slate-600 border-slate-300 hover:border-slate-400"}`}>
+                        {f==="all"?"All":(f==="pass"?`✓ Pass (${testPassed})`:`✗ Fail (${testFailed})`)}
+                      </button>
+                    ))}
+                    <div className="ml-auto flex items-center gap-2">
+                      {testInvestors.map(inv=>(
+                        <button key={inv} onClick={()=>setTestInvestorFilter(inv)}
+                          className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-colors ${testInvestorFilter===inv?"bg-slate-800 text-white border-slate-800":"bg-white text-slate-500 border-slate-200 hover:border-slate-400"}`}>
+                          {inv==="all"?"All":inv}
                         </button>
                       ))}
-                      <div className="ml-auto flex items-center gap-2">
-                        {investors.map(inv=>(
-                          <button key={inv} onClick={()=>setTestInvestorFilter(inv)}
-                            className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-colors ${testInvestorFilter===inv?"bg-slate-800 text-white border-slate-800":"bg-white text-slate-500 border-slate-200 hover:border-slate-400"}`}>
-                            {inv==="all"?"All":inv}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="border-b border-slate-100">
-                            <th className="text-left py-2 pr-3 text-slate-500 font-semibold w-20">ID</th>
-                            <th className="text-left py-2 pr-3 text-slate-500 font-semibold">Test Name</th>
-                            <th className="text-left py-2 pr-3 text-slate-500 font-semibold w-20">Investor</th>
-                            <th className="text-left py-2 pr-3 text-slate-500 font-semibold w-40">Option Checked</th>
-                            <th className="text-left py-2 pr-3 text-slate-500 font-semibold w-20">Expected</th>
-                            <th className="text-left py-2 text-slate-500 font-semibold w-20">Actual</th>
-                            <th className="text-right py-2 text-slate-500 font-semibold w-16">Result</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filtered.map(({tc,actual,pass})=>{
-                            const optKey=Object.keys(tc.expected)[0];
-                            const exp=tc.expected[optKey];
-                            const act=actual[optKey];
-                            return (
-                              <tr key={tc.id} className={`border-b border-slate-50 ${pass?"":"bg-red-50/40"}`}>
-                                <td className="py-1.5 pr-3 font-mono text-slate-400">{tc.id}</td>
-                                <td className="py-1.5 pr-3 text-slate-700">{tc.name}</td>
-                                <td className="py-1.5 pr-3">
-                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${tc.investor==="FHA"?"bg-blue-100 text-blue-700":tc.investor==="USDA"?"bg-green-100 text-green-700":tc.investor==="VA"?"bg-purple-100 text-purple-700":tc.investor==="FNMA"?"bg-amber-100 text-amber-700":"bg-orange-100 text-orange-700"}`}>{tc.investor}</span>
-                                </td>
-                                <td className="py-1.5 pr-3 text-slate-500 truncate max-w-[160px]" title={optKey}>{optKey}</td>
-                                <td className="py-1.5 pr-3">
-                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${exp?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{exp?"eligible":"ineligible"}</span>
-                                </td>
-                                <td className="py-1.5 pr-3">
-                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${act===undefined?"bg-yellow-100 text-yellow-700":act?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{act===undefined?"?":(act?"eligible":"ineligible")}</span>
-                                </td>
-                                <td className="py-1.5 text-right">
-                                  <span className={`text-sm font-bold ${pass?"text-emerald-600":"text-red-500"}`}>{pass?"✓":"✗"}</span>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                      {filtered.length===0&&<div className="text-center text-slate-400 text-sm py-6">No test cases match the current filter.</div>}
                     </div>
                   </div>
-                </>
-              )}
-
-              {!testRan && (
-                <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-                  <div className="text-4xl mb-3">🧪</div>
-                  <div className="text-slate-700 font-bold mb-1">50 test cases ready</div>
-                  <div className="text-xs text-slate-400 mb-4">Tests run directly against the live evaluation engine — no external dependencies.</div>
-                  <div className="text-xs text-slate-400">Covers: FHA · USDA · VA · FNMA · FHLMC · happy paths · boundary conditions · negative cases</div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-100">
+                          <th className="text-left py-2 pr-3 text-slate-500 font-semibold w-20">ID</th>
+                          <th className="text-left py-2 pr-3 text-slate-500 font-semibold">Test Name</th>
+                          <th className="text-left py-2 pr-3 text-slate-500 font-semibold w-20">Investor</th>
+                          <th className="text-left py-2 pr-3 text-slate-500 font-semibold w-40">Option Checked</th>
+                          <th className="text-left py-2 pr-3 text-slate-500 font-semibold w-20">Expected</th>
+                          <th className="text-left py-2 text-slate-500 font-semibold w-20">Actual</th>
+                          <th className="text-right py-2 text-slate-500 font-semibold w-16">Result</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {testFiltered.map(({tc,actual,pass})=>{
+                          const optKey=Object.keys(tc.expected)[0];
+                          const exp=tc.expected[optKey];
+                          const act=actual[optKey];
+                          return (
+                            <tr key={tc.id} className={`border-b border-slate-50 ${pass?"":"bg-red-50/40"}`}>
+                              <td className="py-1.5 pr-3 font-mono text-slate-400">{tc.id}</td>
+                              <td className="py-1.5 pr-3 text-slate-700">{tc.name}</td>
+                              <td className="py-1.5 pr-3">
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${tc.investor==="FHA"?"bg-blue-100 text-blue-700":tc.investor==="USDA"?"bg-green-100 text-green-700":tc.investor==="VA"?"bg-purple-100 text-purple-700":tc.investor==="FNMA"?"bg-amber-100 text-amber-700":"bg-orange-100 text-orange-700"}`}>{tc.investor}</span>
+                              </td>
+                              <td className="py-1.5 pr-3 text-slate-500 truncate max-w-[160px]" title={optKey}>{optKey}</td>
+                              <td className="py-1.5 pr-3">
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${exp?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{exp?"eligible":"ineligible"}</span>
+                              </td>
+                              <td className="py-1.5 pr-3">
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${act===undefined?"bg-yellow-100 text-yellow-700":act?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{act===undefined?"?":(act?"eligible":"ineligible")}</span>
+                              </td>
+                              <td className="py-1.5 text-right">
+                                <span className={`text-sm font-bold ${pass?"text-emerald-600":"text-red-500"}`}>{pass?"✓":"✗"}</span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                    {testFiltered.length===0&&<div className="text-center text-slate-400 text-sm py-6">No test cases match the current filter.</div>}
+                  </div>
                 </div>
-              )}
-            </div>
-          );
-        })()}
+              </>
+            )}
+
+            {!testRan && !testError && (
+              <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+                <div className="text-4xl mb-3">🧪</div>
+                <div className="text-slate-700 font-bold mb-1">50 test cases ready</div>
+                <div className="text-xs text-slate-400 mb-4">Tests run directly against the live evaluation engine — no external dependencies.</div>
+                <div className="text-xs text-slate-400">Covers: FHA · USDA · VA · FNMA · FHLMC · happy paths · boundary conditions · negative cases</div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
