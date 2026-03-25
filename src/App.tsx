@@ -48,8 +48,8 @@ const SLA_RULES = {
     label: "Fannie Mae Servicing Guide D2-2-01",
   },
 };
-const TABS = ["dashboard","inputs","results","audit","report","compare","portfolio","settings"];
-const TAB_LABELS = { dashboard:"📊 Dashboard", inputs:"📋 Inputs", results:"✅ Results", audit:"🔍 Audit Trail", report:"📄 Report", compare:"⚖️ Compare", portfolio:"📦 Portfolio", settings:"⚙️ Settings" };
+const TABS = ["dashboard","inputs","results","audit","report","compare","portfolio","settings","tests"];
+const TAB_LABELS = { dashboard:"📊 Dashboard", inputs:"📋 Inputs", results:"✅ Results", audit:"🔍 Audit Trail", report:"📄 Report", compare:"⚖️ Compare", portfolio:"📦 Portfolio", settings:"⚙️ Settings", tests:"🧪 Tests" };
 const HARDSHIP_TYPES = ["Reduction in Income","Unemployment","Business Failure","Increase in Housing Expenses","Property Problem","Unknown","Disaster"];
 
 // ─── OPTION DOCUMENTS ─────────────────────────────────────────────────────────
@@ -3294,6 +3294,66 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
   }
 }
 
+// ─── TEST CASES ───────────────────────────────────────────────────────────────
+function TL(o:Record<string,any>){return {...initLoan,...o};}
+const TEST_CASES:{investor:string;id:string;name:string;loan:any;expected:Record<string,boolean>}[]=[
+  // ── FHA (10) ──────────────────────────────────────────────────────────────
+  {investor:"FHA",id:"FHA-01",name:"Reinstatement eligible DLQ>0",loan:TL({delinquencyMonths:"3"}),expected:{"FHA Reinstatement":true}},
+  {investor:"FHA",id:"FHA-02",name:"Reinstatement ineligible DLQ=0",loan:TL({delinquencyMonths:"0"}),expected:{"FHA Reinstatement":false}},
+  {investor:"FHA",id:"FHA-03",name:"Repayment Plan eligible",loan:TL({delinquencyMonths:"6",hardshipType:"Reduction in Income",canRepayWithin24Months:true,failedTPP:false}),expected:{"Repayment Plan":true}},
+  {investor:"FHA",id:"FHA-04",name:"Repayment Plan fails disaster hardship",loan:TL({delinquencyMonths:"6",hardshipType:"Disaster",canRepayWithin24Months:true}),expected:{"Repayment Plan":false}},
+  {investor:"FHA",id:"FHA-05",name:"Repayment Plan fails DLQ>12",loan:TL({delinquencyMonths:"13",canRepayWithin24Months:true}),expected:{"Repayment Plan":false}},
+  {investor:"FHA",id:"FHA-06",name:"Payment Deferral happy path",loan:TL({delinquencyMonths:"3",hardshipType:"Reduction in Income",fhaHardshipResolved:true,fhaCumulativeDeferredMonths:"0",fhaPriorDeferralMonths:"0"}),expected:{"FHA Payment Deferral":true}},
+  {investor:"FHA",id:"FHA-07",name:"Payment Deferral fails DLQ=2",loan:TL({delinquencyMonths:"2",fhaHardshipResolved:true,fhaCumulativeDeferredMonths:"0",fhaPriorDeferralMonths:"0"}),expected:{"FHA Payment Deferral":false}},
+  {investor:"FHA",id:"FHA-08",name:"Formal Forbearance eligible",loan:TL({delinquencyMonths:"6",hardshipType:"Reduction in Income",canRepayWithin6Months:true}),expected:{"Formal Forbearance":true}},
+  {investor:"FHA",id:"FHA-09",name:"Formal Forbearance fails DLQ=12",loan:TL({delinquencyMonths:"12",canRepayWithin6Months:true}),expected:{"Formal Forbearance":false}},
+  {investor:"FHA",id:"FHA-10",name:"30-Year Mod eligible",loan:TL({delinquencyMonths:"4",hardshipType:"Reduction in Income",borrowerIntentRetention:true,canAchieveTargetByReamort:true}),expected:{"FHA 30-Year Standalone Modification":true}},
+  // ── USDA (10) ─────────────────────────────────────────────────────────────
+  {investor:"USDA",id:"USDA-01",name:"Reinstatement eligible",loan:TL({delinquencyMonths:"3"}),expected:{"USDA Reinstatement":true}},
+  {investor:"USDA",id:"USDA-02",name:"Reinstatement ineligible DLQ=0",loan:TL({delinquencyMonths:"0"}),expected:{"USDA Reinstatement":false}},
+  {investor:"USDA",id:"USDA-03",name:"Informal Forbearance eligible",loan:TL({delinquencyMonths:"2",hardshipType:"Reduction in Income",hardshipDuration:"Short Term",borrowerIntentRetention:true,usdaHardshipNotExcluded:true,usdaForbearancePeriodLt12:true}),expected:{"USDA Informal Forbearance":true}},
+  {investor:"USDA",id:"USDA-04",name:"Informal Forbearance fails disaster",loan:TL({delinquencyMonths:"2",hardshipType:"Disaster",hardshipDuration:"Short Term",usdaForbearancePeriodLt12:true}),expected:{"USDA Informal Forbearance":false}},
+  {investor:"USDA",id:"USDA-05",name:"Informal Repayment Plan eligible",loan:TL({delinquencyMonths:"3",hardshipDuration:"Resolved",hardshipType:"Reduction in Income",borrowerIntentRetention:true,usdaHardshipNotExcluded:true,usdaNewPaymentLe200pct:true,usdaBorrowerPositiveNetIncome:true}),expected:{"USDA Informal Repayment Plan":true}},
+  {investor:"USDA",id:"USDA-06",name:"Informal Repayment Plan fails not resolved",loan:TL({delinquencyMonths:"3",hardshipDuration:"Short Term",usdaNewPaymentLe200pct:true,usdaBorrowerPositiveNetIncome:true}),expected:{"USDA Informal Repayment Plan":false}},
+  {investor:"USDA",id:"USDA-07",name:"Informal Repayment Plan fails no positive income",loan:TL({delinquencyMonths:"3",hardshipDuration:"Resolved",usdaNewPaymentLe200pct:true,usdaBorrowerPositiveNetIncome:false}),expected:{"USDA Informal Repayment Plan":false}},
+  {investor:"USDA",id:"USDA-08",name:"Special Forbearance eligible",loan:TL({delinquencyMonths:"6",hardshipType:"Reduction in Income",lienPosition:"First",propertyCondition:"Standard",occupancyAbandoned:false,occupancyStatus:"Owner Occupied"}),expected:{"USDA Special Forbearance":true}},
+  {investor:"USDA",id:"USDA-09",name:"Special Forbearance fails disaster",loan:TL({delinquencyMonths:"6",hardshipType:"Disaster"}),expected:{"USDA Special Forbearance":false}},
+  {investor:"USDA",id:"USDA-10",name:"Reinstatement ineligible UPB<5000",loan:TL({delinquencyMonths:"3",usdaUpbGe5000:false}),expected:{"USDA Reinstatement":false}},
+  // ── VA (10) ───────────────────────────────────────────────────────────────
+  {investor:"VA",id:"VA-01",name:"Reinstatement eligible",loan:TL({delinquencyMonths:"3",delinquencyDays:"90",lienPosition:"First",borrowerCanAffordReinstateOrRepay:true}),expected:{"VA Reinstatement":true}},
+  {investor:"VA",id:"VA-02",name:"Reinstatement fails DLQ=0",loan:TL({delinquencyDays:"0",delinquencyMonths:"0",lienPosition:"First",borrowerCanAffordReinstateOrRepay:true}),expected:{"VA Reinstatement":false}},
+  {investor:"VA",id:"VA-03",name:"Reinstatement fails cannot afford",loan:TL({delinquencyDays:"90",lienPosition:"First",borrowerCanAffordReinstateOrRepay:false}),expected:{"VA Reinstatement":false}},
+  {investor:"VA",id:"VA-04",name:"Repayment Plan eligible",loan:TL({delinquencyDays:"60",hardshipType:"Reduction in Income",hardshipDuration:"Resolved",lienPosition:"First",occupancyStatus:"Owner Occupied",borrowerIntentRetention:true,calculatedRPPGt0:true,borrowerCanAffordReinstateOrRepay:true}),expected:{"VA Repayment Plan":true}},
+  {investor:"VA",id:"VA-05",name:"Repayment Plan fails long term",loan:TL({delinquencyDays:"60",hardshipType:"Reduction in Income",hardshipDuration:"Long Term",lienPosition:"First",occupancyStatus:"Owner Occupied",borrowerIntentRetention:true,calculatedRPPGt0:true,borrowerCanAffordReinstateOrRepay:true}),expected:{"VA Repayment Plan":false}},
+  {investor:"VA",id:"VA-06",name:"Repayment Plan fails disaster",loan:TL({delinquencyDays:"60",hardshipType:"Disaster",hardshipDuration:"Resolved",lienPosition:"First",occupancyStatus:"Owner Occupied",borrowerIntentRetention:true,calculatedRPPGt0:true,borrowerCanAffordReinstateOrRepay:true}),expected:{"VA Repayment Plan":false}},
+  {investor:"VA",id:"VA-07",name:"Special Forbearance eligible",loan:TL({hardshipType:"Reduction in Income",hardshipDuration:"Long Term",lienPosition:"First",occupancyStatus:"Owner Occupied",borrowerIntentRetention:true,forbearancePeriodLt12:true}),expected:{"VA Special Forbearance":true}},
+  {investor:"VA",id:"VA-08",name:"Special Forbearance fails resolved",loan:TL({hardshipType:"Reduction in Income",hardshipDuration:"Resolved",lienPosition:"First",occupancyStatus:"Owner Occupied",borrowerIntentRetention:true,forbearancePeriodLt12:true}),expected:{"VA Special Forbearance":false}},
+  {investor:"VA",id:"VA-09",name:"40-Year Mod eligible",loan:TL({delinquencyDays:"90",hardshipType:"Reduction in Income",lienPosition:"First",occupancyStatus:"Owner Occupied",borrowerIntentRetention:true,borrowerConfirmedCannotAffordCurrent:true}),expected:{"VA 40-Year Loan Modification":true}},
+  {investor:"VA",id:"VA-10",name:"40-Year Mod fails DLQ<61d",loan:TL({delinquencyDays:"60",hardshipType:"Reduction in Income",lienPosition:"First",occupancyStatus:"Owner Occupied",borrowerIntentRetention:true,borrowerConfirmedCannotAffordCurrent:true}),expected:{"VA 40-Year Loan Modification":false}},
+  // ── FNMA (10) ─────────────────────────────────────────────────────────────
+  {investor:"FNMA",id:"FNMA-01",name:"Reinstatement eligible",loan:TL({delinquencyMonths:"3"}),expected:{"FNMA Reinstatement":true}},
+  {investor:"FNMA",id:"FNMA-02",name:"Reinstatement ineligible DLQ=0",loan:TL({delinquencyMonths:"0",arrearagesToCapitalize:"0"}),expected:{"FNMA Reinstatement":false}},
+  {investor:"FNMA",id:"FNMA-03",name:"Forbearance Plan eligible principal res",loan:TL({hardshipType:"Reduction in Income",fnmaPropertyType:"Principal Residence",propertyCondition:"Standard"}),expected:{"FNMA Forbearance Plan":true}},
+  {investor:"FNMA",id:"FNMA-04",name:"Forbearance Plan fails condemned",loan:TL({hardshipType:"Reduction in Income",fnmaPropertyType:"Principal Residence",propertyCondition:"Condemned"}),expected:{"FNMA Forbearance Plan":false}},
+  {investor:"FNMA",id:"FNMA-05",name:"Forbearance Plan fails investment non-disaster",loan:TL({hardshipType:"Reduction in Income",fnmaPropertyType:"Investment Property",fnmaDisasterHardship:false}),expected:{"FNMA Forbearance Plan":false}},
+  {investor:"FNMA",id:"FNMA-06",name:"Repayment Plan eligible",loan:TL({hardshipType:"Reduction in Income",fnmaHardshipResolved:true,propertyCondition:"Standard"}),expected:{"FNMA Repayment Plan":true}},
+  {investor:"FNMA",id:"FNMA-07",name:"Repayment Plan fails disaster",loan:TL({hardshipType:"Disaster",fnmaHardshipResolved:true,propertyCondition:"Standard"}),expected:{"FNMA Repayment Plan":false}},
+  {investor:"FNMA",id:"FNMA-08",name:"Repayment Plan fails not resolved",loan:TL({hardshipType:"Reduction in Income",fnmaHardshipResolved:false,propertyCondition:"Standard"}),expected:{"FNMA Repayment Plan":false}},
+  {investor:"FNMA",id:"FNMA-09",name:"Payment Deferral eligible",loan:TL({delinquencyMonths:"4",hardshipType:"Reduction in Income",lienPosition:"First",fnmaLoanAge:"24",fnmaHardshipResolved:true,fnmaCanResumeFull:true,fnmaCannotReinstate:true,fnmaCumulativeDeferredMonths:"0",fnmaPriorDeferralMonths:"0",fnmaWithin36MonthsMaturity:false}),expected:{"FNMA Payment Deferral":true}},
+  {investor:"FNMA",id:"FNMA-10",name:"Payment Deferral fails DLQ=1",loan:TL({delinquencyMonths:"1",fnmaHardshipResolved:true,fnmaCanResumeFull:true,fnmaLoanAge:"24",lienPosition:"First"}),expected:{"FNMA Payment Deferral":false}},
+  // ── FHLMC (10) ────────────────────────────────────────────────────────────
+  {investor:"FHLMC",id:"FHLMC-01",name:"Reinstatement eligible",loan:TL({delinquencyMonths:"3"}),expected:{"FHLMC Reinstatement":true}},
+  {investor:"FHLMC",id:"FHLMC-02",name:"Reinstatement ineligible DLQ=0",loan:TL({delinquencyMonths:"0",arrearagesToCapitalize:"0"}),expected:{"FHLMC Reinstatement":false}},
+  {investor:"FHLMC",id:"FHLMC-03",name:"Repayment Plan eligible",loan:TL({delinquencyMonths:"3",hardshipType:"Reduction in Income",fhlmcHardshipResolved:true}),expected:{"FHLMC Repayment Plan":true}},
+  {investor:"FHLMC",id:"FHLMC-04",name:"Repayment Plan fails disaster",loan:TL({delinquencyMonths:"3",hardshipType:"Disaster",fhlmcHardshipResolved:true}),expected:{"FHLMC Repayment Plan":false}},
+  {investor:"FHLMC",id:"FHLMC-05",name:"Repayment Plan fails not resolved",loan:TL({delinquencyMonths:"3",hardshipType:"Reduction in Income",fhlmcHardshipResolved:false}),expected:{"FHLMC Repayment Plan":false}},
+  {investor:"FHLMC",id:"FHLMC-06",name:"Payment Deferral eligible",loan:TL({delinquencyMonths:"4",hardshipType:"Reduction in Income",fhlmcHardshipResolved:true,fhlmcCanResumeFull:true,fhlmcLoanAge:"24",fhlmcMortgageType:"Conventional",lienPosition:"First",fhlmcCumulativeDeferredMonths:"0",fhlmcPriorDeferralMonths:"0"}),expected:{"FHLMC Payment Deferral":true}},
+  {investor:"FHLMC",id:"FHLMC-07",name:"Payment Deferral fails DLQ=1",loan:TL({delinquencyMonths:"1",fhlmcHardshipResolved:true,fhlmcCanResumeFull:true,fhlmcLoanAge:"24",fhlmcMortgageType:"Conventional",lienPosition:"First"}),expected:{"FHLMC Payment Deferral":false}},
+  {investor:"FHLMC",id:"FHLMC-08",name:"Payment Deferral fails DLQ=7",loan:TL({delinquencyMonths:"7",fhlmcHardshipResolved:true,fhlmcCanResumeFull:true,fhlmcLoanAge:"24",fhlmcMortgageType:"Conventional",lienPosition:"First"}),expected:{"FHLMC Payment Deferral":false}},
+  {investor:"FHLMC",id:"FHLMC-09",name:"Forbearance Plan eligible temporary",loan:TL({hardshipType:"Reduction in Income",fhlmcLongTermHardship:false,propertyCondition:"Standard"}),expected:{"FHLMC Forbearance Plan":true}},
+  {investor:"FHLMC",id:"FHLMC-10",name:"Forbearance Plan fails long-term non-unemp",loan:TL({hardshipType:"Reduction in Income",fhlmcLongTermHardship:true,fhlmcUnemployed:false,propertyCondition:"Standard"}),expected:{"FHLMC Forbearance Plan":false}},
+];
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 interface Profile { id:string; email:string; full_name:string; approved:boolean; role:string; }
 
@@ -3357,6 +3417,11 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
   const [isOffline,setIsOffline]=useState(!navigator.onLine);
   // Share toast
   const [shareToast,setShareToast]=useState(false);
+  // Test runner
+  const [testResults,setTestResults]=useState<{tc:any,actual:Record<string,boolean>,pass:boolean}[]>([]);
+  const [testRan,setTestRan]=useState(false);
+  const [testFilter,setTestFilter]=useState("all");
+  const [testInvestorFilter,setTestInvestorFilter]=useState("all");
   // Quick LOS Import state
   const [losLoanNum,setLosLoanNum]=useState("");
   const [losUpb,setLosUpb]=useState("");
@@ -3774,7 +3839,7 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
         setShowTour(false);
       }
       if (!["INPUT","TEXTAREA","SELECT"].includes((e.target as HTMLElement)?.tagName)) {
-        const tabKeys: Record<string, string> = {"1":"dashboard","2":"inputs","3":"results","4":"audit","5":"report","6":"compare","7":"portfolio","8":"settings"};
+        const tabKeys: Record<string, string> = {"1":"dashboard","2":"inputs","3":"results","4":"audit","5":"report","6":"compare","7":"portfolio","8":"settings","9":"tests"};
         if (tabKeys[e.key]) { e.preventDefault(); setTab(tabKeys[e.key]); }
       }
     };
@@ -5657,6 +5722,153 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
             </div>
           </div>
         )}
+
+        {tab==="tests" && (()=>{
+          const evalMap:{[k:string]:(l:any)=>any[]}={FHA:evaluateFHA,USDA:evaluateUSDA,VA:evaluateVA,FNMA:evaluateFNMA,FHLMC:evaluateFHLMC};
+          const runTests=()=>{
+            const res=TEST_CASES.map(tc=>{
+              const raw=evalMap[tc.investor](tc.loan);
+              const actual:Record<string,boolean>={};
+              raw.forEach((r:any)=>{actual[r.option]=r.eligible;});
+              const pass=Object.entries(tc.expected).every(([k,v])=>actual[k]===v);
+              return {tc,actual,pass};
+            });
+            setTestResults(res);
+            setTestRan(true);
+          };
+          const investors=["all","FHA","USDA","VA","FNMA","FHLMC"];
+          const filtered=testResults.filter(r=>{
+            if(testFilter==="pass"&&!r.pass) return false;
+            if(testFilter==="fail"&&r.pass) return false;
+            if(testInvestorFilter!=="all"&&r.tc.investor!==testInvestorFilter) return false;
+            return true;
+          });
+          const total=testResults.length, passed=testResults.filter(r=>r.pass).length, failed=total-passed;
+          const investorStats=["FHA","USDA","VA","FNMA","FHLMC"].map(inv=>{
+            const inv_cases=testResults.filter(r=>r.tc.investor===inv);
+            return {inv,total:inv_cases.length,passed:inv_cases.filter(r=>r.pass).length};
+          });
+          return (
+            <div className="p-4 max-w-5xl mx-auto">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="text-lg font-black text-slate-800">🧪 Engine Test Suite</div>
+                  <div className="text-xs text-slate-500 mt-0.5">50 representative test cases · 5 investors · live evaluation against coded rules</div>
+                </div>
+                <button onClick={runTests}
+                  className="bg-[#1e3a5f] text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-[#162d4a] active:scale-95 transition-all shadow">
+                  ▶ Run All Tests
+                </button>
+              </div>
+
+              {testRan && (
+                <>
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="bg-white rounded-2xl border border-slate-200 p-4 text-center">
+                      <div className="text-2xl font-black text-slate-800">{total}</div>
+                      <div className="text-xs text-slate-500 mt-1">Total Cases</div>
+                    </div>
+                    <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-4 text-center">
+                      <div className="text-2xl font-black text-emerald-700">{passed}</div>
+                      <div className="text-xs text-emerald-600 mt-1">Passed ✓</div>
+                    </div>
+                    <div className={`${failed>0?"bg-red-50 border-red-200":"bg-slate-50 border-slate-200"} rounded-2xl border p-4 text-center`}>
+                      <div className={`text-2xl font-black ${failed>0?"text-red-700":"text-slate-400"}`}>{failed}</div>
+                      <div className={`text-xs mt-1 ${failed>0?"text-red-600":"text-slate-400"}`}>Failed {failed>0?"✗":""}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-4">
+                    <div className="text-xs font-bold text-slate-600 mb-3">Pass Rate by Investor</div>
+                    <div className="grid grid-cols-5 gap-2">
+                      {investorStats.map(({inv,total:t,passed:p})=>(
+                        <div key={inv} className="text-center">
+                          <div className={`text-sm font-black ${p===t?"text-emerald-700":"text-red-600"}`}>{t>0?Math.round(p/t*100):0}%</div>
+                          <div className="w-full bg-slate-100 rounded-full h-1.5 my-1">
+                            <div className={`h-1.5 rounded-full ${p===t?"bg-emerald-500":"bg-red-500"}`} style={{width:t>0?`${p/t*100}%`:"0%"}}/>
+                          </div>
+                          <div className="text-[10px] text-slate-500 font-semibold">{inv}</div>
+                          <div className="text-[10px] text-slate-400">{p}/{t}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl border border-slate-200 p-4">
+                    <div className="flex items-center gap-3 mb-3 flex-wrap">
+                      <div className="text-xs font-bold text-slate-600">Filter:</div>
+                      {(["all","pass","fail"] as const).map(f=>(
+                        <button key={f} onClick={()=>setTestFilter(f)}
+                          className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${testFilter===f?"bg-[#1e3a5f] text-white border-[#1e3a5f]":"bg-white text-slate-600 border-slate-300 hover:border-slate-400"}`}>
+                          {f==="all"?"All":(f==="pass"?`✓ Pass (${passed})`:`✗ Fail (${failed})`)}
+                        </button>
+                      ))}
+                      <div className="ml-auto flex items-center gap-2">
+                        {investors.map(inv=>(
+                          <button key={inv} onClick={()=>setTestInvestorFilter(inv)}
+                            className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-colors ${testInvestorFilter===inv?"bg-slate-800 text-white border-slate-800":"bg-white text-slate-500 border-slate-200 hover:border-slate-400"}`}>
+                            {inv==="all"?"All":inv}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-100">
+                            <th className="text-left py-2 pr-3 text-slate-500 font-semibold w-20">ID</th>
+                            <th className="text-left py-2 pr-3 text-slate-500 font-semibold">Test Name</th>
+                            <th className="text-left py-2 pr-3 text-slate-500 font-semibold w-20">Investor</th>
+                            <th className="text-left py-2 pr-3 text-slate-500 font-semibold w-40">Option Checked</th>
+                            <th className="text-left py-2 pr-3 text-slate-500 font-semibold w-20">Expected</th>
+                            <th className="text-left py-2 text-slate-500 font-semibold w-20">Actual</th>
+                            <th className="text-right py-2 text-slate-500 font-semibold w-16">Result</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filtered.map(({tc,actual,pass})=>{
+                            const optKey=Object.keys(tc.expected)[0];
+                            const exp=tc.expected[optKey];
+                            const act=actual[optKey];
+                            return (
+                              <tr key={tc.id} className={`border-b border-slate-50 ${pass?"":"bg-red-50/40"}`}>
+                                <td className="py-1.5 pr-3 font-mono text-slate-400">{tc.id}</td>
+                                <td className="py-1.5 pr-3 text-slate-700">{tc.name}</td>
+                                <td className="py-1.5 pr-3">
+                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${tc.investor==="FHA"?"bg-blue-100 text-blue-700":tc.investor==="USDA"?"bg-green-100 text-green-700":tc.investor==="VA"?"bg-purple-100 text-purple-700":tc.investor==="FNMA"?"bg-amber-100 text-amber-700":"bg-orange-100 text-orange-700"}`}>{tc.investor}</span>
+                                </td>
+                                <td className="py-1.5 pr-3 text-slate-500 truncate max-w-[160px]" title={optKey}>{optKey}</td>
+                                <td className="py-1.5 pr-3">
+                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${exp?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{exp?"eligible":"ineligible"}</span>
+                                </td>
+                                <td className="py-1.5 pr-3">
+                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${act===undefined?"bg-yellow-100 text-yellow-700":act?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{act===undefined?"?":(act?"eligible":"ineligible")}</span>
+                                </td>
+                                <td className="py-1.5 text-right">
+                                  <span className={`text-sm font-bold ${pass?"text-emerald-600":"text-red-500"}`}>{pass?"✓":"✗"}</span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                      {filtered.length===0&&<div className="text-center text-slate-400 text-sm py-6">No test cases match the current filter.</div>}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {!testRan && (
+                <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+                  <div className="text-4xl mb-3">🧪</div>
+                  <div className="text-slate-700 font-bold mb-1">50 test cases ready</div>
+                  <div className="text-xs text-slate-400 mb-4">Tests run directly against the live evaluation engine — no external dependencies.</div>
+                  <div className="text-xs text-slate-400">Covers: FHA · USDA · VA · FNMA · FHLMC · happy paths · boundary conditions · negative cases</div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
