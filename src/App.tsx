@@ -537,6 +537,7 @@ const initLoan = {
   fhlmcRecourse:false,
   fhlmcStepRateMortgage:false,
   fhlmcRateAdjustedWithin12Mo:false,
+  fhlmcStreamlinedSolicitation:false, // servicer sent solicitation letter during 90–105 DLQ window (§9206.7)
   fhlmcPriorModCount:"0",
   fhlmcFailedFlexTPP12Mo:false,
   fhlmcPriorFlexMod60DLQ:false, // prior Flex Mod → 60+ DLQ within 12mo, not cured
@@ -2217,7 +2218,7 @@ function evaluateFHA(l) {
   results.push({option:"Repayment Plan",eligible:!isDisaster&&dlq<=12&&canRepayWithin24&&rppWithin150Pct&&!l.failedTPP&&!l.fhaOwlBorrowerUnresponsive,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("DLQ≤12mo",dlq,dlq<=12),node("Can repay within 24mo (total DTI ≤40% — §III.A.2.f)",canRepayWithin24,canRepayWithin24),node("Total RPP payment ≤ 150% of current PITI (§III.A.2.f)",rpp150Label,rppWithin150Pct),node("No failed TPP",!l.failedTPP,!l.failedTPP),node("Borrower responsive (Repayment Plan requires borrower agreement)",l.fhaOwlBorrowerUnresponsive?"Unresponsive — use OWL":"Responsive",!l.fhaOwlBorrowerUnresponsive)]});
 
   // Formal Forbearance — requires borrower request; blocked if unresponsive (use OWL instead)
-  results.push({option:"Formal Forbearance",eligible:!isDisaster&&dlq<12&&(canRepayWithin6||l.requestedForbearance)&&!l.fhaOwlBorrowerUnresponsive,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("DLQ<12mo",dlq,dlq<12),node("Repay 6mo OR requested",canRepayWithin6||l.requestedForbearance,canRepayWithin6||l.requestedForbearance),node("Borrower responsive (Formal Forbearance requires borrower request)",l.fhaOwlBorrowerUnresponsive?"Unresponsive — use OWL":"Responsive",!l.fhaOwlBorrowerUnresponsive)]});
+  results.push({option:"Formal Forbearance",eligible:!isDisaster&&dlq<12&&(canRepayWithin6||l.requestedForbearance)&&!l.fhaOwlBorrowerUnresponsive,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("DLQ < 12 months (§III.A.2.k — 12-month outer cap; servicer may approve extension beyond 6mo up to 12mo total with documented cause)",dlq+"mo",dlq<12),node("Repay 6mo OR requested",canRepayWithin6||l.requestedForbearance,canRepayWithin6||l.requestedForbearance),node("Borrower responsive (Formal Forbearance requires borrower request)",l.fhaOwlBorrowerUnresponsive?"Unresponsive — use OWL":"Responsive",!l.fhaOwlBorrowerUnresponsive)],note:"Initial term up to 6 months; servicer may extend to 12 months total with documented hardship (§III.A.2.k). All home retention options must be evaluated before foreclosure if forbearance exceeds 12 months."});
 
   // ML 2025-12: home retention base — no continuousIncome req; 24-month cooldown
   const cooldownOK = priorHR === 0 || priorHR >= 24;
@@ -2636,6 +2637,7 @@ function evaluateFHLMC(l) {
       node("Long-term/permanent hardship (unemployment OK post-forbearance)", l.fhlmcLongTermHardship?"Yes":"No", eligHardship),
       node("Verified income", l.fhlmcVerifiedIncome?"Yes":"No", l.fhlmcVerifiedIncome),
       node("Investment property: current/<60 DLQ hard stop", l.fhlmcPropertyType, !investmentHardStop),
+      ...(!isPrimaryRes && l.fhlmcPropertyType ? [node(`Non-primary residence (${l.fhlmcPropertyType}) — FHLMC prior written approval may be required for certain workout terms (§9206.2 advisory)`, l.fhlmcPropertyType, true)] : []),
       node("QRPC (Qualified Right Party Contact) achieved (§9206.1)", l.fhlmcQRPCAchieved?"Yes":"No", l.fhlmcQRPCAchieved),
       node("Prior modifications < 3", priorMods, priorMods < 3),
       node("No failed Flex Mod TPP within 12 months", l.fhlmcFailedFlexTPP12Mo?"Yes":"No", !l.fhlmcFailedFlexTPP12Mo),
@@ -2656,6 +2658,7 @@ function evaluateFHLMC(l) {
       node("No recourse arrangement", l.fhlmcRecourse?"Yes":"No", noRecourse),
       node("Loan age ≥ 12 months", loanAge+"mo", loanAge >= 12),
       node("≥ 90 days DLQ OR Step-Rate 60+ DLQ within 12mo of adjustment", dlq+"mo"+(l.fhlmcStepRateMortgage?" (step-rate)":""), eligStreamlined),
+      node("Servicer solicitation letter sent during 90–105 DLQ window (§9206.7)", l.fhlmcStreamlinedSolicitation?"Yes":"No", l.fhlmcStreamlinedSolicitation),
       node("Investment property: current/<60 DLQ hard stop", l.fhlmcPropertyType, !investmentHardStop),
       node("Prior modifications < 3", priorMods, priorMods < 3),
       node("No failed Flex Mod TPP within 12 months", l.fhlmcFailedFlexTPP12Mo?"Yes":"No", !l.fhlmcFailedFlexTPP12Mo),
@@ -2664,7 +2667,7 @@ function evaluateFHLMC(l) {
       node("Not under active TPP/forbearance/repayment plan", (l.fhlmcActiveTPP||l.fhlmcActiveForbearance||l.fhlmcActiveRepayPlan)?"Active":"None", noActiveTPP&&noActiveForbearance&&noActiveRepay),
       node("No unexpired offer for another workout option", l.fhlmcUnexpiredOffer?"Yes":"No", noUnexpiredOffer),
     ];
-    results.push({ option:"Freddie Mac Flex Modification (Streamlined)", eligible:nodes.every(nd=>nd.pass), nodes, note:"No BRP, hardship, or income verification required for streamlined path" });
+    results.push({ option:"Freddie Mac Flex Modification (Streamlined)", eligible:nodes.every(nd=>nd.pass), nodes, note:"Servicer must identify eligible borrowers at 90–105 DLQ and send solicitation letter (§9206.7). No BRP, hardship, or income verification required." });
   }
   // ── 5c. Freddie Mac Flex Modification — Disaster ──────────────────────────────
   {
@@ -2872,6 +2875,7 @@ function evaluateFNMA(l) {
       node("Not modified within previous 12 months (D2-3.2-06)", l.fnmaModifiedWithin12Mo?"Modified within 12mo — not eligible":"OK", !l.fnmaModifiedWithin12Mo),
       ...(dlq < 3 ? [node("BRP / income documentation complete (required for <90 DLQ path — D2-3.2-06)", l.fnmaBRPComplete?"Yes":"No", l.fnmaBRPComplete)] : []),
       node("QRPC (Qualified Right Party Contact) achieved (D2-3.2-06)", l.fnmaQRPCAchieved?"Yes":"No", l.fnmaQRPCAchieved),
+      ...(l.fnmaPropertyType !== "Principal Residence" ? [node(`Non-primary residence (${l.fnmaPropertyType||"unknown"}) — imminent default path unavailable; 60+ DLQ required (D2-3.2-06 advisory)`, l.fnmaPropertyType, true)] : []),
       ...(l.fnmaHasMI ? [node("MI/PMI insurer approval confirmed (LM.R1074)", l.fnmaMIApprovalConfirmed?"Confirmed":"Not confirmed", l.fnmaMIApprovalConfirmed, "Servicer must obtain prior written approval from MI insurer if insurer lacks FNMA delegated authority")] : []),
       ...commonBlockers,
     ];
@@ -2896,6 +2900,7 @@ function evaluateFNMA(l) {
       node("Prior modifications < 3 (payment deferrals excluded)", priorModCount, eligPriorMods),
       node("No failed Flex Mod TPP within 12 months", l.fnmaFailedTPP12Months?"Yes":"No", eligNoFailedTPP),
       node("No 60-day re-default within 12mo of last Flex Mod", l.fnmaReDefaulted12Months?"Yes":"No", eligNoReDefault),
+      ...(l.fnmaPropertyType !== "Principal Residence" ? [node(`Non-primary residence (${l.fnmaPropertyType||"unknown"}) — imminent default path unavailable; 60+ DLQ required (D2-3.2-06 advisory)`, l.fnmaPropertyType, true)] : []),
       ...(l.fnmaHasMI ? [node("MI/PMI insurer approval confirmed (LM.R1074)", l.fnmaMIApprovalConfirmed?"Confirmed":"Not confirmed", l.fnmaMIApprovalConfirmed, "Servicer must obtain prior written approval from MI insurer if insurer lacks FNMA delegated authority")] : []),
       ...commonBlockers,
     ];
@@ -4839,6 +4844,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                   <Tog label="Prior Flex Mod → 60+ DLQ within 12mo, not cured" value={loan.fhlmcPriorFlexMod60DLQ} onChange={v=>set("fhlmcPriorFlexMod60DLQ",v)}/>
                   <Tog label="Step-Rate Mortgage" value={loan.fhlmcStepRateMortgage} onChange={v=>set("fhlmcStepRateMortgage",v)}/>
                   {loan.fhlmcStepRateMortgage&&<Tog label="Interest rate adjusted within past 12 months" value={loan.fhlmcRateAdjustedWithin12Mo} onChange={v=>set("fhlmcRateAdjustedWithin12Mo",v)}/>}
+                  <Tog label="Streamlined Flex Mod solicitation letter sent during 90–105 DLQ window (§9206.7)" value={loan.fhlmcStreamlinedSolicitation} onChange={v=>set("fhlmcStreamlinedSolicitation",v)}/>
                 </Sec>
                 <Sec title="FHLMC – Active Status Blockers">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700 mb-1">These fields reflect current workout status — pull from servicing system</div>
