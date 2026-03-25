@@ -450,6 +450,8 @@ const initLoan = {
   fhaPaymentsMade12:false,           // ≥12 payments made — HUD 4000.1 §III.A.2.k (auto-computed from Note Date)
   // USDA
   usdaUpbGe5000:true, usdaPaymentsMade12:true, usdaBankruptcyNotActive:true,
+  usdaUpbAtInitialDefault:"",      // UPB at date of initial default — basis for 30% MRA cap (§3555.304)
+  usdaTotalDTILe55:true,           // post-modification total DTI ≤ 55% (7 CFR §3555.304 general condition)
   usdaLitigationNotActive:true, usdaPriorFailedStreamlineTPP:false,
   usdaNumPrevMods:"0", usdaForeclosureSaleGe60Away:true,
   usdaBorrowerCanResumeCurrent:false, usdaHardshipDurationResolved:true,
@@ -474,7 +476,7 @@ const initLoan = {
   fnmaPropertyType:"Principal Residence",
   fnmaHardshipResolved:false,
   fnmaCanResumeFull:false,
-  fnmaCannotReinstate:true,
+  fnmaCannotReinstate:false,
   fnmaImminentDefault:false,
   fnmaWithin36MonthsMaturity:false,
   fnmaPriorDeferralMonths:"24",
@@ -507,6 +509,7 @@ const initLoan = {
   fnmaLongTermHardship:false,      // long-term/permanent hardship (ID Rule 1)
   fnmaPrior30DLQ12Mo:false,        // 2+ 30-day DLQ in past 12 months (ID Rule 2)
   fnmaModifiedWithin12Mo:false,    // modified within previous 12 months (D2-3.2-06 — blocks Standard Flex Mod)
+  fnmaBRPComplete:false,           // BRP/income documentation complete (required for Standard Flex Mod when DLQ < 90 days)
   // FHLMC
   fhlmcHardshipResolved:false,
   fhlmcCanResumeFull:false,
@@ -554,6 +557,7 @@ const initLoan = {
   calculatedRPPGt0:true, forbearancePeriodLt12:true, totalDLQLt12:true,
   vaPriorModCount:"0",
   vaLastModDate:"",                // date of most recent VA modification (for §36.4315(a)(3) 12-month seasoning)
+  vaPDMA:false,                    // property is in a Presidentially Declared Major Disaster Area (VA M26-4 Ch. 8)
 };
 
 // ─── MATH HELPERS ─────────────────────────────────────────────────────────────
@@ -616,6 +620,8 @@ const calcNewFirstPayment = (effectiveDate) => {
 function calcApprovalTerms(optionName, l) {
   const upb = n(l.upb);
   const originalUpb = n(l.originalUpb) || upb;
+  // §3555.304: MRA cap = 30% of UPB at date of initial default (not origination UPB)
+  const mraCapBase = n(l.usdaUpbAtInitialDefault) > 0 ? n(l.usdaUpbAtInitialDefault) : originalUpb;
   const escrow = n(l.currentEscrow);
   const arrears = n(l.arrearagesToCapitalize);
   const escShortage = n(l.escrowShortage);
@@ -1059,7 +1065,7 @@ function calcApprovalTerms(optionName, l) {
     const r = newRate > 0 ? newRate / 100 / 12 : 0;
     const affordableUPB = targetPI != null && r > 0 ? targetPI * (Math.pow(1+r,480) - 1) / (r * Math.pow(1+r,480)) : null;
     const mraDeferred = affordableUPB != null ? Math.max(0, newUPB - affordableUPB) : null;
-    const maxMRA = originalUpb > 0 ? originalUpb * 0.30 : null;
+    const maxMRA = mraCapBase > 0 ? mraCapBase * 0.30 : null;
     const mraCapOK = maxMRA != null && mraDeferred != null ? (priorPC + mraDeferred) <= maxMRA : null;
     const finalModUPB = affordableUPB;
     const finalPI = finalModUPB != null && newRate > 0 ? calcMonthlyPI(finalModUPB, newRate, 480) : null;
@@ -1076,8 +1082,8 @@ function calcApprovalTerms(optionName, l) {
       "Affordable UPB at Target Payment (480mo)": affordableUPB != null ? fmt$(affordableUPB) : "Enter rate, GMI/target",
       "MRA Principal Deferral Required": mraDeferred != null ? fmt$(mraDeferred) : "Enter inputs",
       "Prior MRA Balance": fmt$(priorPC),
-      "Maximum MRA (30% of Original UPB)": maxMRA != null ? fmt$(maxMRA) : "Enter Original UPB",
-      "MRA Within 30% Cap?": mraCapOK == null ? "Enter Original UPB" : mraCapOK ? "✅ Yes" : "❌ No — exceeds cap",
+      "Maximum MRA (30% of UPB at Initial Default)": maxMRA != null ? fmt$(maxMRA) + (n(l.usdaUpbAtInitialDefault) > 0 ? "" : " (using Orig UPB — enter UPB at Initial Default for accuracy)") : "Enter UPB at Initial Default or Original UPB",
+      "MRA Within 30% Cap?": mraCapOK == null ? "Enter UPB" : mraCapOK ? "✅ Yes" : "❌ No — exceeds cap",
       "── Final Modified Loan ──": "——",
       "Final Modified UPB (after MRA deferral)": finalModUPB != null ? fmt$(finalModUPB) : "Enter inputs",
       "New Loan Term": "480 months (40 years)",
@@ -1092,7 +1098,7 @@ function calcApprovalTerms(optionName, l) {
 
   // ── USDA Standalone MRA ──
   if (opt === "USDA Standalone Mortgage Recovery Advance (MRA)") {
-    const maxMRA = originalUpb * 0.30;
+    const maxMRA = mraCapBase * 0.30;
     const mraAmount = Math.min(capAmount, Math.max(0, maxMRA - priorPC));
     return {
       "MRA Amount": fmt$(mraAmount),
@@ -1101,9 +1107,9 @@ function calcApprovalTerms(optionName, l) {
       "  → Legal Fees": fmt$(legal),
       "  → Late Fees (EXCLUDED)": lateFees > 0 ? `${fmt$(lateFees)} — NOT included` : "None",
       "Prior MRA Balance": fmt$(priorPC),
-      "Maximum MRA (30% of Original UPB)": fmt$(maxMRA || null),
+      "Maximum MRA (30% of UPB at Initial Default)": fmt$(maxMRA || null) + (n(l.usdaUpbAtInitialDefault) > 0 ? "" : " (using Orig UPB)"),
       "Remaining MRA Capacity": fmt$(Math.max(0, maxMRA - priorPC)),
-      "MRA Within Cap?": maxMRA ? (mraAmount <= (maxMRA - priorPC) ? "✅ Yes" : "❌ Exceeds cap") : "Enter Original UPB",
+      "MRA Within Cap?": maxMRA ? (mraAmount <= (maxMRA - priorPC) ? "✅ Yes" : "❌ Exceeds cap") : "Enter UPB",
       "First Mortgage Rate": "UNCHANGED",
       "First Mortgage Term": "UNCHANGED",
       "First Mortgage Payment": "UNCHANGED",
@@ -1162,14 +1168,14 @@ function calcApprovalTerms(optionName, l) {
 
   // ── USDA Disaster MRA ──
   if (opt === "USDA Disaster Mortgage Recovery Advance (MRA)") {
-    const maxMRA = originalUpb * 0.30;
+    const maxMRA = mraCapBase * 0.30;
     const mraAmount = Math.min(capAmount, Math.max(0, maxMRA - priorPC));
     return {
       "MRA Amount": fmt$(mraAmount),
       "  → All Arrearages Covered": fmt$(arrears),
       "  → Late Fees (EXCLUDED)": lateFees > 0 ? `${fmt$(lateFees)} — NOT included` : "None",
       "Prior MRA Balance": fmt$(priorPC),
-      "Maximum MRA (30% Original UPB)": fmt$(maxMRA || null),
+      "Maximum MRA (30% of UPB at Initial Default)": fmt$(maxMRA || null) + (n(l.usdaUpbAtInitialDefault) > 0 ? "" : " (using Orig UPB)"),
       "First Mortgage Rate": "UNCHANGED",
       "First Mortgage Term": "UNCHANGED",
       "First Mortgage Payment": "UNCHANGED",
@@ -2360,8 +2366,9 @@ function evaluateUSDA(l) {
     ? `${usdaAchieves10Pct?"✅":"❌"} New P&I $${_usdaSlNewPI480.toFixed(2)} ${usdaAchieves10Pct?"≤":">"} $${(_usdaSlCurrentPI*0.90).toFixed(2)} (90% of current $${_usdaSlCurrentPI.toFixed(2)})`
     : "Enter PMMS, rate, UPB, and current P&I to auto-compute";
   // Standard Streamline Mod: full income documentation, targets 31% DTI — 10% P&I check does NOT apply
-  const sb=!isD&&br&&l.borrowerIntentRetention&&l.occupancyStatus==="Owner Occupied"&&nm<2&&!l.usdaPriorFailedStreamlineTPP&&dlqD>=90&&usdaUpb5k&&usdaPayments12&&l.usdaBankruptcyNotActive&&l.usdaLitigationNotActive&&l.usdaForeclosureSaleGe60Away&&notListedForSale;
-  results.push({option:"USDA Streamline Loan Modification",eligible:sb,nodes:[node("Non-disaster hardship",l.hardshipType,!isD),node("≥90d DLQ",dlqD,dlqD>=90),node("UPB≥$5k",usdaUpb5k,usdaUpb5k),node("12+ payments since origination (loan age)",usdaPayments12,usdaPayments12),node("Bankruptcy≠Active",l.usdaBankruptcyNotActive,l.usdaBankruptcyNotActive),node("Litigation≠Active",l.usdaLitigationNotActive,l.usdaLitigationNotActive),node("No failed Streamline TPP",!l.usdaPriorFailedStreamlineTPP,!l.usdaPriorFailedStreamlineTPP),node("Not Abandoned/Condemned",br,br),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied"),node("Lien=First",l.lienPosition,l.lienPosition==="First"),node("Prior mods < 2 (max 1 Streamline mod lifetime — HB-1-3555 §18.7)",nm,nm<2),node("Foreclosure sale≥60d",l.usdaForeclosureSaleGe60Away,l.usdaForeclosureSaleGe60Away),node("Property not listed for sale",notListedForSale?"No":"Listed for sale",notListedForSale)],note:"Full income documentation required (§3555.304); targets 31% front-end DTI; rate = lesser of current or PMMS+50bps"});
+  // Note: usdaPaymentsMade12 removed per 7 CFR §3555.304 (Final Rule Apr 14, 2025) — no 12-payment requirement in current regulation
+  const sb=!isD&&br&&l.borrowerIntentRetention&&l.occupancyStatus==="Owner Occupied"&&nm<2&&!l.usdaPriorFailedStreamlineTPP&&dlqD>=90&&usdaUpb5k&&l.usdaBankruptcyNotActive&&l.usdaLitigationNotActive&&l.usdaForeclosureSaleGe60Away&&notListedForSale&&l.usdaTotalDTILe55;
+  results.push({option:"USDA Streamline Loan Modification",eligible:sb,nodes:[node("Non-disaster hardship",l.hardshipType,!isD),node("≥90d DLQ",dlqD,dlqD>=90),node("UPB≥$5k",usdaUpb5k,usdaUpb5k),node("Bankruptcy≠Active",l.usdaBankruptcyNotActive,l.usdaBankruptcyNotActive),node("Litigation≠Active",l.usdaLitigationNotActive,l.usdaLitigationNotActive),node("No failed Streamline TPP",!l.usdaPriorFailedStreamlineTPP,!l.usdaPriorFailedStreamlineTPP),node("Not Abandoned/Condemned",br,br),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied"),node("Lien=First",l.lienPosition,l.lienPosition==="First"),node("Prior mods < 2 (max 1 Streamline mod lifetime — HB-1-3555 §18.7)",nm,nm<2),node("Foreclosure sale≥60d",l.usdaForeclosureSaleGe60Away,l.usdaForeclosureSaleGe60Away),node("Property not listed for sale",notListedForSale?"No":"Listed for sale",notListedForSale),node("Post-mod total DTI ≤ 55% (7 CFR §3555.304)",l.usdaTotalDTILe55?"Yes":"No",l.usdaTotalDTILe55)],note:"Full income documentation required (§3555.304); targets 31% front-end DTI; rate = lesser of current or PMMS+50bps"});
   // Streamline Final Offer: unresponsive borrower track — no-doc, must achieve ≥10% P&I reduction (§3555.304(b)(2))
   results.push({option:"USDA Streamline Final Offer",eligible:sb&&l.usdaBorrowerUnresponsive&&usdaAchieves10Pct,nodes:[...([node("Non-disaster hardship",l.hardshipType,!isD),node("≥90d DLQ",dlqD,dlqD>=90),node("UPB≥$5k",usdaUpb5k,usdaUpb5k),node("Bankruptcy≠Active",l.usdaBankruptcyNotActive,l.usdaBankruptcyNotActive),node("Litigation≠Active",l.usdaLitigationNotActive,l.usdaLitigationNotActive),node("No failed Streamline TPP",!l.usdaPriorFailedStreamlineTPP,!l.usdaPriorFailedStreamlineTPP),node("Not Abandoned/Condemned",br,br),node("Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied"),node("Prior mods < 2",nm,nm<2),node("Foreclosure sale≥60d",l.usdaForeclosureSaleGe60Away,l.usdaForeclosureSaleGe60Away)]),node("Borrower unresponsive to Streamline Mod offer",l.usdaBorrowerUnresponsive?"Yes":"No — not eligible for Final Offer",l.usdaBorrowerUnresponsive),node("≥10% P&I reduction achievable (480mo re-amortization — §3555.304(b)(2))",usdaAchieves10PctLabel,usdaAchieves10Pct)],note:"No income documentation required; ≥10% P&I reduction mandatory; for borrowers who failed to respond to standard Streamline Mod offer"});
   // USDA Modification + MRA Servicing Plan (Final Rule eff. Feb 11, 2025): when 480mo mod alone can't achieve target
@@ -2435,8 +2442,8 @@ function evaluateVA(l) {
     ? vaLoanAgeLabel
     : (_vaLastModAge !== null ? `${_vaLastModAge} months since last mod` : "Enter Last Mod Date to auto-compute");
   if (isD){
-    // Disaster forbearance: triggered by disaster declaration, no minimum DLQ threshold
-    results.push({option:"VA Disaster Forbearance",eligible:vb&&l.dlqAtDisasterLt30&&(l.forbearancePeriodLt12||l.totalDLQLt12),nodes:[...vN,node("<30d DLQ at Declaration",l.dlqAtDisasterLt30,l.dlqAtDisasterLt30),node("Forbearance/DLQ<12mo",l.forbearancePeriodLt12||l.totalDLQLt12,l.forbearancePeriodLt12||l.totalDLQLt12)]});
+    // Disaster forbearance: triggered by disaster declaration; property must be in PDMA; current borrowers eligible
+    results.push({option:"VA Disaster Forbearance",eligible:vb&&l.vaPDMA&&l.dlqAtDisasterLt30&&(l.forbearancePeriodLt12||l.totalDLQLt12),nodes:[...vN,node("Property in Presidentially Declared Major Disaster Area (VA M26-4 Ch. 8)",l.vaPDMA?"Yes":"No",l.vaPDMA),node("Current or <30d DLQ at Declaration (current borrowers eligible — M26-4 Ch. 8)",l.dlqAtDisasterLt30?"Yes":"No",l.dlqAtDisasterLt30),node("Forbearance/DLQ<12mo",l.forbearancePeriodLt12||l.totalDLQLt12,l.forbearancePeriodLt12||l.totalDLQLt12)]});
     results.push({option:"VA Disaster Modification",eligible:vb&&!l.activeRPP&&vapmmsLeCurrentPlus1&&l.dlqAtDisasterLt30&&l.loanGe60DaysDLQ&&l.previousWorkoutForbearance&&l.workoutStateActivePassed,nodes:[...vN,node("ActiveRPP=False",!l.activeRPP,!l.activeRPP),node("PMMS≤Rate+1%",vapmmsLeCurrentPlus1,vapmmsLeCurrentPlus1),node("<30d at Declaration",l.dlqAtDisasterLt30,l.dlqAtDisasterLt30),node("Loan≥60d DLQ",l.loanGe60DaysDLQ,l.loanGe60DaysDLQ),node("Prev=Forbearance",l.previousWorkoutForbearance,l.previousWorkoutForbearance),node("Workout{Active,Passed}",l.workoutStateActivePassed,l.workoutStateActivePassed)]});
     results.push({option:"VA Disaster Extend Modification",eligible:vb&&l.hardshipDuration!=="Resolved"&&l.dlqGe12ContractualPayments&&l.dlqAtDisasterLt30&&l.loanGe60DaysDLQ&&l.previousWorkoutForbearance&&l.workoutStateActivePassed,nodes:[...vN,node("Hardship≠Resolved",l.hardshipDuration,l.hardshipDuration!=="Resolved"),node("DLQ≥12 Contractual",l.dlqGe12ContractualPayments,l.dlqGe12ContractualPayments),node("<30d at Declaration",l.dlqAtDisasterLt30,l.dlqAtDisasterLt30),node("Loan≥60d DLQ",l.loanGe60DaysDLQ,l.loanGe60DaysDLQ),node("Prev=Forbearance",l.previousWorkoutForbearance,l.previousWorkoutForbearance),node("Workout{Active,Passed}",l.workoutStateActivePassed,l.workoutStateActivePassed)]});
   }
@@ -2863,6 +2870,7 @@ function evaluateFNMA(l) {
       node("No failed Flex Mod TPP within 12 months", l.fnmaFailedTPP12Months?"Yes":"No", eligNoFailedTPP),
       node("No 60-day re-default within 12mo of last Flex Mod", l.fnmaReDefaulted12Months?"Yes":"No", eligNoReDefault),
       node("Not modified within previous 12 months (D2-3.2-06)", l.fnmaModifiedWithin12Mo?"Modified within 12mo — not eligible":"OK", !l.fnmaModifiedWithin12Mo),
+      ...(dlq < 3 ? [node("BRP / income documentation complete (required for <90 DLQ path — D2-3.2-06)", l.fnmaBRPComplete?"Yes":"No", l.fnmaBRPComplete)] : []),
       node("QRPC (Qualified Right Party Contact) achieved (D2-3.2-06)", l.fnmaQRPCAchieved?"Yes":"No", l.fnmaQRPCAchieved),
       ...(l.fnmaHasMI ? [node("MI/PMI insurer approval confirmed (LM.R1074)", l.fnmaMIApprovalConfirmed?"Confirmed":"Not confirmed", l.fnmaMIApprovalConfirmed, "Servicer must obtain prior written approval from MI insurer if insurer lacks FNMA delegated authority")] : []),
       ...commonBlockers,
@@ -4640,10 +4648,12 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                   <Tog label="Hardship type not excluded" value={loan.usdaHardshipNotExcluded} onChange={v=>set("usdaHardshipNotExcluded",v)}/>
                   <Tog label="New RPP payment ≤ 200% of current" value={loan.usdaNewPaymentLe200pct} onChange={v=>set("usdaNewPaymentLe200pct",v)}/>
                   {(()=>{const _g=n(loan.grossMonthlyIncome),_p=n(loan.currentPITI),_e=n(loan.monthlyExpenses);const _net=_g>0&&_p>0&&loan.monthlyExpenses!==""?_g-_p-_e:null;return _net!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Borrower has positive net income</span><span className={`font-semibold ${_net>0?"text-emerald-600":"text-red-500"}`}>{_net>0?"✅ Yes":"❌ No"} — auto (GMI {fmt$(_g)} − PITI {fmt$(_p)} − exp {fmt$(_e)} = {fmt$(_net)})</span></div>:<Tog label="Borrower has positive net income (manual)" value={loan.usdaBorrowerPositiveNetIncome} onChange={v=>set("usdaBorrowerPositiveNetIncome",v)}/>;})()}
+                  <Tog label="Post-modification total DTI ≤ 55% (7 CFR §3555.304 — general eligibility condition)" value={loan.usdaTotalDTILe55} onChange={v=>set("usdaTotalDTILe55",v)}/>
                   <Tog label="480-mo re-amortization alone cannot achieve PITI target (Step 3 MRA required)" value={loan.usdaStep3DeferralRequired} onChange={v=>set("usdaStep3DeferralRequired",v)}/>
                   <Tog label="Borrower unresponsive to Streamline Mod offer (Final Offer track — §3555.304(b)(2))" value={loan.usdaBorrowerUnresponsive} onChange={v=>set("usdaBorrowerUnresponsive",v)}/>
                 </Sec>
                 <Sec title="USDA – MRA / Disaster">
+                  <F label="UPB at Date of Initial Default (§3555.304 — basis for 30% MRA cap; leave blank to use Original UPB)"><Num value={loan.usdaUpbAtInitialDefault} onChange={v=>set("usdaUpbAtInitialDefault",v)} placeholder="e.g. 185000" prefix="$"/></F>
                   <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700 mb-1">These fields reflect current workout status — pull from servicing system</div>
                   <Tog label="Borrower can resume current payment" value={loan.usdaBorrowerCanResumeCurrent} onChange={v=>set("usdaBorrowerCanResumeCurrent",v)}/>
                   <Tog label="Hardship Duration = Resolved" value={loan.usdaHardshipDurationResolved} onChange={v=>set("usdaHardshipDurationResolved",v)}/>
@@ -4688,6 +4698,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                 </Sec>
                 <Sec title="VA – Disaster">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700 mb-1">These fields reflect current workout status — pull from servicing system</div>
+                  <Tog label="Property in Presidentially Declared Major Disaster Area (PDMA — required for VA Disaster Forbearance)" value={loan.vaPDMA} onChange={v=>set("vaPDMA",v)}/>
                   {n(loan.pmmsRate)>0&&n(loan.currentInterestRate)>0
                     ? <div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">PMMS ≤ Current Rate + 1%</span><span className={`font-semibold ${n(loan.pmmsRate)<=n(loan.currentInterestRate)+1?"text-emerald-600":"text-red-500"}`}>{n(loan.pmmsRate)<=n(loan.currentInterestRate)+1?"✅ Yes":"❌ No"} — auto (PMMS {n(loan.pmmsRate).toFixed(3)}% ≤ {(n(loan.currentInterestRate)+1).toFixed(3)}%)</span></div>
                     : <Tog label="PMMS ≤ Current Rate + 1% (manual — enter both rates to auto-compute)" value={loan.pmmsLeCurrentPlus1} onChange={v=>set("pmmsLeCurrentPlus1",v)}/>}
@@ -4726,6 +4737,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                   {(()=>{const _today=new Date().toISOString().split("T")[0];const _eff=loan.approvalEffectiveDate||_today;const _origMat=loan.originalMaturityDate||(loan.noteFirstPaymentDate&&loan.noteTerm?calcOriginalMaturity(loan.noteFirstPaymentDate,loan.noteTerm):null);const _mo=_origMat?monthsBetween(_eff,_origMat):null;return _mo!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Within 36 months of maturity</span><span className={`font-semibold ${_mo<=36?"text-red-500":"text-emerald-600"}`}>{_mo<=36?"⚠️ Yes — within 36mo":"✅ No"} — auto ({_mo} mo remaining)</span></div>:<Tog label="Within 36 months of maturity or projected payoff (manual — enter Maturity Date to auto-compute)" value={loan.fnmaWithin36MonthsMaturity} onChange={v=>set("fnmaWithin36MonthsMaturity",v)}/>;})()}
                   <Tog label="QRPC (Qualified Right Party Contact) achieved" value={loan.fnmaQRPCAchieved} onChange={v=>set("fnmaQRPCAchieved",v)}/>
                   <Tog label="Modified within previous 12 months (D2-3.2-06 — blocks Standard Flex Mod if Yes)" value={loan.fnmaModifiedWithin12Mo} onChange={v=>set("fnmaModifiedWithin12Mo",v)}/>
+                  {n(loan.delinquencyMonths)<3&&<Tog label="BRP / income documentation complete (required for <90 DLQ Standard Flex Mod path — D2-3.2-06)" value={loan.fnmaBRPComplete} onChange={v=>set("fnmaBRPComplete",v)}/>}
                   <F label="FNMA Modification Interest Rate (%) — from current FNMA Servicing Guide exhibit"><Num value={loan.fnmaModificationRate} onChange={v=>set("fnmaModificationRate",v)} placeholder="e.g. 6.5 (check FNMA exhibit)"/></F>
                   <F label="Estimated Property Value (for MTMLTV — LL-2024-02)"><Num value={loan.fnmaPropertyValue} onChange={v=>set("fnmaPropertyValue",v)} placeholder="e.g. 300000" prefix="$"/></F>
                   {n(loan.fnmaPropertyValue)>0&&n(loan.upb)>0&&<div className="bg-teal-50 rounded p-2 text-xs text-teal-800 space-y-0.5 mt-1">
