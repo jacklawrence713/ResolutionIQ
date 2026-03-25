@@ -385,9 +385,9 @@ const OPTION_CITATIONS: Record<string, string> = {
   "FHLMC Streamlined Payment Deferral": "Freddie Mac Guide §9203.4; Bulletin 2020-10",
   "FHLMC Disaster Payment Deferral": "Freddie Mac Single-Family Guide §9203.4 (Disaster Payment Deferral)",
   "Freddie Mac Flex Modification": "Freddie Mac Guide §9206; Bulletin 2026-2",
-  "Freddie Mac Flex Modification (Disaster)": "Freddie Mac Single-Family Guide §9206.6 (Disaster Flex Modification)",
+  "Freddie Mac Flex Modification (Disaster)": "Freddie Mac Single-Family Guide §9206.1(c)(v); Bulletin 2026-2 (eff. Feb 11, 2026 — dual DLQ requirement added)",
   "Freddie Mac Flex Modification (Streamlined)": "Freddie Mac Guide §9206.7",
-  "Freddie Mac Short Sale": "Freddie Mac Guide §9208; Bulletin 2026-2",
+  "Freddie Mac Short Sale": "Freddie Mac Guide §9208; §9201.2; Bulletin 2026-2 (eff. Feb 11, 2026 — home retention evaluation no longer required before short sale)",
   "Freddie Mac Deed-in-Lieu": "Freddie Mac Guide §9209",
   // FNMA
   "FNMA Reinstatement": "Fannie Mae Servicing Guide D2-3.2-01",
@@ -435,7 +435,8 @@ const initLoan = {
   borrowerCanAffordCurrentMonthly:false, modifiedPILe90PctOld:false,
   meetsPFSRequirements:false, outstandingDebtUncurable:false, meetsDILRequirements:false,
   // FHA
-  priorFHAHAMPMonths:"", verifiedDisaster:false, propertyInPDMA:false,
+  priorFHAHAMPMonths:"", priorFHAPaymentSupplementMonths:"",  // PS-specific 36-month cooldown (ML 2024-02)
+  verifiedDisaster:false, propertyInPDMA:false,
   propertySubstantiallyDamaged:false, repairsCompleted:false,
   principalResidencePreDisaster:true, currentOrLe30DaysAtDisaster:false,
   incomeGePreDisaster:false, incomeDocProvided:true,
@@ -1093,6 +1094,7 @@ function calcApprovalTerms(optionName, l) {
       "New First Payment Date": fmtDate(newFirstPmt),
       "MRA Lien Type": "Non-interest bearing subordinate lien; due on sale, refinance, or payoff",
       "Trial Payment Plan": "3 months (4 months if imminent default)",
+      "Post-Mod Performance Requirement": "Borrower must make 36 consecutive timely payments after modification; servicer monitors for re-default (§3555.304(d))",
       "Authority": "HB-1-3555 §18.7; USDA RD Final Rule (eff. Feb 11, 2025) — Modification MRA Servicing Plan",
     };
   }
@@ -1278,11 +1280,14 @@ function calcApprovalTerms(optionName, l) {
     return {
       "Interest Rate": "UNCHANGED — "+fmtPct(currentRate || null),
       "Monthly Payment": "UNCHANGED — "+fmt$(currentPITI || null),
-      "Term Extension": `${extMonths} month(s) (DLQ payments, max 12)`,
+      "Term Extension": `${extMonths} month(s) (capped at 12 months beyond original maturity — Circular 26-24-3 §3.a(2))`,
       "Original Maturity Date": fmtDate(origMaturity),
       "New Maturity Date": fmtDate(newMat),
       "New First Payment Date": fmtDate(newFirstPmt),
       "Trial Payment Plan": "Not required if complete application submitted",
+      "VA Prior Approval": "Required if extension > 12 months beyond original maturity date",
+      "Note": "Extends maturity date only — rate and payment are UNCHANGED. Distinct tool from VA Disaster Modification. Does not require prior Disaster Mod as prerequisite (M26-4 Ch. 5.06; Circular 26-24-3).",
+      "Authority": "VA M26-4 Ch. 5.06; Circular 26-24-3 §3.a (Feb 2024)",
     };
   }
 
@@ -1623,8 +1628,8 @@ function calcApprovalTerms(optionName, l) {
     return {
       "Plan Type": "Freddie Mac Forbearance Plan — Unemployment Hardship",
       "Hardship Requirement": "Unemployment (temporary hardship) — unemployed borrowers must be offered forbearance, not Flex Modification",
-      "Authorized Initial Term": "Up to 6 months (servicer-authorized)",
-      "Extension": "Up to 6 additional months with FHLMC approval (total up to 12 months)",
+      "Authorized Initial Term": "1–3 months per increment (Bulletin 2026-2, eff. May 1, 2026 — reduced from 1–6 months)",
+      "Extension": "Additional 1–3 month increments with FHLMC approval (total up to 12 months cumulative)",
       "Payment During Plan": "Reduced or suspended per plan terms",
       "Late Charges": "Must NOT accrue or be collected during active forbearance",
       "6-Month End Date": fmtDate(end6mo),
@@ -2269,7 +2274,11 @@ function evaluateFHA(l) {
 
   // Payment Supplement (step 7: all eligible delinquent borrowers, not unemployed-only — ML 2025-06)
   // Requires active borrower engagement (MoPR payments) — blocked if borrower is unresponsive (use OWL instead)
-  results.push({option:"Payment Supplement",eligible:!isDisaster&&baseEligible&&dlq>=3&&!canAchieve360&&!canAchieve480&&comboPayLe40&&!l.fhaOwlBorrowerUnresponsive,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),...baseNodes,node("DLQ≥3mo (61+ days — ML 2025-06 minimum for Payment Supplement)",dlq,dlq>=3),node("25% P&I reduction NOT achievable by 360mo re-amortization (30-yr mod fails)",achieve360Label,!canAchieve360),node("25% P&I reduction NOT achievable by 480mo re-amortization (40-yr Combo fails — ML 2024-02)",achieve480Label,!canAchieve480),node("Combo pmt≤40% GMI",comboPayLe40,comboPayLe40),node("Borrower responsive (Payment Supplement requires active borrower participation)",l.fhaOwlBorrowerUnresponsive?"Unresponsive — use OWL":"Responsive",!l.fhaOwlBorrowerUnresponsive)],note:"ML 2025-06 / ML 2024-02: Available only after full retention waterfall exhausted (30-yr mod AND 40-yr Combo both fail to achieve 25% P&I reduction target)"});
+  // ML 2024-02: 36-month specific re-eligibility cooldown after a prior Payment Supplement (stricter than general 24-month HR cooldown)
+  const psMonths = n(l.priorFHAPaymentSupplementMonths);
+  const psCooldownOK = psMonths === 0 || psMonths >= 36;
+  const psCooldownLabel = psMonths === 0 ? "None" : psMonths + "mo ago";
+  results.push({option:"Payment Supplement",eligible:!isDisaster&&baseEligible&&psCooldownOK&&dlq>=3&&!canAchieve360&&!canAchieve480&&comboPayLe40&&comboCapPass&&!l.fhaOwlBorrowerUnresponsive,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),...baseNodes,node("Prior Payment Supplement ≥ 36 months ago or none (ML 2024-02 — 36-month PS-specific cooldown)",psCooldownLabel,psCooldownOK),node("DLQ ≥ 3 months (61+ days — ML 2025-06 minimum for Payment Supplement)",dlq,dlq>=3),node("25% P&I reduction NOT achievable by 360mo re-amortization (30-yr mod fails — waterfall step 5)",achieve360Label,!canAchieve360),node("25% P&I reduction NOT achievable by 480mo re-amortization (40-yr Combo fails — waterfall step 6)",achieve480Label,!canAchieve480),node("Combo pmt ≤ 40% GMI",comboPayLe40,comboPayLe40),node("Partial Claim within 30% statutory cap (ML 2024-02 — PS uses a Partial Claim)",comboCapLabel,comboCapPass),node("Borrower responsive (Payment Supplement requires active borrower participation — not compatible with active TPP)",l.fhaOwlBorrowerUnresponsive?"Unresponsive — use OWL":"Responsive",!l.fhaOwlBorrowerUnresponsive)],note:"ML 2025-06 / ML 2024-02: Last step in waterfall — available only after 30-yr mod AND 40-yr Combo both fail. No income documentation required. 36-month cooldown after prior Payment Supplement."});
 
   // Special Forbearance – Unemployment
   results.push({option:"Special Forbearance – Unemployment",eligible:dlq<=12&&!l.foreclosureActive&&l.hardshipType==="Unemployment"&&l.occupancyStatus==="Owner Occupied"&&l.propertyDisposition==="Principal Residence"&&l.verifiedUnemployment&&!l.continuousIncome&&l.ineligibleAllRetention&&!l.propertyListedForSale&&!l.assumptionInProcess,nodes:[node("DLQ≤12mo",dlq,dlq<=12),node("Hardship=Unemployment",l.hardshipType,l.hardshipType==="Unemployment"),node("Verified unemployment",l.verifiedUnemployment,l.verifiedUnemployment),node("No continuous income",!l.continuousIncome,!l.continuousIncome),node("Ineligible all retention",l.ineligibleAllRetention,l.ineligibleAllRetention),node("Not listed for sale",!l.propertyListedForSale,!l.propertyListedForSale),node("No assumption",!l.assumptionInProcess,!l.assumptionInProcess)]});
@@ -2446,7 +2455,7 @@ function evaluateVA(l) {
     // Disaster forbearance: triggered by disaster declaration; property must be in PDMA; current borrowers eligible
     results.push({option:"VA Disaster Forbearance",eligible:vb&&l.vaPDMA&&l.dlqAtDisasterLt30&&(l.forbearancePeriodLt12||l.totalDLQLt12),nodes:[...vN,node("Property in Presidentially Declared Major Disaster Area (VA M26-4 Ch. 8)",l.vaPDMA?"Yes":"No",l.vaPDMA),node("Current or <30d DLQ at Declaration (current borrowers eligible — M26-4 Ch. 8)",l.dlqAtDisasterLt30?"Yes":"No",l.dlqAtDisasterLt30),node("Forbearance/DLQ<12mo",l.forbearancePeriodLt12||l.totalDLQLt12,l.forbearancePeriodLt12||l.totalDLQLt12)]});
     results.push({option:"VA Disaster Modification",eligible:vb&&!l.activeRPP&&vapmmsLeCurrentPlus1&&l.dlqAtDisasterLt30&&l.loanGe60DaysDLQ&&l.previousWorkoutForbearance&&l.workoutStateActivePassed,nodes:[...vN,node("ActiveRPP=False",!l.activeRPP,!l.activeRPP),node("PMMS≤Rate+1%",vapmmsLeCurrentPlus1,vapmmsLeCurrentPlus1),node("<30d at Declaration",l.dlqAtDisasterLt30,l.dlqAtDisasterLt30),node("Loan≥60d DLQ",l.loanGe60DaysDLQ,l.loanGe60DaysDLQ),node("Prev=Forbearance",l.previousWorkoutForbearance,l.previousWorkoutForbearance),node("Workout{Active,Passed}",l.workoutStateActivePassed,l.workoutStateActivePassed)]});
-    results.push({option:"VA Disaster Extend Modification",eligible:vb&&l.hardshipDuration!=="Resolved"&&l.dlqGe12ContractualPayments&&l.dlqAtDisasterLt30&&l.loanGe60DaysDLQ&&l.previousWorkoutForbearance&&l.workoutStateActivePassed,nodes:[...vN,node("Hardship≠Resolved",l.hardshipDuration,l.hardshipDuration!=="Resolved"),node("DLQ≥12 Contractual",l.dlqGe12ContractualPayments,l.dlqGe12ContractualPayments),node("<30d at Declaration",l.dlqAtDisasterLt30,l.dlqAtDisasterLt30),node("Loan≥60d DLQ",l.loanGe60DaysDLQ,l.loanGe60DaysDLQ),node("Prev=Forbearance",l.previousWorkoutForbearance,l.previousWorkoutForbearance),node("Workout{Active,Passed}",l.workoutStateActivePassed,l.workoutStateActivePassed)]});
+    results.push({option:"VA Disaster Extend Modification",eligible:vb&&l.hardshipDuration!=="Resolved"&&l.dlqAtDisasterLt30&&l.loanGe60DaysDLQ&&l.previousWorkoutForbearance&&l.workoutStateActivePassed,nodes:[...vN,node("Hardship ongoing (not resolved) — Circular 26-24-3 §3.a",l.hardshipDuration,l.hardshipDuration!=="Resolved"),node("Current or <30d DLQ at Disaster Declaration — Circular 26-24-3",l.dlqAtDisasterLt30,l.dlqAtDisasterLt30),node("Loan ≥ 60d DLQ at evaluation",l.loanGe60DaysDLQ,l.loanGe60DaysDLQ),node("Prior forbearance plan or workout completed — Circular 26-24-3",l.previousWorkoutForbearance,l.previousWorkoutForbearance),node("Workout state = Active or Passed",l.workoutStateActivePassed,l.workoutStateActivePassed)],note:"Extends original maturity date up to 12 months beyond original maturity (Circular 26-24-3 §3.a(2)). Does NOT re-amortize — rate and payment are unchanged. VA prior approval required if extension > 12 months. Distinct from VA Disaster Modification — does not require prior Disaster Mod as prerequisite."});
   }
   // ── VA M26-4 Chapter 5 options — NOTE: Home Retention Waterfall (Appendix F) RESCINDED May 1, 2025 per Circular 26-25-2.
   //    Servicers must offer best option for borrower's circumstances per 38 C.F.R. §36.4319; preferred order still considered. ──
@@ -2471,8 +2480,8 @@ function evaluateVA(l) {
   const vaDispositionIntent = !l.borrowerIntentRetention;
   const vaDispositionBRP = dlqD<=60 ? l.completeBRP : true;
   const ce=ltH&&vb&&vaDispositionIntent&&vaDispositionBRP&&((dlqD<=60&&l.completeBRP)||(dlqD>=60&&l.borrowerIntentDisposition));
-  const ceNodes=[...vN,node("Long Term/Perm hardship",l.hardshipDuration,ltH),node("Borrower intent = Disposition",vaDispositionIntent?"Disposition":"Retention — switch intent",vaDispositionIntent),node(dlqD<=60?"Complete BRP (DLQ≤60d)":"DLQ≥60d + Disposition intent",dlqD<=60?l.completeBRP:l.borrowerIntentDisposition,dlqD<=60?l.completeBRP:l.borrowerIntentDisposition)];
-  results.push({option:"VA Compromise Sale",eligible:ce,nodes:ceNodes});
+  const ceNodes=[...vN,node("Long Term/Perm hardship",l.hardshipDuration,ltH),node("Borrower intent = Disposition",vaDispositionIntent?"Disposition":"Retention — switch intent",vaDispositionIntent),node(dlqD<=60?"Complete BRP (DLQ≤60d)":"DLQ≥60d + Disposition intent",dlqD<=60?l.completeBRP:l.borrowerIntentDisposition,dlqD<=60?l.completeBRP:l.borrowerIntentDisposition),node("VA Regional Loan Center approval required — servicers have NO delegated authority for Compromise Sales (M26-4 Ch. 5 §3.A; Circular 26-24-2)","Required",true)];
+  results.push({option:"VA Compromise Sale",eligible:ce,nodes:ceNodes,note:"VA RLC must approve all Compromise Sales. Submit fully executed purchase contract + VA BPO/appraisal to RLC. Standard response: ~5 business days. Net proceeds must meet or exceed VA-appraised net value."});
   results.push({option:"VA Deed-in-Lieu",eligible:ce&&l.priorWorkoutCompromiseSaleFailed,nodes:[...ceNodes,node("Prior Comp Sale FAILED",l.priorWorkoutCompromiseSaleFailed,l.priorWorkoutCompromiseSaleFailed)]});
   return results;
 }
@@ -2640,7 +2649,7 @@ function evaluateFHLMC(l) {
       ...(!isPrimaryRes && l.fhlmcPropertyType ? [node(`Non-primary residence (${l.fhlmcPropertyType}) — FHLMC prior written approval may be required for certain workout terms (§9206.2 advisory)`, l.fhlmcPropertyType, true)] : []),
       node("QRPC (Qualified Right Party Contact) achieved (§9206.1)", l.fhlmcQRPCAchieved?"Yes":"No", l.fhlmcQRPCAchieved),
       node("Prior modifications < 3", priorMods, priorMods < 3),
-      node("No failed Flex Mod TPP within 12 months", l.fhlmcFailedFlexTPP12Mo?"Yes":"No", !l.fhlmcFailedFlexTPP12Mo),
+      node("No servicer-cancelled (non-performing) Flex Mod TPP within 12 months (§9206.5 — borrower-initiated withdrawal does NOT trigger ineligibility)", l.fhlmcFailedFlexTPP12Mo?"Yes":"No", !l.fhlmcFailedFlexTPP12Mo),
       node("No prior Flex Mod re-default within 12mo (not cured)", l.fhlmcPriorFlexMod60DLQ?"Yes":"No", !l.fhlmcPriorFlexMod60DLQ),
       node("No approved liquidation option active", l.fhlmcApprovedLiquidationOption?"Active":"None", noActiveLiquidation),
       node("Not under active TPP/forbearance/repayment plan", (l.fhlmcActiveTPP||l.fhlmcActiveForbearance||l.fhlmcActiveRepayPlan)?"Active":"None", noActiveTPP&&noActiveForbearance&&noActiveRepay),
@@ -2661,7 +2670,7 @@ function evaluateFHLMC(l) {
       node("Servicer solicitation letter sent during 90–105 DLQ window (§9206.7)", l.fhlmcStreamlinedSolicitation?"Yes":"No", l.fhlmcStreamlinedSolicitation),
       node("Investment property: current/<60 DLQ hard stop", l.fhlmcPropertyType, !investmentHardStop),
       node("Prior modifications < 3", priorMods, priorMods < 3),
-      node("No failed Flex Mod TPP within 12 months", l.fhlmcFailedFlexTPP12Mo?"Yes":"No", !l.fhlmcFailedFlexTPP12Mo),
+      node("No servicer-cancelled (non-performing) Flex Mod TPP within 12 months (§9206.5 — borrower-initiated withdrawal does NOT trigger ineligibility)", l.fhlmcFailedFlexTPP12Mo?"Yes":"No", !l.fhlmcFailedFlexTPP12Mo),
       node("No prior Flex Mod re-default within 12mo (not cured)", l.fhlmcPriorFlexMod60DLQ?"Yes":"No", !l.fhlmcPriorFlexMod60DLQ),
       node("No approved liquidation option active", l.fhlmcApprovedLiquidationOption?"Active":"None", noActiveLiquidation),
       node("Not under active TPP/forbearance/repayment plan", (l.fhlmcActiveTPP||l.fhlmcActiveForbearance||l.fhlmcActiveRepayPlan)?"Active":"None", noActiveTPP&&noActiveForbearance&&noActiveRepay),
@@ -2674,18 +2683,20 @@ function evaluateFHLMC(l) {
     const eligDisaster = l.fhlmcDisasterHardship;
     const eligFEMA = l.fhlmcFEMADesignation;
     const eligDlqAtDisaster = dlqAtDisaster < 2;
+    const eligDlqAtEval = dlq >= 3; // §9206.1(c)(v) — Bulletin 2026-2 (eff. Feb 11, 2026): ≥90 DLQ at evaluation date required
     const nodes = [
       node("Disaster-related hardship", l.fhlmcDisasterHardship?"Yes":"No", eligDisaster),
       node("Eligible Disaster (FEMA-declared)", l.fhlmcFEMADesignation?"Yes":"No", eligFEMA),
       node("Conventional mortgage (not FHA/VA/RHS)", l.fhlmcMortgageType, isConventional),
       node("First lien", l.lienPosition, isFirstLien),
       node("No recourse arrangement", l.fhlmcRecourse?"Yes":"No", noRecourse),
-      node("Current or <60 days DLQ at time of disaster", dlqAtDisaster+"mo", eligDlqAtDisaster),
+      node("Current or <60 days DLQ at time of disaster (§9206.1(c)(v))", dlqAtDisaster+"mo", eligDlqAtDisaster),
+      node("≥ 90 days DLQ at evaluation date (§9206.1(c)(v) — Bulletin 2026-2, eff. Feb 11, 2026)", dlq+"mo", eligDlqAtEval),
       node("Not under active approved liquidation option", l.fhlmcApprovedLiquidationOption?"Active":"None", noActiveLiquidation),
       node("Not under active non-disaster TPP/repayment plan", (l.fhlmcActiveTPP||l.fhlmcActiveRepayPlan)?"Active":"None", noActiveTPP&&noActiveRepay),
       node("No unexpired non-disaster workout offer", l.fhlmcUnexpiredOffer?"Yes":"No", noUnexpiredOffer),
     ];
-    results.push({ option:"Freddie Mac Flex Modification (Disaster)", eligible:nodes.every(nd=>nd.pass), nodes, note:"Prior solicitation not required; disaster forbearance plan does NOT disqualify" });
+    results.push({ option:"Freddie Mac Flex Modification (Disaster)", eligible:nodes.every(nd=>nd.pass), nodes, note:"Bulletin 2026-2 (eff. Feb 11, 2026): must be current/<60 DLQ at disaster AND ≥90 DLQ at evaluation. Disaster forbearance plan does NOT disqualify." });
   }
   // ── 6. Short Sale ─────────────────────────────────────────────────────────────
   {
@@ -2863,6 +2874,9 @@ function evaluateFNMA(l) {
     const eligPriorMods = priorModCount < 3;
     const eligNoFailedTPP = !l.fnmaFailedTPP12Months;
     const eligNoReDefault = !l.fnmaReDefaulted12Months;
+    const _fnmaPropVal = n(l.fnmaPropertyValue);
+    const _fnmaPostCapUPB = upb + n(l.arrearagesToCapitalize) + n(l.legalFees) + n(l.fnmaPriorDeferredUPB);
+    const _fnmaMTMLTV = _fnmaPropVal > 0 ? (_fnmaPostCapUPB / _fnmaPropVal * 100) : null;
     const nodes = [
       node("Non-disaster hardship", l.hardshipType, !isDisaster),
       node("Conventional 1st lien", l.lienPosition, eligLienPos),
@@ -2877,6 +2891,7 @@ function evaluateFNMA(l) {
       node("QRPC (Qualified Right Party Contact) achieved (D2-3.2-06)", l.fnmaQRPCAchieved?"Yes":"No", l.fnmaQRPCAchieved),
       ...(l.fnmaPropertyType !== "Principal Residence" ? [node(`Non-primary residence (${l.fnmaPropertyType||"unknown"}) — imminent default path unavailable; 60+ DLQ required (D2-3.2-06 advisory)`, l.fnmaPropertyType, true)] : []),
       ...(l.fnmaHasMI ? [node("MI/PMI insurer approval confirmed (LM.R1074)", l.fnmaMIApprovalConfirmed?"Confirmed":"Not confirmed", l.fnmaMIApprovalConfirmed, "Servicer must obtain prior written approval from MI insurer if insurer lacks FNMA delegated authority")] : []),
+      node("Post-cap MTMLTV (LL-2024-02: ≥50% enables rate reduction; >50% enables principal forbearance)", _fnmaMTMLTV != null ? `${_fnmaMTMLTV.toFixed(1)}% (${fmt$(_fnmaPostCapUPB)} ÷ ${fmt$(_fnmaPropVal)})` : "Enter property value to compute", true),
       ...commonBlockers,
     ];
     results.push({ option:"Fannie Mae Flex Modification", eligible:nodes.every(nd=>nd.pass), nodes });
@@ -4587,6 +4602,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                 <Sec title="FHA Home Retention (ML 2025-06)">
                   <div className="flex items-center gap-1 mb-1"><SrcBadge type="borrower"/><SrcBadge type="calc"/><span className="text-[10px] text-slate-400 ml-1">Mixed: borrower docs + auto-computed</span></div>
                   <F label="Prior Home Retention Option (months ago — 24-month cooldown)"><Num value={loan.priorFHAHAMPMonths} onChange={v=>set("priorFHAHAMPMonths",v)} placeholder="0 = none"/></F>
+                  <F label="Prior Payment Supplement (months ago — 36-month cooldown, ML 2024-02)"><Num value={loan.priorFHAPaymentSupplementMonths} onChange={v=>set("priorFHAPaymentSupplementMonths",v)} placeholder="0 = none"/></F>
                   {(()=>{const _today=new Date().toISOString().split("T")[0];const _eff=loan.approvalEffectiveDate||_today;const _ageSrc=loan.noteDate||loan.noteFirstPaymentDate;const _age=_ageSrc?monthsBetween(_ageSrc,_eff):null;return _age!==null?<div className="flex items-center justify-between py-1 text-xs"><span className="text-slate-600">Loan age ≥ 12 months (HUD 4000.1 §III.A.2.k)</span><span className={`font-semibold ${_age>=12?"text-emerald-600":"text-red-500"}`}>{_age>=12?"✅ Yes":"❌ No — ineligible for all mod/PC options"} — auto ({_age} months)</span></div>:<Tog label="≥12 payments made / loan age ≥ 12 months (HUD 4000.1 §III.A.2.k — required for all mod/PC options; enter Note Date to auto-compute)" value={loan.fhaPaymentsMade12} onChange={v=>set("fhaPaymentsMade12",v)}/>;})()}
                   {_pmms>0&&<div className="bg-blue-50 rounded p-2 text-xs text-blue-800 mt-1">Mod rate: PMMS {_pmms.toFixed(3)}% + 25bps = <strong>{_modRate.toFixed(3)}%</strong> (rounded to nearest 0.125%)</div>}
                   {_pi>0&&<div className="bg-emerald-50 rounded p-2 text-xs text-emerald-800 mt-0.5">25% P&I target: {fmt$(_pi*0.75)} + {fmt$(_esc)} escrow = <strong>{fmt$(_tgtPITI)}</strong> PITI</div>}
@@ -4840,7 +4856,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                   <F label="Cumulative months deferred (lifetime total, prior to this evaluation)"><Num value={loan.fhlmcCumulativeDeferredMonths} onChange={v=>set("fhlmcCumulativeDeferredMonths",v)} placeholder="0"/></F>
                   <F label="Months since last non-disaster payment deferral (0 = never)"><Num value={loan.fhlmcPriorDeferralMonths} onChange={v=>set("fhlmcPriorDeferralMonths",v)} placeholder="0 = never"/></F>
                   <F label="Prior modifications (count)"><Num value={loan.fhlmcPriorModCount} onChange={v=>set("fhlmcPriorModCount",v)} placeholder="0"/></F>
-                  <Tog label="Failed Flex Mod TPP within 12 months" value={loan.fhlmcFailedFlexTPP12Mo} onChange={v=>set("fhlmcFailedFlexTPP12Mo",v)}/>
+                  <Tog label="Servicer-cancelled (non-performing) Flex Mod TPP within 12 months (§9206.5 — borrower-initiated withdrawal excluded)" value={loan.fhlmcFailedFlexTPP12Mo} onChange={v=>set("fhlmcFailedFlexTPP12Mo",v)}/>
                   <Tog label="Prior Flex Mod → 60+ DLQ within 12mo, not cured" value={loan.fhlmcPriorFlexMod60DLQ} onChange={v=>set("fhlmcPriorFlexMod60DLQ",v)}/>
                   <Tog label="Step-Rate Mortgage" value={loan.fhlmcStepRateMortgage} onChange={v=>set("fhlmcStepRateMortgage",v)}/>
                   {loan.fhlmcStepRateMortgage&&<Tog label="Interest rate adjusted within past 12 months" value={loan.fhlmcRateAdjustedWithin12Mo} onChange={v=>set("fhlmcRateAdjustedWithin12Mo",v)}/>}
