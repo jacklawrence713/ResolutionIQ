@@ -2875,7 +2875,7 @@ function evaluateFNMA(l) {
     const eligNoFailedTPP = !l.fnmaFailedTPP12Months;
     const eligNoReDefault = !l.fnmaReDefaulted12Months;
     const _fnmaPropVal = n(l.fnmaPropertyValue);
-    const _fnmaPostCapUPB = upb + n(l.arrearagesToCapitalize) + n(l.legalFees) + n(l.fnmaPriorDeferredUPB);
+    const _fnmaPostCapUPB = n(l.upb) + n(l.arrearagesToCapitalize) + n(l.legalFees) + n(l.fnmaPriorDeferredUPB);
     const _fnmaMTMLTV = _fnmaPropVal > 0 ? (_fnmaPostCapUPB / _fnmaPropVal * 100) : null;
     const nodes = [
       node("Non-disaster hardship", l.hardshipType, !isDisaster),
