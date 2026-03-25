@@ -3426,12 +3426,16 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
   const runTests=useCallback(()=>{
     try {
       const evalMap:{[k:string]:(l:any)=>any[]}={FHA:evaluateFHA,USDA:evaluateUSDA,VA:evaluateVA,FNMA:evaluateFNMA,FHLMC:evaluateFHLMC};
-      const res=TEST_CASES.map(tc=>{
-        const raw=evalMap[tc.investor](tc.loan);
-        const actual:Record<string,boolean>={};
-        raw.forEach((r:any)=>{actual[r.option]=r.eligible;});
-        const pass=Object.entries(tc.expected).every(([k,v])=>actual[k]===v);
-        return {tc,actual,pass};
+      const res=TEST_CASES.map((tc,idx)=>{
+        try {
+          const raw=evalMap[tc.investor](tc.loan);
+          const actual:Record<string,boolean>={};
+          raw.forEach((r:any)=>{actual[r.option]=r.eligible;});
+          const pass=Object.entries(tc.expected).every(([k,v])=>actual[k]===v);
+          return {tc,actual,pass};
+        } catch(e:any) {
+          throw new Error(`[${tc.id}] ${e?.message||String(e)}`);
+        }
       });
       setTestError("");
       setTestResults(res);
