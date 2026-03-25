@@ -3422,6 +3422,19 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
   const [testRan,setTestRan]=useState(false);
   const [testFilter,setTestFilter]=useState("all");
   const [testInvestorFilter,setTestInvestorFilter]=useState("all");
+  const runTests=useCallback(()=>{
+    const evalMap:{[k:string]:(l:any)=>any[]}={FHA:evaluateFHA,USDA:evaluateUSDA,VA:evaluateVA,FNMA:evaluateFNMA,FHLMC:evaluateFHLMC};
+    const res=TEST_CASES.map(tc=>{
+      const raw=evalMap[tc.investor](tc.loan);
+      const actual:Record<string,boolean>={};
+      raw.forEach((r:any)=>{actual[r.option]=r.eligible;});
+      const pass=Object.entries(tc.expected).every(([k,v])=>actual[k]===v);
+      return {tc,actual,pass};
+    });
+    setTestResults(res);
+    setTestRan(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
   // Quick LOS Import state
   const [losLoanNum,setLosLoanNum]=useState("");
   const [losUpb,setLosUpb]=useState("");
@@ -5724,18 +5737,6 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
         )}
 
         {tab==="tests" && (()=>{
-          const evalMap:{[k:string]:(l:any)=>any[]}={FHA:evaluateFHA,USDA:evaluateUSDA,VA:evaluateVA,FNMA:evaluateFNMA,FHLMC:evaluateFHLMC};
-          const runTests=()=>{
-            const res=TEST_CASES.map(tc=>{
-              const raw=evalMap[tc.investor](tc.loan);
-              const actual:Record<string,boolean>={};
-              raw.forEach((r:any)=>{actual[r.option]=r.eligible;});
-              const pass=Object.entries(tc.expected).every(([k,v])=>actual[k]===v);
-              return {tc,actual,pass};
-            });
-            setTestResults(res);
-            setTestRan(true);
-          };
           const investors=["all","FHA","USDA","VA","FNMA","FHLMC"];
           const filtered=testResults.filter(r=>{
             if(testFilter==="pass"&&!r.pass) return false;
