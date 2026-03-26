@@ -381,8 +381,8 @@ const OPTION_CITATIONS: Record<string, string> = {
   // FHLMC
   "FHLMC Reinstatement": "Freddie Mac Guide §9202.2",
   "FHLMC Repayment Plan": "Freddie Mac Guide §9203.1",
-  "FHLMC Payment Deferral": "Freddie Mac Guide §9204.3; Bulletin 2019-15",
-  "FHLMC Streamlined Payment Deferral": "Freddie Mac Guide §9203.4; Bulletin 2020-10",
+  "FHLMC Payment Deferral": "Freddie Mac Single-Family Guide §9203.23; Bulletin 2026-2",
+  "FHLMC Streamlined Payment Deferral": "Freddie Mac Single-Family Guide §9203.23; Bulletin 2026-2",
   "FHLMC Disaster Payment Deferral": "Freddie Mac Single-Family Guide §9203.4 (Disaster Payment Deferral)",
   "Freddie Mac Flex Modification": "Freddie Mac Guide §9206; Bulletin 2026-2",
   "Freddie Mac Flex Modification (Disaster)": "Freddie Mac Single-Family Guide §9206.1(c)(v); Bulletin 2026-2 (eff. Feb 11, 2026 — dual DLQ requirement added)",
@@ -2556,7 +2556,7 @@ function evaluateFHLMC(l) {
     const eligLoanAge = loanAge >= 12;
     const fhlmcCumDeferred = n(l.fhlmcCumulativeDeferredMonths);
     const fhlmcPriorDeferral = n(l.fhlmcPriorDeferralMonths);
-    const eligCumCap = fhlmcCumDeferred < 12;
+    const eligCumCap = fhlmcCumDeferred < 18;
     const eligPriorDeferral = fhlmcPriorDeferral === 0 || fhlmcPriorDeferral >= 12;
     const nodes = [
       node("Non-disaster hardship", l.hardshipType, !isDisaster),
@@ -2565,9 +2565,9 @@ function evaluateFHLMC(l) {
       node("DLQ 2–6 months", dlq+"mo", eligDlqRange),
       node("Hardship resolved", l.fhlmcHardshipResolved?"Yes":"No", l.fhlmcHardshipResolved),
       node("Can resume full contractual payment", l.fhlmcCanResumeFull?"Yes":"No", l.fhlmcCanResumeFull),
-      node("Cumulative deferred months < 12 (lifetime, non-disaster)", fhlmcCumDeferred+"mo", eligCumCap),
+      node("Cumulative deferred months < 18 (lifetime cap, non-disaster — §9203.23)", fhlmcCumDeferred+"mo", eligCumCap),
       node("Prior non-disaster deferral ≥ 12 months ago (or never)", fhlmcPriorDeferral===0?"None":fhlmcPriorDeferral+"mo ago", eligPriorDeferral),
-      node("QRPC (Qualified Right Party Contact) achieved (§9201 / §9203.23)", l.fhlmcQRPCAchieved?"Yes":"No", l.fhlmcQRPCAchieved),
+      node("QRPC (Qualified Right Party Contact) achieved (§9203.23)", l.fhlmcQRPCAchieved?"Yes":"No", l.fhlmcQRPCAchieved),
       node("No approved liquidation option active", l.fhlmcApprovedLiquidationOption?"Active":"None", noActiveLiquidation),
       node("No active/performing TPP", l.fhlmcActiveTPP?"Active":"None", noActiveTPP),
       node("No unexpired offer for another workout option", l.fhlmcUnexpiredOffer?"Yes":"No", noUnexpiredOffer),
@@ -2582,14 +2582,14 @@ function evaluateFHLMC(l) {
     const eligLoanAge = loanAge >= 12;
     const fhlmcCumDeferred = n(l.fhlmcCumulativeDeferredMonths);
     const fhlmcPriorDeferral = n(l.fhlmcPriorDeferralMonths);
-    const eligCumCap = fhlmcCumDeferred < 12;
+    const eligCumCap = fhlmcCumDeferred < 18;
     const eligPriorDeferral = fhlmcPriorDeferral === 0 || fhlmcPriorDeferral >= 12;
     const nodes = [
       node("Non-disaster hardship", l.hardshipType, !isDisaster),
       node("Conventional 1st lien", l.lienPosition, isConventional && isFirstLien),
       node("Loan age ≥ 12 months", loanAge+"mo", eligLoanAge),
       node("DLQ 2–24 months (streamlined solicitation range)", dlq+"mo", eligDlqRange),
-      node("Cumulative deferred months < 12 (lifetime, non-disaster)", fhlmcCumDeferred+"mo", eligCumCap),
+      node("Cumulative deferred months < 18 (lifetime cap, non-disaster — §9203.23)", fhlmcCumDeferred+"mo", eligCumCap),
       node("Prior non-disaster deferral ≥ 12 months ago (or never)", fhlmcPriorDeferral===0?"None":fhlmcPriorDeferral+"mo ago", eligPriorDeferral),
       node("No approved liquidation option active", l.fhlmcApprovedLiquidationOption?"Active":"None", noActiveLiquidation),
       node("No active/performing TPP", l.fhlmcActiveTPP?"Active":"None", noActiveTPP),
@@ -3347,9 +3347,9 @@ const TEST_CASES:{investor:string;id:string;name:string;loan:any;expected:Record
   {investor:"FHLMC",id:"FHLMC-03",name:"Repayment Plan eligible",loan:TL({delinquencyMonths:"3",hardshipType:"Reduction in Income",fhlmcHardshipResolved:true}),expected:{"FHLMC Repayment Plan":true}},
   {investor:"FHLMC",id:"FHLMC-04",name:"Repayment Plan fails disaster",loan:TL({delinquencyMonths:"3",hardshipType:"Disaster",fhlmcHardshipResolved:true}),expected:{"FHLMC Repayment Plan":false}},
   {investor:"FHLMC",id:"FHLMC-05",name:"Repayment Plan fails not resolved",loan:TL({delinquencyMonths:"3",hardshipType:"Reduction in Income",fhlmcHardshipResolved:false}),expected:{"FHLMC Repayment Plan":false}},
-  {investor:"FHLMC",id:"FHLMC-06",name:"Payment Deferral eligible",loan:TL({delinquencyMonths:"4",hardshipType:"Reduction in Income",fhlmcHardshipResolved:true,fhlmcCanResumeFull:true,fhlmcLoanAge:"24",fhlmcMortgageType:"Conventional",lienPosition:"First",fhlmcCumulativeDeferredMonths:"0",fhlmcPriorDeferralMonths:"0"}),expected:{"FHLMC Payment Deferral":true}},
-  {investor:"FHLMC",id:"FHLMC-07",name:"Payment Deferral fails DLQ=1",loan:TL({delinquencyMonths:"1",fhlmcHardshipResolved:true,fhlmcCanResumeFull:true,fhlmcLoanAge:"24",fhlmcMortgageType:"Conventional",lienPosition:"First"}),expected:{"FHLMC Payment Deferral":false}},
-  {investor:"FHLMC",id:"FHLMC-08",name:"Payment Deferral fails DLQ=7",loan:TL({delinquencyMonths:"7",fhlmcHardshipResolved:true,fhlmcCanResumeFull:true,fhlmcLoanAge:"24",fhlmcMortgageType:"Conventional",lienPosition:"First"}),expected:{"FHLMC Payment Deferral":false}},
+  {investor:"FHLMC",id:"FHLMC-06",name:"Payment Deferral eligible",loan:TL({delinquencyMonths:"4",hardshipType:"Reduction in Income",fhlmcHardshipResolved:true,fhlmcCanResumeFull:true,fhlmcQRPCAchieved:true,fhlmcLoanAge:"24",fhlmcMortgageType:"Conventional",lienPosition:"First",fhlmcCumulativeDeferredMonths:"0",fhlmcPriorDeferralMonths:"0"}),expected:{"FHLMC Payment Deferral":true}},
+  {investor:"FHLMC",id:"FHLMC-07",name:"Payment Deferral eligible — 15mo cum deferred (cap is 18, not 12)",loan:TL({delinquencyMonths:"4",hardshipType:"Reduction in Income",fhlmcHardshipResolved:true,fhlmcCanResumeFull:true,fhlmcQRPCAchieved:true,fhlmcLoanAge:"24",fhlmcMortgageType:"Conventional",lienPosition:"First",fhlmcCumulativeDeferredMonths:"15",fhlmcPriorDeferralMonths:"0"}),expected:{"FHLMC Payment Deferral":true}},
+  {investor:"FHLMC",id:"FHLMC-08",name:"Payment Deferral fails DLQ=7",loan:TL({delinquencyMonths:"7",fhlmcHardshipResolved:true,fhlmcCanResumeFull:true,fhlmcQRPCAchieved:true,fhlmcLoanAge:"24",fhlmcMortgageType:"Conventional",lienPosition:"First"}),expected:{"FHLMC Payment Deferral":false}},
   {investor:"FHLMC",id:"FHLMC-09",name:"Forbearance Plan eligible temporary",loan:TL({hardshipType:"Reduction in Income",fhlmcLongTermHardship:false,propertyCondition:"Standard"}),expected:{"FHLMC Forbearance Plan":true}},
   {investor:"FHLMC",id:"FHLMC-10",name:"Forbearance Plan fails long-term non-unemp",loan:TL({hardshipType:"Reduction in Income",fhlmcLongTermHardship:true,fhlmcUnemployed:false,propertyCondition:"Standard"}),expected:{"FHLMC Forbearance Plan":false}},
 ];
