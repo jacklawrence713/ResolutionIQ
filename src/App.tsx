@@ -3677,6 +3677,11 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
 
   const set=useCallback((k,v)=>{setLoan(p=>({...p,[k]:v}));setEvaluated(false);},[]);
   const set2=useCallback((k,v)=>{setLoan2(p=>({...p,[k]:v}));setEvaluated2(false);},[]);
+  // Refs always hold the latest values — used by evaluate() to avoid stale closure
+  const loanRef = React.useRef(loan);
+  loanRef.current = loan;
+  const overlaysRef = React.useRef(overlays);
+  overlaysRef.current = overlays;
   const evalLoan=(l)=>l.loanType==="FHA"?evaluateFHA(l):l.loanType==="USDA"?evaluateUSDA(l):l.loanType==="VA"?evaluateVA(l):l.loanType==="FNMA"?evaluateFNMA(l):evaluateFHLMC(l);
   const applyOverlays = (evalResults: any[], loanData: any, ov: any) => {
     return evalResults.map(r => {
@@ -3697,11 +3702,13 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
       return r;
     });
   };
-  const evaluate=()=>{
+  const evaluate=useCallback(()=>{
     try {
-      const rawResults = evalLoan(loan);
-      setResults(applyOverlays(rawResults, loan, overlays));
-      setValidationWarnings(validateLoan(loan));
+      const l = loanRef.current;
+      const ov = overlaysRef.current;
+      const rawResults = evalLoan(l);
+      setResults(applyOverlays(rawResults, l, ov));
+      setValidationWarnings(validateLoan(l));
       setEvaluated(true);
       setTab("results");
       setAiResponse("");
@@ -3709,7 +3716,8 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
       setSaveToast("Evaluation error: "+(e?.message||String(e)));
       setTimeout(()=>setSaveToast(""),4000);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
   const evaluate2=()=>{setResults2(evalLoan(loan2));setEvaluated2(true);};
 
   const saveCase=async()=>{
