@@ -3386,6 +3386,7 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
     return evaluateFHA(demoLoan);
   });
   const [evaluated,setEvaluated]=useState(true);
+  const [lastEvaluatedAt,setLastEvaluatedAt]=useState<string|null>(null);
   const [expanded,setExpanded]=useState(null);
   const [expandedAudit,setExpandedAudit]=useState(null);
   const [aiLoading,setAiLoading]=useState(false);
@@ -3710,6 +3711,7 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
       setResults(applyOverlays(rawResults, l, ov));
       setValidationWarnings(validateLoan(l));
       setEvaluated(true);
+      setLastEvaluatedAt(new Date().toLocaleTimeString());
       setTab("results");
       setAiResponse("");
     } catch(e:any) {
@@ -5028,6 +5030,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                   {missing.length===0&&<div className="text-[10px] text-emerald-600 font-semibold">✅ All key fields entered — full auto-compute active</div>}
                 </div>);
               })()}
+              {saveToast&&saveToast.startsWith("Evaluation error")&&<div className="bg-red-50 border border-red-300 text-red-800 text-xs px-3 py-2 rounded-xl mb-2 font-semibold">{saveToast}</div>}
               <button onClick={evaluate} className="w-full bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900 text-white font-black py-3 rounded-xl text-sm mt-3 shadow-lg shadow-emerald-200 transition-all active:scale-95">🔍 Evaluate Loan →</button>
               <div className="text-xs text-slate-400 text-center mt-2">
                 <kbd className="bg-slate-100 px-1 rounded">Ctrl+Enter</kbd> evaluate ·{" "}
@@ -5056,6 +5059,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                   <span className="font-black text-slate-800 text-lg">{loan.loanType}</span>
                   <span className="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold">{eligible.length} eligible</span>
                   <span className="text-xs bg-red-100 text-red-700 px-2.5 py-1 rounded-full font-bold">{ineligible.length} ineligible</span>
+                  {lastEvaluatedAt&&<span className="text-xs text-slate-400 font-medium">evaluated {lastEvaluatedAt}</span>}
                   <button onClick={shareEvaluation} className="ml-auto text-xs bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm font-medium transition-all">🔗 Share</button>
                   <button onClick={printReport} className="text-xs bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm font-medium transition-all">🖨 Print Report</button>
                   <button onClick={exportCaseToExcel} className="text-xs bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm font-medium transition-all">📊 Export to Excel</button>
