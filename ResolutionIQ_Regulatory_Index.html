@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResolutionIQ — Regulatory Citation Index</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #0f172a;
+      --navy2:  #1e293b;
+      --text:   #1e293b;
+      --muted:  #64748b;
+      --border: #e2e8f0;
+      --gray0:  #ffffff;
+      --gray1:  #f8fafc;
+
+      --fha:   #1a56db;
+      --usda:  #0e9f6e;
+      --va:    #c27803;
+      --fhlmc: #7e3af2;
+      --fnma:  #e02424;
+
+      --fha-bg:   #eff6ff;
+      --usda-bg:  #ecfdf5;
+      --va-bg:    #fffbeb;
+      --fhlmc-bg: #f5f3ff;
+      --fnma-bg:  #fff5f5;
+    }
+
+    html { font-size: 14px; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      background: #f1f5f9;
+      padding: 0.5in;
+      line-height: 1.5;
+    }
+
+    /* ── Page Wrapper ── */
+    .page {
+      width: 100%;
+      max-width: 10.5in;
+      margin: 0 auto;
+      background: #fff;
+    }
+
+    /* ── Cover ── */
+    .cover {
+      background: var(--navy);
+      padding: 48px 56px 44px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 280px; height: 280px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .cover::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: 40%;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .cover-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 14px;
+    }
+
+    .cover-title {
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.2;
+      margin-bottom: 10px;
+    }
+
+    .cover-title span {
+      color: #60a5fa;
+    }
+
+    .cover-subtitle {
+      font-size: 1rem;
+      font-weight: 400;
+      color: #94a3b8;
+      margin-bottom: 32px;
+    }
+
+    .cover-meta {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .cover-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .cover-meta-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    .cover-meta-value {
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: #e2e8f0;
+    }
+
+    .cover-meta-value.big {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #60a5fa;
+    }
+
+    /* ── Investor Badge Strip ── */
+    .investor-strip {
+      display: flex;
+      border-top: 4px solid #1e293b;
+    }
+
+    .investor-badge {
+      flex: 1;
+      padding: 10px 0;
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .investor-badge.fha   { background: var(--fha); }
+    .investor-badge.usda  { background: var(--usda); }
+    .investor-badge.va    { background: var(--va); }
+    .investor-badge.fnma  { background: var(--fnma); }
+    .investor-badge.fhlmc { background: var(--fhlmc); }
+
+    /* ── Body Content ── */
+    .content {
+      padding: 0 56px 48px;
+    }
+
+    /* ── Table of Contents ── */
+    .toc {
+      margin: 36px 0 0;
+      padding: 20px 24px;
+      background: var(--gray1);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .toc-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .toc-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 32px;
+      list-style: none;
+    }
+
+    .toc-list li {
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toc-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .toc-list a {
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .toc-count {
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    /* ── Section ── */
+    .investor-section {
+      margin-top: 48px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 16px;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+
+    .section-accent {
+      width: 8px;
+      align-self: stretch;
+      flex-shrink: 0;
+    }
+
+    .section-header-inner {
+      flex: 1;
+      padding: 14px 20px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .section-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .section-subname {
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: rgba(255,255,255,0.75);
+      margin-left: 10px;
+    }
+
+    .section-count {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.65);
+      background: rgba(0,0,0,0.2);
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+
+    .fha-header   { background: var(--fha); }
+    .usda-header  { background: var(--usda); }
+    .va-header    { background: var(--va); }
+    .fnma-header  { background: var(--fnma); }
+    .fhlmc-header { background: var(--fhlmc); }
+
+    .fha-accent   { background: #1240a8; }
+    .usda-accent  { background: #057a55; }
+    .va-accent    { background: #92580e; }
+    .fnma-accent  { background: #9b1c1c; }
+    .fhlmc-accent { background: #5521b5; }
+
+    /* ── Citation Table ── */
+    .citation-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .citation-table thead tr {
+      border-bottom: 2px solid var(--border);
+    }
+
+    .citation-table th {
+      padding: 9px 12px;
+      text-align: left;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--gray1);
+      white-space: nowrap;
+    }
+
+    .citation-table th:first-child  { border-radius: 4px 0 0 0; }
+    .citation-table th:last-child   { border-radius: 0 4px 0 0; }
+
+    .citation-table td {
+      padding: 10px 12px;
+      vertical-align: top;
+      border-bottom: 1px solid var(--border);
+      line-height: 1.5;
+    }
+
+    .citation-table tbody tr:nth-child(odd)  td { background: #ffffff; }
+    .citation-table tbody tr:nth-child(even) td { background: #f8fafc; }
+
+    .citation-table tbody tr:last-child td { border-bottom: none; }
+
+    .citation-table tbody tr:hover td {
+      background: #f0f4ff;
+    }
+
+    /* Column widths */
+    .col-citation  { width: 16%; }
+    .col-title     { width: 20%; }
+    .col-key       { width: 52%; }
+    .col-date      { width: 12%; white-space: nowrap; }
+
+    /* Citation cell */
+    .cite-code {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.76rem;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--navy);
+      word-break: break-word;
+    }
+
+    .cite-title {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .cite-desc {
+      color: var(--muted);
+      font-size: 0.76rem;
+      margin-top: 2px;
+    }
+
+    /* Key provisions */
+    .provisions-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .provisions-list li {
+      padding-left: 14px;
+      position: relative;
+      color: var(--text);
+      font-size: 0.78rem;
+    }
+
+    .provisions-list li::before {
+      content: '·';
+      position: absolute;
+      left: 4px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .date-pill {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+
+    .date-ongoing  { background: #e2e8f0; color: #475569; }
+    .date-specific { background: #dbeafe; color: #1e40af; }
+    .date-future   { background: #ede9fe; color: #4c1d95; }
+    .date-2025     { background: #d1fae5; color: #065f46; }
+
+    /* ── Footer ── */
+    .footer {
+      margin: 48px 0 0;
+      padding: 20px 24px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--navy);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .footer-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .footer-text {
+      font-size: 0.82rem;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .footer-text strong {
+      color: var(--navy);
+    }
+
+    .doc-footer {
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .doc-footer-left {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .doc-footer-right {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* ── Print Styles ── */
+    @media print {
+      @page {
+        size: letter;
+        margin: 0.5in;
+      }
+
+      body {
+        background: #fff;
+        padding: 0;
+        font-size: 11px;
+      }
+
+      .page {
+        max-width: 100%;
+        box-shadow: none;
+      }
+
+      .cover {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .investor-badge {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .section-header {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .citation-table tbody tr:nth-child(even) td {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .date-pill {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .citation-table tbody tr:hover td {
+        background: inherit;
+      }
+
+      .investor-section {
+        page-break-before: always;
+      }
+
+      .investor-section:first-of-type {
+        page-break-before: avoid;
+      }
+
+      .citation-table { page-break-inside: auto; }
+      .citation-table tr { page-break-inside: avoid; }
+
+      .section-header {
+        page-break-after: avoid;
+      }
+
+      .toc { page-break-after: always; }
+
+      a { color: inherit; text-decoration: none; }
+    }
+
+    @media screen {
+      .page {
+        box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ══════════════════════════════ COVER ══════════════════════════════ -->
+  <div class="cover">
+    <div class="cover-eyebrow">ResolutionIQ · Loss Mitigation Rules Engine</div>
+    <div class="cover-title"><span>ResolutionIQ</span> — Regulatory Citation Index</div>
+    <div class="cover-subtitle">Loss Mitigation Rules Engine &nbsp;·&nbsp; All Regulatory Sources by Investor</div>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Document Date</span>
+        <span class="cover-meta-value">March 2026</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Regulatory Sources</span>
+        <span class="cover-meta-value big">32 sources across 5 investors</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Investors Covered</span>
+        <span class="cover-meta-value">FHA · USDA · VA · FNMA · FHLMC</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Classification</span>
+        <span class="cover-meta-value">Internal Reference — Engine v1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Investor badge strip -->
+  <div class="investor-strip">
+    <div class="investor-badge fha">FHA / HUD</div>
+    <div class="investor-badge usda">USDA RD</div>
+    <div class="investor-badge va">VA</div>
+    <div class="investor-badge fnma">FNMA</div>
+    <div class="investor-badge fhlmc">FHLMC</div>
+  </div>
+
+  <!-- ══════════════════════════════ BODY ══════════════════════════════ -->
+  <div class="content">
+
+    <!-- Table of Contents -->
+    <div class="toc">
+      <div class="toc-title">Sections</div>
+      <ul class="toc-list">
+        <li>
+          <span class="toc-dot" style="background:var(--fha)"></span>
+          <a href="#fha">FHA / HUD</a>
+          <span class="toc-count">7 citations</span>
+        </li>
+        <li>
+          <span class="toc-dot" style="background:var(--usda)"></span>
+          <a href="#usda">USDA Rural Development</a>
+          <span class="toc-count">7 citations</span>
+        </li>
+        <li>
+          <span class="toc-dot" style="background:var(--va)"></span>
+          <a href="#va">Department of Veterans Affairs</a>
+          <span class="toc-count">7 citations</span>
+        </li>
+        <li>
+          <span class="toc-dot" style="background:var(--fnma)"></span>
+          <a href="#fnma">Fannie Mae (FNMA)</a>
+          <span class="toc-count">5 citations</span>
+        </li>
+        <li>
+          <span class="toc-dot" style="background:var(--fhlmc)"></span>
+          <a href="#fhlmc">Freddie Mac (FHLMC)</a>
+          <span class="toc-count">7 citations</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ════════════ FHA ════════════ -->
+    <div class="investor-section" id="fha">
+      <div class="section-header">
+        <div class="section-accent fha-accent"></div>
+        <div class="section-header-inner fha-header">
+          <div>
+            <span class="section-name">FHA / HUD</span>
+            <span class="section-subname">Federal Housing Administration · U.S. Department of Housing and Urban Development</span>
+          </div>
+          <span class="section-count">7 Citations</span>
+        </div>
+      </div>
+
+      <table class="citation-table">
+        <thead>
+          <tr>
+            <th class="col-citation">Citation</th>
+            <th class="col-title">Title / Description</th>
+            <th class="col-key">Key Provisions Implemented in Engine</th>
+            <th class="col-date">Effective Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="cite-code">HUD Handbook 4000.1 §III.A.2</span></td>
+            <td>
+              <div class="cite-title">FHA Single Family Housing Policy Handbook — Loss Mitigation</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Primary framework for all FHA loss mitigation options</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing, current</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">ML 2023-05</span></td>
+            <td>
+              <div class="cite-title">FHA Loss Mitigation Waterfall Update</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Updated waterfall priority order</li>
+                <li>Payment Supplement added to waterfall</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-specific">Effective Aug 2023</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">ML 2024-02</span></td>
+            <td>
+              <div class="cite-title">FHA Payment Supplement</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Payment Supplement (PS) program established</li>
+                <li>36-month PS-specific cooldown period</li>
+                <li>Uses Partial Claim mechanism</li>
+                <li>No income documentation required</li>
+                <li>30% statutory Partial Claim cap applies</li>
+                <li>Last-resort waterfall position</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-specific">Effective Apr 2024</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">ML 2025-06</span></td>
+            <td>
+              <div class="cite-title">FHA Payment Supplement Extension</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Extends ML 2024-02 Payment Supplement program</li>
+                <li>Operational continuity provisions</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-2025">Effective 2025</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">HUD 4000.1 §III.A.2.k</span></td>
+            <td>
+              <div class="cite-title">Formal Forbearance — Outer Cap</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>12-month total forbearance cap</li>
+                <li>Servicer may extend beyond 6 months up to 12 months with documented cause</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">HUD 4000.1 §III.A.2.e</span></td>
+            <td>
+              <div class="cite-title">FHA Payment Deferral</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Delinquency range: 3–12 months</li>
+                <li>Hardship must be resolved</li>
+                <li>12-month cumulative cap</li>
+                <li>12-month prior spacing required</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">HUD 4000.1 §III.A.2.n</span></td>
+            <td>
+              <div class="cite-title">FHA 40-Year Combination Mod + Partial Claim</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>480-month term (40-year)</li>
+                <li>Combined payment target ≤ 40% gross monthly income</li>
+                <li>Partial Claim used to capitalize arrearages</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ════════════ USDA ════════════ -->
+    <div class="investor-section" id="usda">
+      <div class="section-header">
+        <div class="section-accent usda-accent"></div>
+        <div class="section-header-inner usda-header">
+          <div>
+            <span class="section-name">USDA Rural Development</span>
+            <span class="section-subname">U.S. Department of Agriculture · Single Family Housing Guaranteed Loan Program</span>
+          </div>
+          <span class="section-count">7 Citations</span>
+        </div>
+      </div>
+
+      <table class="citation-table">
+        <thead>
+          <tr>
+            <th class="col-citation">Citation</th>
+            <th class="col-title">Title / Description</th>
+            <th class="col-key">Key Provisions Implemented in Engine</th>
+            <th class="col-date">Effective Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="cite-code">7 CFR §3555.304</span></td>
+            <td>
+              <div class="cite-title">USDA RD Loan Servicing — Loss Mitigation</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Primary regulatory framework for USDA guaranteed loan servicing</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">HB-1-3555 Ch. 18</span></td>
+            <td>
+              <div class="cite-title">USDA Single Family Housing Guaranteed Loan Program — Servicing</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Operational guidance for all USDA workout options</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing, current</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">HB-1-3555 §18.6</span></td>
+            <td>
+              <div class="cite-title">USDA Informal Forbearance</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Short-term forbearance only</li>
+                <li>Delinquency must be less than 360 days</li>
+                <li>Retention intent required</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">HB-1-3555 §18.7</span></td>
+            <td>
+              <div class="cite-title">USDA Streamline Modification</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Delinquency range: 90–360 days</li>
+                <li>UPB must be ≥ $5,000</li>
+                <li>Maximum 2 prior modifications</li>
+                <li>No failed trial payment plan</li>
+                <li>Property must not be listed for sale</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">HB-1-3555 §18.8</span></td>
+            <td>
+              <div class="cite-title">USDA Special Forbearance</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Disaster or long-term hardship eligibility basis</li>
+                <li>Delinquency cap: ≤ 12 months</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">§3555.304(d)</span></td>
+            <td>
+              <div class="cite-title">USDA MRA Post-Modification Performance</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>36 consecutive timely payments required post-modification</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">HB-1-3555 §18.10</span></td>
+            <td>
+              <div class="cite-title">USDA Compromise Sale</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Disposition intent required</li>
+                <li>Not applicable for short-term hardship situations</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ════════════ VA ════════════ -->
+    <div class="investor-section" id="va">
+      <div class="section-header">
+        <div class="section-accent va-accent"></div>
+        <div class="section-header-inner va-header">
+          <div>
+            <span class="section-name">VA</span>
+            <span class="section-subname">U.S. Department of Veterans Affairs · Loan Guaranty Service</span>
+          </div>
+          <span class="section-count">7 Citations</span>
+        </div>
+      </div>
+
+      <table class="citation-table">
+        <thead>
+          <tr>
+            <th class="col-citation">Citation</th>
+            <th class="col-title">Title / Description</th>
+            <th class="col-key">Key Provisions Implemented in Engine</th>
+            <th class="col-date">Effective Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="cite-code">VA M26-4</span></td>
+            <td>
+              <div class="cite-title">VA Servicer Handbook — Loss Mitigation</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Primary VA servicer operational handbook</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing, current</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">VA M26-4 Ch. 5</span></td>
+            <td>
+              <div class="cite-title">VA Loss Mitigation Options — General</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Repayment plans</li>
+                <li>Special forbearance</li>
+                <li>Modifications</li>
+                <li>Liquidation options framework</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">VA M26-4 Ch. 5.06</span></td>
+            <td>
+              <div class="cite-title">VA Compromise Sale — No Delegated Authority</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Servicers have NO delegated authority for Compromise Sales</li>
+                <li>All Compromise Sales require VA Regional Loan Center approval</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">Circular 26-25-2</span></td>
+            <td>
+              <div class="cite-title">VA VASP Program Wind-Down</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>VASP fully wound down</li>
+                <li>All pipeline deadlines elapsed Aug 31 / Sep 30, 2025</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-2025">Issued 2025</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">Circular 26-24-3</span></td>
+            <td>
+              <div class="cite-title">VA Disaster Extend Modification</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Extends original maturity date up to 12 months</li>
+                <li>Does not re-amortize the loan</li>
+                <li>Does not require a prior Disaster Modification</li>
+                <li>Hardship must be ongoing at time of request</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-specific">Feb 2024</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">Circular 26-24-2</span></td>
+            <td>
+              <div class="cite-title">VA Compromise Sale — RLC Approval Required</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Confirms no servicer delegated authority</li>
+                <li>Submit purchase contract + BPO/appraisal to Regional Loan Center</li>
+                <li>Approximately 5 business day response window</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-specific">2024</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">38 CFR §36.4315(a)</span></td>
+            <td>
+              <div class="cite-title">VA Modification Seasoning</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>12-month seasoning required after a VA modification</li>
+                <li>Bars next modification until seasoning period is satisfied</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ════════════ FNMA ════════════ -->
+    <div class="investor-section" id="fnma">
+      <div class="section-header">
+        <div class="section-accent fnma-accent"></div>
+        <div class="section-header-inner fnma-header">
+          <div>
+            <span class="section-name">FNMA</span>
+            <span class="section-subname">Fannie Mae · Federal National Mortgage Association</span>
+          </div>
+          <span class="section-count">5 Citations</span>
+        </div>
+      </div>
+
+      <table class="citation-table">
+        <thead>
+          <tr>
+            <th class="col-citation">Citation</th>
+            <th class="col-title">Title / Description</th>
+            <th class="col-key">Key Provisions Implemented in Engine</th>
+            <th class="col-date">Effective Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="cite-code">Servicing Guide D2-3</span></td>
+            <td>
+              <div class="cite-title">Fannie Mae Servicing Guide — Loss Mitigation Options</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Primary framework for all FNMA loss mitigation</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing, current</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">D2-3.2-06</span></td>
+            <td>
+              <div class="cite-title">FNMA Flex Modification Eligibility</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Standard, Streamlined, and Disaster Flex Mod pathways</li>
+                <li>Delinquency range: 2–12 months, or imminent default</li>
+                <li>Maximum 3 prior modifications</li>
+                <li>12-month failed trial payment plan bar</li>
+                <li>Recourse and liquidation status blocks eligibility</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">LL-2021-01</span></td>
+            <td>
+              <div class="cite-title">FNMA Payment Deferral Update</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Delinquency range: 2–6 months</li>
+                <li>12-month cumulative deferral cap</li>
+                <li>12-month prior spacing required</li>
+                <li>36-month maturity guard</li>
+                <li>Loan age ≥ 12 months required</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-specific">Effective 2021</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">LL-2024-02</span></td>
+            <td>
+              <div class="cite-title">FNMA MTMLTV and Flex Mod Rate/Forbearance</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Post-capitalization MTMLTV ≥ 50% enables rate reduction step</li>
+                <li>MTMLTV > 50% enables principal forbearance step</li>
+                <li>Computed as: postCapUPB ÷ propertyValue × 100</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-specific">Effective 2024</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">D2-3.2-06 (ID)</span></td>
+            <td>
+              <div class="cite-title">FNMA Imminent Default Determination</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Rule 1: Primary residence + long-term hardship + cash reserves &lt; 3 months PITIA</li>
+                <li>Rule 2: FICO ≤ 620, or housing expense ratio &gt; 55%, or 2+ 30-day DLQ in last 12 months</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">D2-3.3-01</span></td>
+            <td>
+              <div class="cite-title">FNMA Short Sale / Mortgage Release</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Disposition intent required</li>
+                <li>Liquidation pathway</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ════════════ FHLMC ════════════ -->
+    <div class="investor-section" id="fhlmc">
+      <div class="section-header">
+        <div class="section-accent fhlmc-accent"></div>
+        <div class="section-header-inner fhlmc-header">
+          <div>
+            <span class="section-name">FHLMC</span>
+            <span class="section-subname">Freddie Mac · Federal Home Loan Mortgage Corporation</span>
+          </div>
+          <span class="section-count">7 Citations</span>
+        </div>
+      </div>
+
+      <table class="citation-table">
+        <thead>
+          <tr>
+            <th class="col-citation">Citation</th>
+            <th class="col-title">Title / Description</th>
+            <th class="col-key">Key Provisions Implemented in Engine</th>
+            <th class="col-date">Effective Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="cite-code">Servicing Guide Ch. 9200</span></td>
+            <td>
+              <div class="cite-title">Freddie Mac Servicing Guide — Loss Mitigation</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Primary framework for all FHLMC loss mitigation</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing, current</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">§9206.1</span></td>
+            <td>
+              <div class="cite-title">FHLMC Flex Modification — Standard</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Delinquency: 2+ months or imminent default</li>
+                <li>Conventional loans only; no recourse loans</li>
+                <li>Loan age ≥ 12 months</li>
+                <li>Maximum 2 prior modifications</li>
+                <li>No non-performing trial payment plan within 12 months</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">§9206.1(c)(v) (Bulletin 2026-2)</span></td>
+            <td>
+              <div class="cite-title">FHLMC Disaster Flex Mod — Dual DLQ Requirement</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Borrower must be current or &lt; 60 DLQ at time of disaster declaration</li>
+                <li>AND must be ≥ 90 DLQ at evaluation date</li>
+                <li>Both conditions required concurrently</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-future">Effective Feb 11, 2026</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">§9206.5</span></td>
+            <td>
+              <div class="cite-title">FHLMC Flex Mod TPP Ineligibility</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Servicer-cancelled (non-performing) TPP within 12 months bars next Flex Modification</li>
+                <li>Borrower-initiated TPP withdrawal does NOT trigger the ineligibility bar</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">§9206.7</span></td>
+            <td>
+              <div class="cite-title">FHLMC Streamlined Flex Mod — Servicer Solicitation</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Servicer must identify eligible borrowers at 90–105 DLQ</li>
+                <li>Servicer must send solicitation letter to identified borrowers</li>
+                <li>No Borrower Response Package, hardship letter, or income verification required</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">§9203.3 (Bulletin 2026-2)</span></td>
+            <td>
+              <div class="cite-title">FHLMC Forbearance Increment Reduction</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Forbearance increments reduced from 1–6 months per increment to 1–3 months per increment</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-future">Effective May 1, 2026</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">§9201.2 (Bulletin 2026-2)</span></td>
+            <td>
+              <div class="cite-title">FHLMC Short Sale — Prior Retention Evaluation Removed</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Short Sale no longer requires prior home retention evaluation</li>
+                <li>Any eligible hardship qualifies directly</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-future">Effective Feb 11, 2026</span></td>
+          </tr>
+          <tr>
+            <td><span class="cite-code">§9203.2</span></td>
+            <td>
+              <div class="cite-title">FHLMC Imminent Default — Flex Mod ID Path</div>
+            </td>
+            <td>
+              <ul class="provisions-list">
+                <li>Rule 1: Primary residence + long-term hardship + cash reserves &lt; $25,000</li>
+                <li>Rule 2: FICO ≤ 660, or housing expense ratio &gt; 40%, or 2+ 30-day DLQ in last 6 months</li>
+              </ul>
+            </td>
+            <td><span class="date-pill date-ongoing">Ongoing</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ══════════════════════════════ FOOTER ══════════════════════════════ -->
+    <div class="footer">
+      <div class="footer-label">Regulatory Currency Notice</div>
+      <div class="footer-text">
+        This index reflects rules implemented in the <strong>ResolutionIQ engine as of March 2026</strong>. Servicers should verify against current investor bulletins before relying on engine output for specific loan decisions.
+      </div>
+    </div>
+
+    <div class="doc-footer">
+      <div class="doc-footer-left">ResolutionIQ · Loss Mitigation Rules Engine · Regulatory Citation Index · March 2026</div>
+      <div class="doc-footer-right">32 Regulatory Sources · 5 Investors · Internal Reference</div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /page -->
+</body>
+</html>

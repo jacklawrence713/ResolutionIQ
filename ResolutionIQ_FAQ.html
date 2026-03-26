@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResolutionIQ — Frequently Asked Questions</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --color-cat1: #1e3a5f;
+      --color-cat2: #1a56db;
+      --color-cat3: #374151;
+      --color-cat4: #92400e;
+      --color-cat5: #1e3a5f;
+      --color-cat6: #065f46;
+      --color-cat7: #1a56db;
+      --color-cat1-light: #e8eef5;
+      --color-cat2-light: #e8f0fd;
+      --color-cat3-light: #f3f4f6;
+      --color-cat4-light: #fef3c7;
+      --color-cat5-light: #e8eef5;
+      --color-cat6-light: #d1fae5;
+      --color-cat7-light: #e8f0fd;
+      --navy: #1e3a5f;
+      --text-primary: #111827;
+      --text-secondary: #374151;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --white: #ffffff;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 10pt;
+      line-height: 1.6;
+      color: var(--text-primary);
+      background: #f5f7fa;
+    }
+
+    /* ── PAGE WRAPPER ── */
+    .page {
+      width: 8.5in;
+      margin: 0 auto;
+      background: white;
+    }
+
+    /* ── COVER PAGE ── */
+    .cover {
+      width: 8.5in;
+      min-height: 11in;
+      background: linear-gradient(160deg, #0f2342 0%, #1e3a5f 45%, #162d4f 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5in 1in;
+      page-break-after: always;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(26, 86, 219, 0.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 80%, rgba(6, 95, 70, 0.12) 0%, transparent 50%);
+    }
+
+    .cover-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 6in;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      background: rgba(26, 86, 219, 0.35);
+      border: 1px solid rgba(26, 86, 219, 0.5);
+      color: #93c5fd;
+      font-size: 8.5pt;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 5px 16px;
+      border-radius: 20px;
+      margin-bottom: 0.45in;
+    }
+
+    .cover-logo {
+      font-size: 11pt;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #60a5fa;
+      margin-bottom: 0.2in;
+    }
+
+    .cover-title {
+      font-size: 36pt;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.18in;
+    }
+
+    .cover-title span {
+      color: #60a5fa;
+    }
+
+    .cover-subtitle {
+      font-size: 13pt;
+      font-weight: 400;
+      color: #94a3b8;
+      margin-bottom: 0.5in;
+      letter-spacing: 0.01em;
+    }
+
+    .cover-divider {
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, #1a56db, #60a5fa);
+      border-radius: 2px;
+      margin: 0 auto 0.5in;
+    }
+
+    .cover-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .cover-meta-item {
+      font-size: 9pt;
+      color: #64748b;
+      letter-spacing: 0.02em;
+    }
+
+    .cover-meta-item strong {
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .cover-investors {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 0.35in;
+      flex-wrap: wrap;
+    }
+
+    .investor-pill {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #cbd5e1;
+      font-size: 8.5pt;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 4px 14px;
+      border-radius: 4px;
+    }
+
+    .cover-toc {
+      margin-top: 0.5in;
+      text-align: left;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 0.25in 0.3in;
+      width: 100%;
+    }
+
+    .cover-toc-title {
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 12px;
+    }
+
+    .cover-toc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 24px;
+    }
+
+    .cover-toc-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 8.5pt;
+      color: #94a3b8;
+    }
+
+    .cover-toc-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      font-size: 7.5pt;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* ── CONTENT AREA ── */
+    .content {
+      padding: 0.5in;
+    }
+
+    /* ── CATEGORY SECTION ── */
+    .category {
+      margin-bottom: 0.4in;
+      page-break-inside: avoid;
+    }
+
+    .category-header {
+      padding: 14px 20px;
+      border-radius: 6px 6px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 0;
+    }
+
+    .category-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      font-size: 9pt;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .category-title {
+      font-size: 13pt;
+      font-weight: 700;
+      color: white;
+      letter-spacing: -0.01em;
+    }
+
+    .category-count {
+      margin-left: auto;
+      font-size: 8pt;
+      font-weight: 500;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.04em;
+    }
+
+    /* Category-specific header colors */
+    .cat1 .category-header { background: var(--color-cat1); }
+    .cat2 .category-header { background: var(--color-cat2); }
+    .cat3 .category-header { background: var(--color-cat3); }
+    .cat4 .category-header { background: var(--color-cat4); }
+    .cat5 .category-header { background: var(--color-cat5); }
+    .cat6 .category-header { background: var(--color-cat6); }
+    .cat7 .category-header { background: var(--color-cat7); }
+
+    /* ── FAQ ITEMS ── */
+    .faq-list {
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      overflow: hidden;
+    }
+
+    .faq-item {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-item:last-child {
+      border-bottom: none;
+    }
+
+    .faq-item:nth-child(even) {
+      background: var(--gray-50);
+    }
+
+    .faq-item:nth-child(odd) {
+      background: white;
+    }
+
+    .faq-q {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 7px;
+      align-items: flex-start;
+    }
+
+    .faq-q-label {
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-top: 2px;
+      min-width: 18px;
+    }
+
+    .cat1 .faq-q-label { color: var(--color-cat1); }
+    .cat2 .faq-q-label { color: var(--color-cat2); }
+    .cat3 .faq-q-label { color: var(--color-cat3); }
+    .cat4 .faq-q-label { color: var(--color-cat4); }
+    .cat5 .faq-q-label { color: var(--color-cat5); }
+    .cat6 .faq-q-label { color: var(--color-cat6); }
+    .cat7 .faq-q-label { color: var(--color-cat7); }
+
+    .faq-q-text {
+      font-size: 10pt;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.45;
+    }
+
+    .faq-a {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      padding-left: 2px;
+    }
+
+    .faq-a-label {
+      font-size: 8pt;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+      padding-top: 2px;
+      min-width: 18px;
+    }
+
+    .faq-a-text {
+      font-size: 9.5pt;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    .faq-a-text p + p {
+      margin-top: 6px;
+    }
+
+    .faq-a-text ul {
+      margin: 6px 0 6px 16px;
+    }
+
+    .faq-a-text li {
+      margin-bottom: 3px;
+    }
+
+    .faq-a-text strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .faq-a-text .cite {
+      font-size: 8.5pt;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0;
+      font-size: 8.5pt;
+    }
+
+    .comparison-table th {
+      padding: 5px 10px;
+      text-align: left;
+      font-weight: 700;
+      background: var(--gray-100);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .comparison-table td {
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+
+    .comparison-table tr:nth-child(even) td {
+      background: #fafafa;
+    }
+
+    /* ── SECTION BREAK ── */
+    .section-break {
+      page-break-before: always;
+    }
+
+    /* ── FOOTER ── */
+    .doc-footer {
+      margin-top: 0.3in;
+      padding: 14px 20px;
+      background: var(--gray-50);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .doc-footer-left {
+      font-size: 8pt;
+      color: var(--text-muted);
+    }
+
+    .doc-footer-left strong {
+      color: var(--text-secondary);
+    }
+
+    .doc-footer-right {
+      font-size: 8pt;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* ── PRINT STYLES ── */
+    @media print {
+      body {
+        background: white;
+        font-size: 9.5pt;
+      }
+
+      .page {
+        width: 100%;
+        margin: 0;
+      }
+
+      .cover {
+        width: 100%;
+        min-height: 100vh;
+      }
+
+      .content {
+        padding: 0.5in;
+      }
+
+      .category {
+        page-break-inside: avoid;
+      }
+
+      .section-break {
+        page-break-before: always;
+      }
+
+      .faq-item {
+        page-break-inside: avoid;
+      }
+
+      @page {
+        size: letter;
+        margin: 0.5in;
+      }
+
+      @page :first {
+        margin: 0;
+      }
+    }
+
+    @media screen {
+      body {
+        padding: 20px 0 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     COVER PAGE
+═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="cover">
+    <div class="cover-inner">
+      <div class="cover-badge">Servicer Support Reference</div>
+      <div class="cover-logo">ResolutionIQ</div>
+      <div class="cover-title">Frequently Asked<br><span>Questions</span></div>
+      <div class="cover-subtitle">Loss Mitigation Rules Engine &nbsp;·&nbsp; Servicer Support Reference</div>
+      <div class="cover-divider"></div>
+
+      <div class="cover-investors">
+        <span class="investor-pill">FHA / HUD</span>
+        <span class="investor-pill">FNMA</span>
+        <span class="investor-pill">FHLMC</span>
+        <span class="investor-pill">VA</span>
+        <span class="investor-pill">USDA</span>
+      </div>
+
+      <div class="cover-meta" style="margin-top: 0.3in;">
+        <div class="cover-meta-item"><strong>Rules Current Through:</strong> March 2026</div>
+        <div class="cover-meta-item"><strong>Includes:</strong> FHLMC Bulletin 2026-2 &nbsp;|&nbsp; FHA ML 2024-02 &nbsp;|&nbsp; VA Circular 26-25-2</div>
+        <div class="cover-meta-item"><strong>Document Type:</strong> General Reference — Not Legal or Regulatory Advice</div>
+      </div>
+
+      <div class="cover-toc">
+        <div class="cover-toc-title">Contents</div>
+        <div class="cover-toc-grid">
+          <div class="cover-toc-item">
+            <span class="cover-toc-num" style="background:#1e3a5f;color:white;">1</span>
+            Engine Basics (6 questions)
+          </div>
+          <div class="cover-toc-item">
+            <span class="cover-toc-num" style="background:#1a56db;color:white;">2</span>
+            Input Fields &amp; Data (5 questions)
+          </div>
+          <div class="cover-toc-item">
+            <span class="cover-toc-num" style="background:#374151;color:white;">3</span>
+            Specific Option Questions (8 questions)
+          </div>
+          <div class="cover-toc-item">
+            <span class="cover-toc-num" style="background:#92400e;color:white;">4</span>
+            Disaster Loans (5 questions)
+          </div>
+          <div class="cover-toc-item">
+            <span class="cover-toc-num" style="background:#1e3a5f;color:white;">5</span>
+            Imminent Default (4 questions)
+          </div>
+          <div class="cover-toc-item">
+            <span class="cover-toc-num" style="background:#065f46;color:white;">6</span>
+            Compliance &amp; Regulatory (4 questions)
+          </div>
+          <div class="cover-toc-item">
+            <span class="cover-toc-num" style="background:#1a56db;color:white;">7</span>
+            Technical &amp; Implementation (4 questions)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       CONTENT BODY
+  ═══════════════════════════════════════════════════ -->
+  <div class="content">
+
+    <!-- ───────────────────────────────────────────────
+         CATEGORY 1 — ENGINE BASICS
+    ─────────────────────────────────────────────── -->
+    <div class="category cat1">
+      <div class="category-header">
+        <span class="category-num">1</span>
+        <span class="category-title">Engine Basics</span>
+        <span class="category-count">6 Questions</span>
+      </div>
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">What does ResolutionIQ actually evaluate?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">ResolutionIQ takes a delinquent loan's financial profile, hardship details, and property information and evaluates it against the complete eligibility rules for all five major investors — FHA, Fannie Mae (FNMA), Freddie Mac (FHLMC), VA, and USDA. It produces a ranked waterfall of all eligible loss mitigation options, along with an audit trail showing exactly why each option was approved or denied, with citations to the governing regulatory section.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">Does it replace my loss mitigation team?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">No. ResolutionIQ is a decision support tool, not a decision-making system. Your loss mitigation specialists retain final determination authority. The engine eliminates the manual guideline-lookup and calculation work, so specialists can focus on borrower interaction, documentation, and judgment calls. Think of it as a highly accurate second opinion that happens in under 30 seconds.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">Which investors does it cover?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">All five major agency investors: FHA (HUD), Fannie Mae (FNMA), Freddie Mac (FHLMC), the Department of Veterans Affairs (VA), and USDA Rural Development. Private label, non-agency, and HELOC products are on the roadmap for 2027.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">How current are the rules?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">The engine is current through March 2026. This includes <strong>FHLMC Bulletin 2026-2</strong> (effective February 11, 2026 — the Disaster Flex Mod dual DLQ gate and forbearance increment reduction), <strong>FHA ML 2024-02</strong> (Payment Supplement), and <strong>VA Circulars 26-24-2, 26-24-3, and 26-25-2</strong> (VASP wind-down). Material guideline changes are incorporated within 30 days for Enterprise subscribers.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">How accurate is it?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">
+              <ul>
+                <li><strong>97–99%</strong> accuracy on standard delinquency scenarios.</li>
+                <li><strong>93–97%</strong> on disaster and imminent default cases (which involve more servicer judgment).</li>
+                <li><strong>90–95%</strong> when input fields are incomplete.</li>
+              </ul>
+              The engine has 449 automated test cases with a 100% pass rate. The primary source of real-world divergence is servicer discretion on judgment-call fields (e.g., "can the borrower afford the modified payment") — those fields require human input.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">What does the audit trail look like?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">Each eligible or ineligible option includes a list of audit nodes — individual pass/fail checks. Each node states what was tested, what value was found, whether it passed or failed, and the regulatory citation. For example: <span class="cite">"≥ 90 days DLQ at evaluation date — PASS — 4 months — §9206.1(c)(v), Bulletin 2026-2, eff. Feb 11, 2026"</span>. This is the documentation you need for investor repurchase challenges and regulatory examinations.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ───────────────────────────────────────────────
+         CATEGORY 2 — INPUT FIELDS & DATA
+    ─────────────────────────────────────────────── -->
+    <div class="category cat2 section-break">
+      <div class="category-header">
+        <span class="category-num">2</span>
+        <span class="category-title">Input Fields &amp; Data</span>
+        <span class="category-count">5 Questions</span>
+      </div>
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">What happens if I don't fill in all the fields?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">Missing fields default to their baseline values (usually false/zero). If a critical field is missing — like DLQ months, UPB, or hardship type — most options will be denied because the engine can't confirm eligibility. Always populate the core financial fields, DLQ, hardship type/duration, and borrower intent for a meaningful evaluation. See the Field Reference Guide for required vs. optional fields.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">I don't know the borrower's FICO score. What should I enter?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">FICO is only used for the FNMA and FHLMC Imminent Default Rule 2 determination. If you don't have it, leave the field blank — the engine will not trigger the FICO-based ID criterion, but other ID Rule 2 criteria (housing ratio, prior 30-day DLQs) can still satisfy the requirement. The engine will note that the FICO criterion could not be evaluated.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">The loan has disaster hardship but I haven't confirmed FEMA designation yet. Can I still run the evaluation?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">Yes — run it with the disaster hardship flag set but FEMA designation unchecked. The engine will show the disaster options as ineligible due to missing FEMA designation, which is accurate. Once FEMA designation is confirmed, re-run with that flag set to see the full disaster pathway.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">How does the engine handle ARM loans?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">ARM-specific fields (current index, margin) are available for FNMA and FHLMC. The engine uses them for modification rate calculations when applicable. If left blank for a fixed-rate loan, they have no effect on eligibility.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">Can I run the same loan through multiple investors?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">Yes. The engine evaluates the selected investor's rules based on the <strong>loanType</strong> field. To compare across investors (e.g., if you're not sure of investor identity), run the evaluation once per investor by changing loanType. The Professional and Enterprise tiers include a side-by-side comparison mode.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ───────────────────────────────────────────────
+         CATEGORY 3 — SPECIFIC OPTION QUESTIONS
+    ─────────────────────────────────────────────── -->
+    <div class="category cat3 section-break">
+      <div class="category-header">
+        <span class="category-num">3</span>
+        <span class="category-title">Specific Option Questions</span>
+        <span class="category-count">8 Questions</span>
+      </div>
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">Why is FHA Payment Deferral showing as ineligible even though the borrower is 4 months DLQ?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">
+              The most common causes are:
+              <ul>
+                <li><strong>(1)</strong> Hardship is not marked as "Resolved" — FHA Payment Deferral requires the hardship to be resolved.</li>
+                <li><strong>(2)</strong> Disaster hardship flag is set — disaster hardship routes to disaster options and blocks standard deferral.</li>
+                <li><strong>(3)</strong> Prior deferral spacing — if a deferral was used within the past 12 months, another is blocked.</li>
+                <li><strong>(4)</strong> Cumulative cap — if 12 or more months have been previously deferred, no further deferrals are available.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">Why does the engine show FHA 40-Year Combination Mod but not 30-Year Mod?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">The FHA 40-Year Combo requires that (1) 360-month re-amortization does <strong>NOT</strong> achieve the target payment (<strong>canAchieveTargetByReamort = false</strong>) AND (2) 480-month re-amortization <strong>DOES</strong> achieve the target (<strong>canAchieveTargetBy480Reamort = true</strong>). If the 30-Year Mod is ineligible, it means the 360-month test is passing — the engine believes re-amortization alone achieves target. Verify your <strong>targetPayment</strong> and <strong>canAchieveTargetByReamort</strong> inputs.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">The FNMA Streamlined Flex Mod is showing ineligible. The borrower is 4 months DLQ.</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">FNMA Streamlined Flex Mod requires DLQ of at least 3 months (90+ days), which 4 months satisfies. Check whether: (1) <strong>fnmaDisasterHardship</strong> is set to true — disaster hardship blocks the streamlined path; (2) a prior failed TPP (<strong>fnmaFailedTPP12Months</strong>) is blocking; (3) the loan age is under 12 months. For Streamlined, no solicitation letter is required on FNMA (unlike FHLMC which requires §9206.7 solicitation).</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">Why does FHLMC Disaster Flex Mod require TWO DLQ conditions?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">This is a change from <strong>FHLMC Bulletin 2026-2, effective February 11, 2026</strong>. Under §9206.1(c)(v) as amended, the loan must be: (1) current or &lt; 60 DLQ at the time of the disaster event, AND (2) ≥ 90 DLQ at the evaluation date. Before Bulletin 2026-2, only the at-disaster condition applied. Both <strong>fhlmcDLQAtDisaster</strong> (set to 0 or 1 for the at-disaster test) and <strong>delinquencyDays</strong> (90+ for the evaluation date test) must be populated correctly.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">The VA Disaster Extend Modification shows eligible, but what exactly does it do?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">It extends the original maturity date of the note by up to 12 months beyond the original maturity. It does <strong>NOT</strong> re-amortize the loan, does <strong>NOT</strong> change the interest rate, and does <strong>NOT</strong> change the monthly payment amount. It is purely a maturity date extension — the borrower "catches up" by having more time at the back end of the loan. VA Regional Loan Center approval is required if the extension exceeds 12 months. <span class="cite">Authority: VA M26-4 Ch. 5.06; Circular 26-24-3 §3.a.</span></div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">Can the FHA Payment Supplement be used alongside a modification?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">No. Payment Supplement is the last-resort option in the FHA waterfall — it is only eligible when standard modifications (30-Year Mod, 40-Year Combo) are ineligible. The engine enforces this through waterfall sequencing: <strong>canAchieve360</strong> and <strong>canAchieve480</strong> must both be false for Payment Supplement to appear as eligible. It also requires that the 30% partial claim statutory cap has not been exhausted (PS uses a Partial Claim per ML 2024-02).</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">What is the USDA MRA and how is its cap calculated?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">The MRA (Mortgage Recovery Advance) is a deferred subordinate lien used to capitalize arrearages in USDA Streamline Modifications. The cap is <strong>30% of the UPB at the date of initial default</strong> (<strong>usdaUpbAtInitialDefault</strong> field). For example, if the UPB at initial default was $150,000, the maximum MRA is $45,000. After modification, the borrower must make 36 consecutive timely payments per §3555.304(d).</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">Why is VA Compromise Sale showing "VA RLC Approval Required"?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">This is not an error — it is a required regulatory disclosure. Per VA M26-4 Ch. 5 §3.A and Circular 26-24-2, servicers have <strong>NO delegated authority</strong> to approve VA Compromise Sales. Every VA Compromise Sale, without exception, requires VA Regional Loan Center approval. The engine displays this as a mandatory audit node on every eligible Compromise Sale result so it is not overlooked in the workflow.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ───────────────────────────────────────────────
+         CATEGORY 4 — DISASTER LOANS
+    ─────────────────────────────────────────────── -->
+    <div class="category cat4 section-break">
+      <div class="category-header">
+        <span class="category-num">4</span>
+        <span class="category-title">Disaster Loans</span>
+        <span class="category-count">5 Questions</span>
+      </div>
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">How do I know which disaster path to use — forbearance, modification, or extend mod?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">
+              The disaster sequence is generally:
+              <ul>
+                <li><strong>(1) Disaster Forbearance</strong> first — immediate relief while hardship is ongoing.</li>
+                <li><strong>(2) Disaster Modification</strong> after forbearance completes — re-amortizes the loan.</li>
+                <li><strong>(3) Disaster Extend Modification</strong> if modification is not achievable — VA-specific, extends maturity only.</li>
+              </ul>
+              The engine routes automatically based on <strong>hardshipType</strong>, prior workout history, and workout state. For VA loans, the extend mod does NOT require a prior disaster modification — only a prior forbearance.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">The FHLMC Disaster Flex Mod is failing the evaluation-date DLQ gate. The loan is 2 months DLQ.</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">Per <strong>Bulletin 2026-2 (eff. Feb 11, 2026)</strong>, FHLMC Disaster Flex Mod requires ≥ 90 days DLQ at the evaluation date. 2 months (approximately 60 days) does not meet this threshold. The loan may still be eligible for the Standard Flex Mod if other criteria are met. If the disaster hardship flag blocks Standard Flex Mod, the servicer should continue disaster forbearance until the 90-day threshold is reached.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">For FHA disaster loans, what's the difference between Disaster Standalone PC and the regular Standalone PC?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">The Disaster Standalone Partial Claim is specifically for disaster-affected borrowers who were current at the time of the disaster. It does <strong>not</strong> require the borrower to demonstrate they cannot afford the pre-hardship payment (unlike the standard Standalone PC which requires <strong>fhaBorrowerCanResumePreHardship = true</strong>). The disaster version is also available to borrowers who are unresponsive, unless the servicer has flagged <strong>fhaOwlBorrowerUnresponsive</strong>.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">We have a VA loan where the borrower was current at the disaster but now has not responded. Can we still use disaster options?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">Generally no — VA disaster modification options require <strong>QRPC (Qualified Right Party Contact)</strong>. Unlike some FHA disaster provisions, VA requires borrower engagement. If the borrower remains unresponsive, the servicer should document outreach attempts and may need to proceed to liquidation options with VA RLC involvement.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">A USDA borrower had a prior disaster forbearance. What workout options are now available?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">
+              After USDA Disaster Forbearance completes, the primary next steps are:
+              <ul>
+                <li><strong>USDA Disaster Modification</strong> — re-amortizes the loan; requires prior forbearance as prerequisite.</li>
+                <li><strong>USDA Disaster Term Extension</strong> — if modification is not achievable.</li>
+              </ul>
+              Ensure <strong>usdaPrevWorkoutForbearance = true</strong> and <strong>usdaWorkoutStateActivePassed = true</strong> to unlock these options in the engine.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ───────────────────────────────────────────────
+         CATEGORY 5 — IMMINENT DEFAULT
+    ─────────────────────────────────────────────── -->
+    <div class="category cat5 section-break">
+      <div class="category-header">
+        <span class="category-num">5</span>
+        <span class="category-title">Imminent Default</span>
+        <span class="category-count">4 Questions</span>
+      </div>
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">What is imminent default and when does it apply?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">Imminent default (ID) is a determination that a borrower who is current or minimally delinquent is at high risk of defaulting. It is relevant for FNMA Standard Flex Mod and FHLMC Standard Flex Mod — both require DLQ ≥ 2 months <strong>OR</strong> documented imminent default for a current/1-month DLQ borrower. ID determination requires meeting both <strong>Rule 1 AND Rule 2</strong> criteria. It is NOT available for FNMA/FHLMC Streamlined or Disaster Flex Mod variants.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">What's the difference between FNMA and FHLMC imminent default rules?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">
+              <table class="comparison-table">
+                <thead>
+                  <tr>
+                    <th>Criterion</th>
+                    <th>FNMA</th>
+                    <th>FHLMC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Rule 1 — Residence</strong></td>
+                    <td>Primary residence</td>
+                    <td>Primary residence</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Rule 1 — Hardship</strong></td>
+                    <td>Long-term hardship</td>
+                    <td>Long-term hardship</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Rule 1 — Reserves</strong></td>
+                    <td>&lt; 3 months PITIA</td>
+                    <td>&lt; $25,000</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Rule 2 — FICO</strong></td>
+                    <td>≤ 620</td>
+                    <td>≤ 660</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Rule 2 — Housing Ratio</strong></td>
+                    <td>&gt; 55%</td>
+                    <td>&gt; 40%</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Rule 2 — Prior DLQs</strong></td>
+                    <td>2+ in 12 months</td>
+                    <td>2+ in 6 months</td>
+                  </tr>
+                </tbody>
+              </table>
+              Key differences: FHLMC uses a $25,000 dollar threshold for reserves vs. FNMA's 3-month PITIA ratio; FHLMC FICO threshold is 660 vs. FNMA's 620; FHLMC housing ratio threshold is 40% vs. FNMA's 55%; FHLMC uses a 6-month lookback vs. FNMA's 12-month.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">Can a borrower with 0 months DLQ ever be eligible for Payment Deferral via imminent default?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">For FNMA: Payment Deferral via ID path requires DLQ ≥ 2 months even if imminent default is documented. A truly current borrower (DLQ = 0) cannot access Payment Deferral even with ID. For FHLMC: same rule — Payment Deferral requires DLQ 2–6 months; ID does not lower this threshold. <strong>Flex Mod, however, CAN be accessed at DLQ = 0 with documented ID</strong> (FNMA and FHLMC).</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">The imminent default determination was made by our system but the engine still shows Flex Mod ineligible. Why?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">
+              Check the following:
+              <ul>
+                <li><strong>fnmaImminentDefault</strong> (or <strong>fhlmcImminentDefault</strong>) must be set to <strong>true</strong>.</li>
+                <li>Both <strong>Rule 1 AND Rule 2</strong> must be satisfied — the engine checks each criterion individually.</li>
+                <li>A common miss is Rule 1 requiring <strong>fnmaLongTermHardship = true AND fnmaCashReservesLt3Mo = true</strong> — both must pass.</li>
+                <li>Check each ID sub-field: long-term hardship flag, cash reserves flag, FICO, housing ratio, prior DLQ flag.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ───────────────────────────────────────────────
+         CATEGORY 6 — COMPLIANCE & REGULATORY
+    ─────────────────────────────────────────────── -->
+    <div class="category cat6 section-break">
+      <div class="category-header">
+        <span class="category-num">6</span>
+        <span class="category-title">Compliance &amp; Regulatory</span>
+        <span class="category-count">4 Questions</span>
+      </div>
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">Is the engine's output sufficient for investor repurchase defense?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">ResolutionIQ provides a documented, regulatory-cited audit trail that demonstrates the servicer followed a systematic, rules-based evaluation process aligned with investor guidelines. This is strong evidence in a repurchase defense. However, the audit trail <strong>supplements — it does not replace</strong> — borrower communication records, income documentation, BRP files, and servicer notes. The combination of engine output + complete file documentation provides the strongest defense.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">How does the engine handle Regulation X (CFPB 12 CFR §1024.41) requirements?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">The current engine evaluates investor eligibility rules (what options the borrower qualifies for under investor guidelines). Regulation X procedural requirements — acknowledgment notices, 5-day acknowledgment, 30-day evaluation deadline, appeal rights — are on the roadmap as an integrated compliance checklist (Q4 2026). For now, Reg X procedural compliance remains the servicer's responsibility using existing procedures.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">What if an investor updates their guidelines and the engine hasn't been updated yet?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">The engine reflects rules as of its last update (March 2026 for the current version). Subscribers receive notification when material guideline changes are identified. <strong>Enterprise subscribers</strong> receive updates within 30 days of material changes; <strong>Professional</strong> within 60 days. For any guideline change you become aware of before the engine update, document the variance in your servicer notes and apply the new rule manually. The engine's regulatory citation on each audit node allows you to identify exactly which rule version was applied.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">Does using ResolutionIQ create any liability for the technology provider?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">ResolutionIQ is a decision support tool. The servicer retains full responsibility for all loss mitigation determinations. The engine's output is a recommendation, not a regulatory determination. See the Terms of Use for complete limitation of liability provisions. The servicer must independently verify all engine outputs against current investor guidelines before implementing any loss mitigation action.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ───────────────────────────────────────────────
+         CATEGORY 7 — TECHNICAL & IMPLEMENTATION
+    ─────────────────────────────────────────────── -->
+    <div class="category cat7 section-break">
+      <div class="category-header">
+        <span class="category-num">7</span>
+        <span class="category-title">Technical &amp; Implementation</span>
+        <span class="category-count">4 Questions</span>
+      </div>
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">How long does an evaluation take?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">Under 30 seconds in the standard web interface. Via API, typical response time is under 2 seconds per loan evaluation. Batch processing (Enterprise tier) can evaluate 50,000 loans overnight.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">Can ResolutionIQ integrate with our LOS?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">LOS integration is available for Enterprise subscribers. Native connectors for <strong>Encompass</strong> (ICE Mortgage Technology) and <strong>MSP</strong> (Black Knight) are on the roadmap for Q3 2026. In the interim, the Enterprise API allows any LOS with an API layer to push loan data and receive evaluation results programmatically. Custom integration builds are available as a paid add-on service.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">What data does ResolutionIQ store?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">In the current web application version, <strong>no loan data is stored server-side</strong> — all evaluation processing happens in the browser. API and Enterprise versions store evaluation logs (input hash, output, timestamp, user) for audit purposes. All data is encrypted at rest and in transit. See the Privacy Policy and Terms of Use for complete data handling details.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">
+            <span class="faq-q-label">Q</span>
+            <span class="faq-q-text">Who should I contact for support?</span>
+          </div>
+          <div class="faq-a">
+            <span class="faq-a-label">A</span>
+            <div class="faq-a-text">
+              <ul>
+                <li><strong>Technical issues:</strong> support@resolutioniq.com — Professional: next business day; Enterprise: 4-hour SLA.</li>
+                <li><strong>Regulatory questions about specific evaluation results:</strong> Review the audit node trail and the regulatory citation listed — the specific section number and guideline version are shown on every node.</li>
+                <li><strong>New investor guideline changes:</strong> Email compliance@resolutioniq.com to alert the team.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ───────────────────────────────────────────────
+         FOOTER
+    ─────────────────────────────────────────────── -->
+    <div class="doc-footer">
+      <div class="doc-footer-left">
+        <strong>ResolutionIQ</strong> &nbsp;—&nbsp; Loss Mitigation Rules Engine<br>
+        Rules current through March 2026 &nbsp;|&nbsp; FHLMC Bulletin 2026-2 &nbsp;|&nbsp; FHA ML 2024-02 &nbsp;|&nbsp; VA Circular 26-25-2
+      </div>
+      <div class="doc-footer-right">
+        For general reference only<br>
+        Not legal or regulatory advice &nbsp;|&nbsp; resolutioniq.com
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /page -->
+
+</body>
+</html>

@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResolutionIQ — Test Case Suite (449 Cases)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --fha:    #1a56db;
+    --usda:   #0e9f6e;
+    --va:     #c27803;
+    --fhlmc:  #7e3af2;
+    --fnma:   #e02424;
+    --pass:   #057a55;
+    --fail:   #9b1c1c;
+    --wf:     #374151;
+    --bg:     #f9fafb;
+    --border: #e5e7eb;
+    --text:   #111827;
+    --muted:  #6b7280;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11px;
+    color: var(--text);
+    background: #fff;
+    line-height: 1.4;
+  }
+
+  /* ── Cover Page ─────────────────────────────── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+    color: #fff;
+    text-align: center;
+    padding: 60px 40px;
+    page-break-after: always;
+  }
+
+  .cover-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #93c5fd;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 6px 20px;
+    border-radius: 20px;
+    margin-bottom: 32px;
+  }
+
+  .cover h1 {
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  .cover h1 span { color: #60a5fa; }
+
+  .cover-sub {
+    font-size: 18px;
+    color: #94a3b8;
+    font-weight: 300;
+    margin-bottom: 48px;
+  }
+
+  .cover-stats {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    margin-bottom: 48px;
+  }
+
+  .cover-stat {
+    text-align: center;
+  }
+
+  .cover-stat-num {
+    font-size: 48px;
+    font-weight: 700;
+    color: #60a5fa;
+    line-height: 1;
+  }
+
+  .cover-stat-label {
+    font-size: 12px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 6px;
+  }
+
+  .cover-divider {
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+    margin: 0 auto 48px;
+  }
+
+  .cover-table {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    max-width: 700px;
+    margin-bottom: 48px;
+  }
+
+  .cover-investor {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 16px 10px;
+    text-align: center;
+  }
+
+  .cover-investor-name {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .cover-investor-count {
+    font-size: 22px;
+    font-weight: 700;
+    color: #60a5fa;
+  }
+
+  .cover-investor-label {
+    font-size: 9px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  .cover-meta {
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  /* ── TOC ──────────────────────────────────────── */
+  .toc-page {
+    padding: 48px 64px;
+    page-break-after: always;
+  }
+
+  .page-header {
+    border-bottom: 2px solid #1e3a5f;
+    padding-bottom: 12px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+
+  .page-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e3a5f;
+  }
+
+  .page-header-sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .toc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .toc-section {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .toc-section-header {
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 12px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .toc-section-body {
+    padding: 12px 16px;
+    background: var(--bg);
+  }
+
+  .toc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px dotted var(--border);
+    font-size: 11px;
+  }
+
+  .toc-row:last-child { border-bottom: none; }
+
+  .toc-count {
+    font-weight: 700;
+    font-size: 13px;
+    background: rgba(0,0,0,0.08);
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+
+  /* ── Suite Overview ──────────────────────────── */
+  .suite-overview {
+    padding: 40px 64px;
+    page-break-after: always;
+  }
+
+  .suite-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-top: 24px;
+  }
+
+  .suite-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .suite-card-header {
+    padding: 14px 18px;
+    background: #1e3a5f;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .suite-card-title {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .suite-card-file {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #93c5fd;
+  }
+
+  .suite-card-body {
+    padding: 14px 18px;
+    background: var(--bg);
+  }
+
+  .suite-card-desc {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  .suite-investor-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .pill {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    color: #fff;
+  }
+
+  .pill-fha    { background: var(--fha); }
+  .pill-usda   { background: var(--usda); }
+  .pill-va     { background: var(--va); }
+  .pill-fhlmc  { background: var(--fhlmc); }
+  .pill-fnma   { background: var(--fnma); }
+  .pill-wf     { background: var(--wf); }
+
+  .suite-stats {
+    display: flex;
+    gap: 12px;
+  }
+
+  .suite-stat {
+    flex: 1;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+
+  .suite-stat-num {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e3a5f;
+  }
+
+  .suite-stat-label {
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Test Case Pages ─────────────────────────── */
+  .test-page {
+    padding: 36px 64px;
+    page-break-after: always;
+  }
+
+  .test-page:last-child { page-break-after: auto; }
+
+  .investor-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 3px solid;
+  }
+
+  .investor-badge {
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+  }
+
+  .investor-title {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .investor-subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .suite-label {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1.5px solid;
+  }
+
+  .test-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10.5px;
+  }
+
+  .test-table thead tr {
+    background: #f3f4f6;
+    border-bottom: 2px solid #d1d5db;
+  }
+
+  .test-table th {
+    padding: 7px 10px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #374151;
+  }
+
+  .test-table td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: top;
+  }
+
+  .test-table tbody tr:hover { background: #fafafa; }
+
+  .tc-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #374151;
+  }
+
+  .tc-desc {
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .tc-type {
+    font-size: 9.5px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+
+  .type-happy  { background: #d1fae5; color: #065f46; }
+  .type-sad    { background: #fee2e2; color: #991b1b; }
+  .type-id     { background: #fef3c7; color: #92400e; }
+  .type-severe { background: #ede9fe; color: #4c1d95; }
+  .type-wf     { background: #e0e7ff; color: #3730a3; }
+
+  .result-pass { color: #065f46; font-weight: 600; }
+  .result-fail { color: #991b1b; font-weight: 600; }
+
+  /* ── Summary / Appendix ──────────────────────── */
+  .summary-page {
+    padding: 48px 64px;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .summary-card {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .summary-card-top {
+    padding: 14px;
+    color: #fff;
+    text-align: center;
+  }
+
+  .summary-card-name {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 1px;
+  }
+
+  .summary-card-body {
+    padding: 12px;
+    background: var(--bg);
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 10.5px;
+    border-bottom: 1px dotted var(--border);
+  }
+
+  .summary-row:last-child { border-bottom: none; }
+
+  .summary-num {
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .pass-rate-bar {
+    margin: 24px 0;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+  }
+
+  .bar-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #1e3a5f;
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .bar-label {
+    width: 120px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 18px;
+    background: #e5e7eb;
+    border-radius: 9px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #059669);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    min-width: 50px;
+  }
+
+  .bar-count {
+    width: 70px;
+    text-align: right;
+    font-size: 10.5px;
+    color: var(--muted);
+  }
+
+  .footer-note {
+    margin-top: 32px;
+    padding: 16px 20px;
+    background: #eff6ff;
+    border-left: 4px solid #1a56db;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #1e40af;
+    line-height: 1.6;
+  }
+
+  /* ── Print ──────────────────────────────────── */
+  @media print {
+    body { font-size: 10px; }
+    .cover { min-height: 100vh; }
+    .test-page, .toc-page, .suite-overview, .summary-page { page-break-inside: avoid; }
+    .test-table { font-size: 9.5px; }
+    a { text-decoration: none; color: inherit; }
+  }
+
+  @page {
+    size: letter;
+    margin: 0.5in 0.6in;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════ COVER ══════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-badge">Confidential — Internal Use Only</div>
+  <h1><span>ResolutionIQ</span><br>Test Case Suite</h1>
+  <div class="cover-sub">Loss Mitigation Rules Engine — Complete Validation Library</div>
+  <div class="cover-divider"></div>
+
+  <div class="cover-stats">
+    <div class="cover-stat">
+      <div class="cover-stat-num">449</div>
+      <div class="cover-stat-label">Total Test Cases</div>
+    </div>
+    <div class="cover-stat">
+      <div class="cover-stat-num">4</div>
+      <div class="cover-stat-label">Test Suites</div>
+    </div>
+    <div class="cover-stat">
+      <div class="cover-stat-num">5</div>
+      <div class="cover-stat-label">Investors</div>
+    </div>
+    <div class="cover-stat">
+      <div class="cover-stat-num">100%</div>
+      <div class="cover-stat-label">Pass Rate</div>
+    </div>
+  </div>
+
+  <div class="cover-table">
+    <div class="cover-investor">
+      <div class="cover-investor-name" style="color:#60a5fa">FHA</div>
+      <div class="cover-investor-count">100</div>
+      <div class="cover-investor-label">test cases</div>
+    </div>
+    <div class="cover-investor">
+      <div class="cover-investor-name" style="color:#34d399">USDA</div>
+      <div class="cover-investor-count">75</div>
+      <div class="cover-investor-label">test cases</div>
+    </div>
+    <div class="cover-investor">
+      <div class="cover-investor-name" style="color:#fbbf24">VA</div>
+      <div class="cover-investor-count">80</div>
+      <div class="cover-investor-label">test cases</div>
+    </div>
+    <div class="cover-investor">
+      <div class="cover-investor-name" style="color:#c4b5fd">FHLMC</div>
+      <div class="cover-investor-count">99</div>
+      <div class="cover-investor-label">test cases</div>
+    </div>
+    <div class="cover-investor">
+      <div class="cover-investor-name" style="color:#fca5a5">FNMA</div>
+      <div class="cover-investor-count">100</div>
+      <div class="cover-investor-label">test cases</div>
+    </div>
+  </div>
+
+  <div class="cover-meta">
+    Generated: March 2026 &nbsp;·&nbsp; ResolutionIQ v1.0 &nbsp;·&nbsp; Engine: evaluateFHA / evaluateFNMA / evaluateFHLMC / evaluateVA / evaluateUSDA
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════ TOC ══════════════════════════════════════════ -->
+<div class="toc-page">
+  <div class="page-header">
+    <h2>Table of Contents</h2>
+    <span class="page-header-sub">450 test cases across 4 suites</span>
+  </div>
+
+  <div class="toc-grid">
+
+    <div class="toc-section">
+      <div class="toc-section-header" style="background:#1e3a5f">
+        <span>Suite 1 — Standard Eligibility</span>
+        <span class="toc-count">249</span>
+      </div>
+      <div class="toc-section-body">
+        <div class="toc-row"><span>FHA (TC01–TC50)</span><span style="font-weight:700;color:var(--fha)">50 cases</span></div>
+        <div class="toc-row"><span>USDA (TC01–TC50)</span><span style="font-weight:700;color:var(--usda)">50 cases</span></div>
+        <div class="toc-row"><span>VA (TC01–TC50)</span><span style="font-weight:700;color:var(--va)">50 cases</span></div>
+        <div class="toc-row"><span>FHLMC (TC01–TC49)</span><span style="font-weight:700;color:var(--fhlmc)">49 cases</span></div>
+        <div class="toc-row"><span>FNMA (TC01–TC50)</span><span style="font-weight:700;color:var(--fnma)">50 cases</span></div>
+        <div class="toc-row" style="margin-top:4px;color:var(--muted);font-size:10px"><span>File: test_evaluations.mjs</span></div>
+      </div>
+    </div>
+
+    <div class="toc-section">
+      <div class="toc-section-header" style="background:#9b1c1c">
+        <span>Suite 2 — Sad Path (Ineligible)</span>
+        <span class="toc-count">125</span>
+      </div>
+      <div class="toc-section-body">
+        <div class="toc-row"><span>FHA (SAD-FHA-01–25)</span><span style="font-weight:700;color:var(--fha)">25 cases</span></div>
+        <div class="toc-row"><span>USDA (SAD-USDA-01–25)</span><span style="font-weight:700;color:var(--usda)">25 cases</span></div>
+        <div class="toc-row"><span>VA (SAD-VA-01–25)</span><span style="font-weight:700;color:var(--va)">25 cases</span></div>
+        <div class="toc-row"><span>FHLMC (SAD-FHLMC-01–25)</span><span style="font-weight:700;color:var(--fhlmc)">25 cases</span></div>
+        <div class="toc-row"><span>FNMA (SAD-FNMA-01–25)</span><span style="font-weight:700;color:var(--fnma)">25 cases</span></div>
+        <div class="toc-row" style="margin-top:4px;color:var(--muted);font-size:10px"><span>File: test_evaluations_sad.mjs</span></div>
+      </div>
+    </div>
+
+    <div class="toc-section">
+      <div class="toc-section-header" style="background:#6d28d9">
+        <span>Suite 3 — Imminent Default &amp; Severe DLQ</span>
+        <span class="toc-count">50</span>
+      </div>
+      <div class="toc-section-body">
+        <div class="toc-row"><span>FHLMC (ID-FHLMC-01–15)</span><span style="font-weight:700;color:var(--fhlmc)">15 cases</span></div>
+        <div class="toc-row"><span>FNMA (ID-FNMA-01–15)</span><span style="font-weight:700;color:var(--fnma)">15 cases</span></div>
+        <div class="toc-row"><span>FHA (SEV-FHA-01–10)</span><span style="font-weight:700;color:var(--fha)">10 cases</span></div>
+        <div class="toc-row"><span>USDA (SEV-USDA-01–05)</span><span style="font-weight:700;color:var(--usda)">5 cases</span></div>
+        <div class="toc-row"><span>VA (SEV-VA-01–05)</span><span style="font-weight:700;color:var(--va)">5 cases</span></div>
+        <div class="toc-row" style="margin-top:4px;color:var(--muted);font-size:10px"><span>File: test_evaluations_id_severe.mjs</span></div>
+      </div>
+    </div>
+
+    <div class="toc-section">
+      <div class="toc-section-header" style="background:#374151">
+        <span>Suite 4 — Waterfall Ordering</span>
+        <span class="toc-count">10</span>
+      </div>
+      <div class="toc-section-body">
+        <div class="toc-row"><span>FHA waterfall order</span><span style="font-weight:700;color:var(--wf)">2 cases</span></div>
+        <div class="toc-row"><span>VA waterfall order</span><span style="font-weight:700;color:var(--wf)">1 case</span></div>
+        <div class="toc-row"><span>FHLMC waterfall order</span><span style="font-weight:700;color:var(--wf)">1 case</span></div>
+        <div class="toc-row"><span>USDA waterfall order</span><span style="font-weight:700;color:var(--wf)">1 case</span></div>
+        <div class="toc-row"><span>FNMA waterfall order</span><span style="font-weight:700;color:var(--wf)">1 case</span></div>
+        <div class="toc-row"><span>Edge cases (empty, unknown, single)</span><span style="font-weight:700;color:var(--wf)">4 cases</span></div>
+        <div class="toc-row" style="margin-top:4px;color:var(--muted);font-size:10px"><span>File: test_waterfall.mjs</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════ SUITE OVERVIEW ══════════════════════════════ -->
+<div class="suite-overview">
+  <div class="page-header">
+    <h2>Suite Architecture</h2>
+    <span class="page-header-sub">Design rationale and coverage philosophy</span>
+  </div>
+
+  <div class="suite-grid">
+
+    <div class="suite-card">
+      <div class="suite-card-header">
+        <div>
+          <div class="suite-card-title">Suite 1 — Standard Eligibility</div>
+          <div class="suite-card-file">test_evaluations.mjs &nbsp;·&nbsp; 1,761 lines</div>
+        </div>
+        <div style="font-size:22px;font-weight:800;color:#60a5fa">249</div>
+      </div>
+      <div class="suite-card-body">
+        <div class="suite-card-desc">
+          Happy-path and boundary eligibility tests across all five investors. Covers each loss mitigation option for eligible scenarios, boundary conditions on DLQ thresholds, loan age limits, prior-modification cooldowns, and multi-option simultaneous eligibility. Serves as the primary correctness regression suite.
+        </div>
+        <div class="suite-investor-pills">
+          <span class="pill pill-fha">FHA ×50</span>
+          <span class="pill pill-usda">USDA ×50</span>
+          <span class="pill pill-va">VA ×50</span>
+          <span class="pill pill-fhlmc">FHLMC ×49</span>
+          <span class="pill pill-fnma">FNMA ×50</span>
+        </div>
+        <div class="suite-stats">
+          <div class="suite-stat"><div class="suite-stat-num">249</div><div class="suite-stat-label">Total Cases</div></div>
+          <div class="suite-stat"><div class="suite-stat-num">249</div><div class="suite-stat-label">Passing</div></div>
+          <div class="suite-stat"><div class="suite-stat-num">100%</div><div class="suite-stat-label">Pass Rate</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="suite-card">
+      <div class="suite-card-header">
+        <div>
+          <div class="suite-card-title">Suite 2 — Sad Path (Ineligible)</div>
+          <div class="suite-card-file">test_evaluations_sad.mjs &nbsp;·&nbsp; 957 lines</div>
+        </div>
+        <div style="font-size:22px;font-weight:800;color:#f87171">125</div>
+      </div>
+      <div class="suite-card-body">
+        <div class="suite-card-desc">
+          Negative path tests confirming the engine correctly denies options when eligibility criteria are NOT met. Each test mirrors a standard case but with one or more blocking conditions. Critical for ensuring no false positives (erroneous approvals). 25 ineligibility cases per investor.
+        </div>
+        <div class="suite-investor-pills">
+          <span class="pill pill-fha">FHA ×25</span>
+          <span class="pill pill-usda">USDA ×25</span>
+          <span class="pill pill-va">VA ×25</span>
+          <span class="pill pill-fhlmc">FHLMC ×25</span>
+          <span class="pill pill-fnma">FNMA ×25</span>
+        </div>
+        <div class="suite-stats">
+          <div class="suite-stat"><div class="suite-stat-num">125</div><div class="suite-stat-label">Total Cases</div></div>
+          <div class="suite-stat"><div class="suite-stat-num">125</div><div class="suite-stat-label">Passing</div></div>
+          <div class="suite-stat"><div class="suite-stat-num">100%</div><div class="suite-stat-label">Pass Rate</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="suite-card">
+      <div class="suite-card-header">
+        <div>
+          <div class="suite-card-title">Suite 3 — Imminent Default &amp; Severe DLQ</div>
+          <div class="suite-card-file">test_evaluations_id_severe.mjs &nbsp;·&nbsp; 652 lines</div>
+        </div>
+        <div style="font-size:22px;font-weight:800;color:#c4b5fd">50</div>
+      </div>
+      <div class="suite-card-body">
+        <div class="suite-card-desc">
+          Specialized tests for complex borrower states: imminent default (current but at-risk), and severely delinquent (12–24+ months DLQ). Validates FNMA/FHLMC ID path rules (FICO ≤ 620, housing ratio thresholds, prior-DLQ triggers) and FHA/VA/USDA severe-DLQ boundary behavior. Most regulatory-nuanced suite.
+        </div>
+        <div class="suite-investor-pills">
+          <span class="pill pill-fhlmc">FHLMC ×15</span>
+          <span class="pill pill-fnma">FNMA ×15</span>
+          <span class="pill pill-fha">FHA ×10</span>
+          <span class="pill pill-usda">USDA ×5</span>
+          <span class="pill pill-va">VA ×5</span>
+        </div>
+        <div class="suite-stats">
+          <div class="suite-stat"><div class="suite-stat-num">50</div><div class="suite-stat-label">Total Cases</div></div>
+          <div class="suite-stat"><div class="suite-stat-num">50</div><div class="suite-stat-label">Passing</div></div>
+          <div class="suite-stat"><div class="suite-stat-num">100%</div><div class="suite-stat-label">Pass Rate</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="suite-card">
+      <div class="suite-card-header">
+        <div>
+          <div class="suite-card-title">Suite 4 — Waterfall Ordering</div>
+          <div class="suite-card-file">test_waterfall.mjs &nbsp;·&nbsp; 206 lines</div>
+        </div>
+        <div style="font-size:22px;font-weight:800;color:#93c5fd">10</div>
+      </div>
+      <div class="suite-card-body">
+        <div class="suite-card-desc">
+          Validates that the waterfall sorting function correctly prioritizes loss mitigation options per regulatory hierarchy (e.g., Reinstatement → Payment Deferral → Modification → Liquidation). Also tests edge cases: empty eligible lists, unknown loan types, single-option sets, and extras placement for unrecognized options.
+        </div>
+        <div class="suite-investor-pills">
+          <span class="pill pill-fha">FHA ×2</span>
+          <span class="pill pill-va">VA ×1</span>
+          <span class="pill pill-fhlmc">FHLMC ×1</span>
+          <span class="pill pill-usda">USDA ×1</span>
+          <span class="pill pill-fnma">FNMA ×1</span>
+          <span class="pill" style="background:#6b7280">Edge ×4</span>
+        </div>
+        <div class="suite-stats">
+          <div class="suite-stat"><div class="suite-stat-num">10</div><div class="suite-stat-label">Total Cases</div></div>
+          <div class="suite-stat"><div class="suite-stat-num">10</div><div class="suite-stat-label">Passing</div></div>
+          <div class="suite-stat"><div class="suite-stat-num">100%</div><div class="suite-stat-label">Pass Rate</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ SUITE 1 — STANDARD ELIGIBILITY ════════════════════════════ -->
+
+<!-- FHA Standard -->
+<div class="test-page">
+  <div class="investor-header" style="border-color:var(--fha)">
+    <span class="investor-badge" style="background:var(--fha)">FHA</span>
+    <div>
+      <div class="investor-title" style="color:var(--fha)">Federal Housing Administration</div>
+      <div class="investor-subtitle">Suite 1 — Standard Eligibility &nbsp;·&nbsp; HUD Handbook 4000.1 &nbsp;·&nbsp; ML 2023-05 / ML 2024-02 / ML 2025-06</div>
+    </div>
+    <span class="suite-label" style="color:var(--fha);border-color:var(--fha)">50 Cases</span>
+  </div>
+  <table class="test-table">
+    <thead><tr><th width="90">Case ID</th><th>Description</th><th width="70">Type</th></tr></thead>
+    <tbody>
+      <tr><td class="tc-id">TC01</td><td class="tc-desc">Reinstatement eligible when DLQ&gt;0</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC02</td><td class="tc-desc">Reinstatement ineligible DLQ=0</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC03</td><td class="tc-desc">Repayment Plan eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC04</td><td class="tc-desc">Repayment Plan fails disaster hardship</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC05</td><td class="tc-desc">Formal Forbearance eligible short-term</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC06</td><td class="tc-desc">Formal Forbearance fails DLQ>=12</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC07</td><td class="tc-desc">FHA Payment Deferral eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC08</td><td class="tc-desc">FHA Payment Deferral fails DLQ=1</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC09</td><td class="tc-desc">FHA 30-Year Mod eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC10</td><td class="tc-desc">FHA 30-Year Mod fails 360-month achieves target</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC11</td><td class="tc-desc">FHA 40-Year Combo eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC12</td><td class="tc-desc">FHA 40-Year Combo fails 480-month cannot achieve target</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC13</td><td class="tc-desc">Standalone Partial Claim eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC14</td><td class="tc-desc">Standalone Partial Claim fails borrower cannot resume payments</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC15</td><td class="tc-desc">Payment Supplement eligible (last resort)</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC16</td><td class="tc-desc">Payment Supplement fails disaster hardship flag</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC17</td><td class="tc-desc">Pre-Foreclosure Sale eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC18</td><td class="tc-desc">Pre-Foreclosure Sale fails retention intent</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC19</td><td class="tc-desc">Deed-in-Lieu eligible after failed PFS</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC20</td><td class="tc-desc">Deed-in-Lieu fails no prior PFS attempt</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC21</td><td class="tc-desc">Disaster Standalone Partial Claim eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC22</td><td class="tc-desc">Disaster Standalone PC fails not a disaster hardship</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC23</td><td class="tc-desc">Disaster Standalone PC fails borrower unresponsive</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC24</td><td class="tc-desc">FHA Disaster Mod eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC25</td><td class="tc-desc">FHA Disaster Mod fails not disaster hardship</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC26</td><td class="tc-desc">Payment Deferral — DLQ=3 boundary eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC27</td><td class="tc-desc">Payment Deferral — DLQ=12 boundary eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC28</td><td class="tc-desc">Repayment Plan — DLQ=12 boundary eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC29</td><td class="tc-desc">Formal Forbearance — DLQ=11 boundary eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC30</td><td class="tc-desc">40-Year Combo fails 480mo cannot achieve target</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC31</td><td class="tc-desc">Prior HR cooldown 24mo exactly — Mod eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC32</td><td class="tc-desc">Prior HR cooldown 23mo — Mod ineligible</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC33</td><td class="tc-desc">Prior deferral spacing 12mo exactly — Deferral eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC34</td><td class="tc-desc">Cumulative deferral 11mo — Deferral eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC35</td><td class="tc-desc">Cumulative deferral 12mo — Deferral ineligible</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC36</td><td class="tc-desc">Failed TPP blocks Repayment Plan</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC37</td><td class="tc-desc">Borrower cannot repay within 24mo blocks Repayment Plan</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC38</td><td class="tc-desc">Payment Supplement — prior PS 36mo cooldown eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC39</td><td class="tc-desc">Payment Supplement — prior PS 35mo cooldown ineligible</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC40</td><td class="tc-desc">Partial Claim 30% cap — eligible within cap</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC41</td><td class="tc-desc">Partial Claim 30% cap — ineligible over cap</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC42</td><td class="tc-desc">Multiple options eligible simultaneously</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC43</td><td class="tc-desc">OWL borrower unresponsive blocks Payment Supplement</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC44</td><td class="tc-desc">Active TPP blocks Mod waterfall</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC45</td><td class="tc-desc">Forbearance blocks FHA standard options</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC46</td><td class="tc-desc">Active foreclosure blocks all retention options</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC47</td><td class="tc-desc">Disposition intent opens PFS/DIL, closes Mod</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC48</td><td class="tc-desc">Disaster Forbearance eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC49</td><td class="tc-desc">Disaster Forbearance fails not current at disaster</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC50</td><td class="tc-desc">Non-principal-residence blocks modification</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- USDA Standard -->
+<div class="test-page">
+  <div class="investor-header" style="border-color:var(--usda)">
+    <span class="investor-badge" style="background:var(--usda)">USDA</span>
+    <div>
+      <div class="investor-title" style="color:var(--usda)">U.S. Department of Agriculture — Rural Development</div>
+      <div class="investor-subtitle">Suite 1 — Standard Eligibility &nbsp;·&nbsp; HB-1-3555 Chapter 18 / §3555.304</div>
+    </div>
+    <span class="suite-label" style="color:var(--usda);border-color:var(--usda)">50 Cases</span>
+  </div>
+  <table class="test-table">
+    <thead><tr><th width="90">Case ID</th><th>Description</th><th width="70">Type</th></tr></thead>
+    <tbody>
+      <tr><td class="tc-id">TC01</td><td class="tc-desc">Reinstatement eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC02</td><td class="tc-desc">Informal Forbearance eligible short-term</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC03</td><td class="tc-desc">Informal Forbearance fails long-term hardship</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC04</td><td class="tc-desc">Informal Repayment Plan eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC05</td><td class="tc-desc">Informal Repayment Plan fails DLQ=0</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC06</td><td class="tc-desc">Special Forbearance eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC07</td><td class="tc-desc">Special Forbearance fails no FEMA/disaster</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC08</td><td class="tc-desc">Streamline Mod eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC09</td><td class="tc-desc">Streamline Mod fails DLQ&lt;90d</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC10</td><td class="tc-desc">Streamline Mod fails UPB&lt;$5,000</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC11</td><td class="tc-desc">Streamline Mod fails prior mods &gt;=2</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC12</td><td class="tc-desc">Standalone MRA eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC13</td><td class="tc-desc">Standalone MRA fails DLQ&lt;30d</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC14</td><td class="tc-desc">Mod+MRA eligible (step 3 required)</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC15</td><td class="tc-desc">Mod+MRA fails step 3 not required</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC16</td><td class="tc-desc">Disaster Forbearance eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC17</td><td class="tc-desc">Disaster Forbearance fails not current at disaster</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC18</td><td class="tc-desc">Disaster Modification eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC19</td><td class="tc-desc">Disaster Modification fails not disaster hardship</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC20</td><td class="tc-desc">Disaster Term Extension eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC21</td><td class="tc-desc">Disaster Term Extension fails not disaster hardship</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC22</td><td class="tc-desc">Compromise Sale eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC23</td><td class="tc-desc">Compromise Sale fails retention intent</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC24</td><td class="tc-desc">Deed-in-Lieu eligible after failed Comp Sale</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC25</td><td class="tc-desc">Deed-in-Lieu fails no prior Comp Sale attempt</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC26</td><td class="tc-desc">Informal Forbearance fails DLQ&gt;=360 days</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC27</td><td class="tc-desc">Streamline Mod fails property listed for sale</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC28</td><td class="tc-desc">Streamline Mod fails failed TPP</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC29</td><td class="tc-desc">Informal Forbearance — DLQ=359d boundary eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC30</td><td class="tc-desc">Informal Repayment fails no positive net income</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC31</td><td class="tc-desc">Special Forbearance — long-term hardship eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC32</td><td class="tc-desc">Special Forbearance — DLQ=3mo eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC33</td><td class="tc-desc">Standalone MRA fails cannot resume current payment</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC34</td><td class="tc-desc">Multiple options eligible simultaneously</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC35</td><td class="tc-desc">Disaster options blocked for non-disaster hardship</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC36</td><td class="tc-desc">Streamline Mod — prior mod count=1 eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC37</td><td class="tc-desc">Streamline Mod — prior mod count=2 ineligible</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC38</td><td class="tc-desc">Reinstatement ineligible DLQ=0</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC39</td><td class="tc-desc">Informal Repayment — DLQ exactly 1 eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC40</td><td class="tc-desc">Informal Forbearance — intent=dispose blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC41</td><td class="tc-desc">Disaster Forbearance — current at disaster eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC42</td><td class="tc-desc">Mod+MRA requires streamline mod pathway</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC43</td><td class="tc-desc">Disaster Term Extension — maturity extension eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC44</td><td class="tc-desc">Compromise Sale — all conditions met</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC45</td><td class="tc-desc">DIL — all conditions met after PFS fail</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC46</td><td class="tc-desc">Short-term hardship resolved enables Repayment Plan</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC47</td><td class="tc-desc">Long-term hardship routes to Mod pathway</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC48</td><td class="tc-desc">Disaster Mod — 2nd lien present fails</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC49</td><td class="tc-desc">Streamline Mod — DLQ=90d (3mo) boundary eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC50</td><td class="tc-desc">Disaster Mod fails second lien</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- VA Standard -->
+<div class="test-page">
+  <div class="investor-header" style="border-color:var(--va)">
+    <span class="investor-badge" style="background:var(--va)">VA</span>
+    <div>
+      <div class="investor-title" style="color:var(--va)">Department of Veterans Affairs</div>
+      <div class="investor-subtitle">Suite 1 — Standard Eligibility &nbsp;·&nbsp; VA M26-4 / Circulars 26-25-2, 26-24-3, 26-24-2</div>
+    </div>
+    <span class="suite-label" style="color:var(--va);border-color:var(--va)">50 Cases</span>
+  </div>
+  <table class="test-table">
+    <thead><tr><th width="90">Case ID</th><th>Description</th><th width="70">Type</th></tr></thead>
+    <tbody>
+      <tr><td class="tc-id">TC01</td><td class="tc-desc">Reinstatement eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC02</td><td class="tc-desc">Repayment Plan eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC03</td><td class="tc-desc">Repayment Plan fails disaster hardship</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC04</td><td class="tc-desc">Special Forbearance eligible long-term</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC05</td><td class="tc-desc">Special Forbearance fails resolved hardship</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC06</td><td class="tc-desc">Traditional Modification eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC07</td><td class="tc-desc">Traditional Mod fails DLQ&lt;61d</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC08</td><td class="tc-desc">VA 30-Year Mod eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC09</td><td class="tc-desc">VA 30-Year Mod fails can afford current payment</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC10</td><td class="tc-desc">VA 40-Year Mod eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC11</td><td class="tc-desc">VA 40-Year Mod fails DLQ&lt;61d</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC12</td><td class="tc-desc">Compromise Sale eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC13</td><td class="tc-desc">Compromise Sale fails retention intent</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC14</td><td class="tc-desc">Deed-in-Lieu eligible after failed Comp Sale</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC15</td><td class="tc-desc">Deed-in-Lieu fails no prior Comp Sale</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC16</td><td class="tc-desc">Disaster Forbearance eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC17</td><td class="tc-desc">Disaster Forbearance fails not current at disaster</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC18</td><td class="tc-desc">Disaster Modification eligible after forbearance</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC19</td><td class="tc-desc">Disaster Mod fails active Repayment Plan</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC20</td><td class="tc-desc">Disaster Extend Mod eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC21</td><td class="tc-desc">Disaster Extend Mod fails hardship resolved</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC22</td><td class="tc-desc">Special Forbearance — DLQ=12 and forbearance=12 blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC23</td><td class="tc-desc">Repayment Plan — DLQ=1 boundary ineligible (needs 30d)</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC24</td><td class="tc-desc">Traditional Mod — DLQ=61d boundary eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC25</td><td class="tc-desc">Traditional Mod — cannot confirm cannot afford current</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC26</td><td class="tc-desc">VA 40-Year Mod — cannot afford modified payment fails</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC27</td><td class="tc-desc">Disaster Mod — no prior forbearance workout fails</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC28</td><td class="tc-desc">Multiple retention options eligible simultaneously</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC29</td><td class="tc-desc">Reinstatement blocked by active foreclosure</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC30</td><td class="tc-desc">Reinstatement blocked — cannot afford reinstatement</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC31</td><td class="tc-desc">Compromise Sale — short term hardship blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC32</td><td class="tc-desc">Special Forbearance — resolved hardship blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC33</td><td class="tc-desc">Disaster Forbearance — current at disaster passes</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC34</td><td class="tc-desc">Disaster Mod — workout state active/passed required</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC35</td><td class="tc-desc">RLC approval node present on Compromise Sale</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC36</td><td class="tc-desc">Disaster Extend Mod — maturity extension 12mo cap</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC37</td><td class="tc-desc">Traditional Mod — borrower cannot afford modified payment</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC38</td><td class="tc-desc">VA 30-Year Mod — DLQ=61d boundary eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC39</td><td class="tc-desc">Repayment Plan — hardship not resolved (Long Term) blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC40</td><td class="tc-desc">Repayment Plan — cannot afford RPP blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC41</td><td class="tc-desc">Special Forbearance — disaster hardship blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC42</td><td class="tc-desc">Traditional Mod — disaster hardship blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC43</td><td class="tc-desc">VA 30-Year Mod — disaster hardship blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC44</td><td class="tc-desc">VA 40-Year Mod — disaster hardship blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC45</td><td class="tc-desc">Compromise Sale — disaster hardship blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC46</td><td class="tc-desc">DIL — disaster hardship blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC47</td><td class="tc-desc">Compromise Sale — all conditions met, RLC required</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC48</td><td class="tc-desc">VA borrower not confirmed — all options blocked</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC49</td><td class="tc-desc">Disaster Extend Mod — does not require prior Disaster Mod</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC50</td><td class="tc-desc">40-Year Mod fails disposition intent</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- FHLMC Standard -->
+<div class="test-page">
+  <div class="investor-header" style="border-color:var(--fhlmc)">
+    <span class="investor-badge" style="background:var(--fhlmc)">FHLMC</span>
+    <div>
+      <div class="investor-title" style="color:var(--fhlmc)">Freddie Mac</div>
+      <div class="investor-subtitle">Suite 1 — Standard Eligibility &nbsp;·&nbsp; Freddie Mac Servicing Guide Chapter 9200 &amp; Bulletin 2026-2</div>
+    </div>
+    <span class="suite-label" style="color:var(--fhlmc);border-color:var(--fhlmc)">49 Cases</span>
+  </div>
+  <table class="test-table">
+    <thead><tr><th width="90">Case ID</th><th>Description</th><th width="70">Type</th></tr></thead>
+    <tbody>
+      <tr><td class="tc-id">TC01</td><td class="tc-desc">Reinstatement eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC02</td><td class="tc-desc">Repayment Plan eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC03</td><td class="tc-desc">Repayment Plan fails disaster hardship</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC04</td><td class="tc-desc">Payment Deferral eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC05</td><td class="tc-desc">Payment Deferral fails DLQ&lt;2</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC06</td><td class="tc-desc">Payment Deferral fails DLQ&gt;6</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC07</td><td class="tc-desc">Forbearance Plan eligible (short-term)</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC08</td><td class="tc-desc">Forbearance Plan eligible (unemployment)</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC09</td><td class="tc-desc">Forbearance Plan — increment 1–3mo (Bulletin 2026-2)</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC10</td><td class="tc-desc">Standard Flex Mod eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC11</td><td class="tc-desc">Standard Flex Mod fails DLQ&lt;2 no imminent default</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC12</td><td class="tc-desc">Standard Flex Mod fails loan age &lt;12 months</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC13</td><td class="tc-desc">Standard Flex Mod fails prior mods &gt;=3</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC14</td><td class="tc-desc">Standard Flex Mod fails non-performing TPP within 12mo (§9206.5)</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC15</td><td class="tc-desc">Streamlined Flex Mod eligible — solicitation letter sent (§9206.7)</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC16</td><td class="tc-desc">Streamlined Flex Mod fails no solicitation letter (§9206.7)</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC17</td><td class="tc-desc">Streamlined Flex Mod fails DLQ&lt;3mo</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC18</td><td class="tc-desc">Disaster Flex Mod eligible — current at disaster, &gt;=90 DLQ at eval (Bulletin 2026-2)</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC19</td><td class="tc-desc">Disaster Flex Mod fails — current at disaster but &lt;90 DLQ at eval (Bulletin 2026-2)</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC20</td><td class="tc-desc">Disaster Flex Mod fails — &gt;=60 DLQ at disaster</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC21</td><td class="tc-desc">Short Sale eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC22</td><td class="tc-desc">Short Sale fails retention intent</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC23</td><td class="tc-desc">Deed-in-Lieu eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC24</td><td class="tc-desc">Deed-in-Lieu fails requirements not met</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC25</td><td class="tc-desc">Payment Deferral — DLQ=2 boundary eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC26</td><td class="tc-desc">Payment Deferral — DLQ=6 boundary eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC27</td><td class="tc-desc">Payment Deferral — cumulative 11mo eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC28</td><td class="tc-desc">Payment Deferral — cumulative 12mo ineligible</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC29</td><td class="tc-desc">Standard Flex Mod — recourse arrangement fails</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC30</td><td class="tc-desc">Standard Flex Mod — not conventional (FHA) fails</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC31</td><td class="tc-desc">Standard Flex Mod — imminent default via FICO eligible</td><td><span class="tc-type type-id">ID Path</span></td></tr>
+      <tr><td class="tc-id">TC32</td><td class="tc-desc">Standard Flex Mod — imminent default via housing ratio eligible</td><td><span class="tc-type type-id">ID Path</span></td></tr>
+      <tr><td class="tc-id">TC33</td><td class="tc-desc">Standard Flex Mod — imminent default fails no criteria met</td><td><span class="tc-type type-id">ID Path</span></td></tr>
+      <tr><td class="tc-id">TC34</td><td class="tc-desc">Repayment Plan — hardship not resolved blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC35</td><td class="tc-desc">Repayment Plan — property condemned blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC36</td><td class="tc-desc">Forbearance Plan — long-term hardship, not unemployed blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC37</td><td class="tc-desc">Forbearance Plan — active liquidation option blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC38</td><td class="tc-desc">Prior deferral spacing &lt;12mo blocks Payment Deferral</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC39</td><td class="tc-desc">Loan age &lt;12mo blocks Payment Deferral</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC40</td><td class="tc-desc">Investment property with DLQ&gt;=2 eligible for Flex Mod</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC41</td><td class="tc-desc">Non-primary property advisory node appears (§9206.2)</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC42</td><td class="tc-desc">Borrower-withdrawn TPP does NOT trigger ineligibility (§9206.5)</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC43</td><td class="tc-desc">Short Sale — no prior home retention evaluation required (Bulletin 2026-2)</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC44</td><td class="tc-desc">Forbearance Plan — disaster hardship blocks</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC45</td><td class="tc-desc">Disaster Flex Mod — no FEMA designation fails</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC46</td><td class="tc-desc">Disaster Flex Mod — no disaster hardship flag fails</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC47</td><td class="tc-desc">Prior spacing 12mo exactly — Payment Deferral eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC48</td><td class="tc-desc">Flex Mod fails disaster hardship</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC49</td><td class="tc-desc">Multiple options eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- FNMA Standard -->
+<div class="test-page">
+  <div class="investor-header" style="border-color:var(--fnma)">
+    <span class="investor-badge" style="background:var(--fnma)">FNMA</span>
+    <div>
+      <div class="investor-title" style="color:var(--fnma)">Fannie Mae</div>
+      <div class="investor-subtitle">Suite 1 — Standard Eligibility &nbsp;·&nbsp; Fannie Mae Servicing Guide D2-3 / LL-2021-01 / LL-2024-02</div>
+    </div>
+    <span class="suite-label" style="color:var(--fnma);border-color:var(--fnma)">50 Cases</span>
+  </div>
+  <table class="test-table">
+    <thead><tr><th width="90">Case ID</th><th>Description</th><th width="70">Type</th></tr></thead>
+    <tbody>
+      <tr><td class="tc-id">TC01</td><td class="tc-desc">Reinstatement eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC02</td><td class="tc-desc">Reinstatement ineligible DLQ=0</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC03</td><td class="tc-desc">Forbearance Plan eligible principal res</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC04</td><td class="tc-desc">Forbearance Plan fails condemned</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC05</td><td class="tc-desc">Forbearance Plan fails investment non-disaster</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC06</td><td class="tc-desc">Forbearance Plan passes investment + disaster</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC07</td><td class="tc-desc">Repayment Plan eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC08</td><td class="tc-desc">Repayment Plan fails disaster</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC09</td><td class="tc-desc">Repayment Plan fails not resolved</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC10</td><td class="tc-desc">Payment Deferral eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC11</td><td class="tc-desc">Payment Deferral fails DLQ=1</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC12</td><td class="tc-desc">Payment Deferral fails DLQ=7</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC13</td><td class="tc-desc">Payment Deferral fails near maturity (&lt;36mo)</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC14</td><td class="tc-desc">Payment Deferral fails cumulative &gt;=12</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC15</td><td class="tc-desc">Payment Deferral fails second lien / recourse</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC16</td><td class="tc-desc">Flex Mod eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC17</td><td class="tc-desc">Flex Mod fails DLQ=1 no ID</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC18</td><td class="tc-desc">Flex Mod fails loan age &lt;12</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC19</td><td class="tc-desc">Flex Mod fails prior mods &gt;=3</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC20</td><td class="tc-desc">Flex Mod fails failed TPP within 12mo</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC21</td><td class="tc-desc">Flex Mod fails re-default</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC22</td><td class="tc-desc">Flex Mod Streamlined eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC23</td><td class="tc-desc">Flex Mod Streamlined fails DLQ=2</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC24</td><td class="tc-desc">Flex Mod Disaster eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC25</td><td class="tc-desc">Flex Mod Disaster fails no FEMA declaration</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC26</td><td class="tc-desc">Flex Mod Disaster fails DLQ at disaster &gt;=2</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC27</td><td class="tc-desc">Disaster Payment Deferral eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC28</td><td class="tc-desc">Disaster Payment Deferral DLQ=1</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC29</td><td class="tc-desc">Disaster Payment Deferral fails DLQ=0</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC30</td><td class="tc-desc">Disaster Payment Deferral fails same disaster already used</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC31</td><td class="tc-desc">Short Sale eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC32</td><td class="tc-desc">Short Sale fails retention intent</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC33</td><td class="tc-desc">Mortgage Release (DIL) eligible</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC34</td><td class="tc-desc">Mortgage Release fails requirements</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC35</td><td class="tc-desc">Recourse arrangement blocks Flex Mod</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC36</td><td class="tc-desc">Active liquidation option blocks Flex Mod</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC37</td><td class="tc-desc">Active TPP blocks Flex Mod</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC38</td><td class="tc-desc">Pending sale offer blocks Flex Mod</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC39</td><td class="tc-desc">Payment Deferral via imminent default (DLQ=2 required)</td><td><span class="tc-type type-id">ID Path</span></td></tr>
+      <tr><td class="tc-id">TC40</td><td class="tc-desc">Flex Mod via imminent default</td><td><span class="tc-type type-id">ID Path</span></td></tr>
+      <tr><td class="tc-id">TC41</td><td class="tc-desc">Payment Deferral DLQ=2 boundary eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC42</td><td class="tc-desc">Payment Deferral DLQ=6 boundary eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC43</td><td class="tc-desc">Flex Mod standard fails disaster flag</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC44</td><td class="tc-desc">Forbearance Plan fails abandoned property</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC45</td><td class="tc-desc">Multiple options eligible simultaneously</td><td><span class="tc-type type-happy">Happy</span></td></tr>
+      <tr><td class="tc-id">TC46</td><td class="tc-desc">Loan age &lt;12 fails Payment Deferral</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC47</td><td class="tc-desc">Flex Mod DLQ=2 eligible</td><td><span class="tc-type type-happy">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC48</td><td class="tc-desc">Failed TPP blocks Payment Deferral</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC49</td><td class="tc-desc">Disaster Flex Mod fails DLQ at disaster &gt;=2</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+      <tr><td class="tc-id">TC50</td><td class="tc-desc">Insured loss — no FEMA declaration blocks Disaster Deferral</td><td><span class="tc-type type-sad">Boundary</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════ SUITE 2 — SAD PATH ════════════════════════════ -->
+
+<div class="test-page">
+  <div class="investor-header" style="border-color:#dc2626">
+    <span class="investor-badge" style="background:#dc2626">SAD PATH</span>
+    <div>
+      <div class="investor-title" style="color:#dc2626">Suite 2 — Ineligibility Tests (All Investors)</div>
+      <div class="investor-subtitle">test_evaluations_sad.mjs &nbsp;·&nbsp; Confirms the engine correctly denies options when eligibility criteria are not met &nbsp;·&nbsp; 125 cases total</div>
+    </div>
+    <span class="suite-label" style="color:#dc2626;border-color:#dc2626">125 Cases</span>
+  </div>
+
+  <table class="test-table">
+    <thead><tr><th width="130">Case ID</th><th>Description</th><th width="60">Investor</th></tr></thead>
+    <tbody>
+      <!-- FHA -->
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-01</td><td class="tc-desc">Reinstatement ineligible when DLQ=0</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-02</td><td class="tc-desc">Repayment Plan blocked by disaster hardship</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-03</td><td class="tc-desc">Repayment Plan blocked when DLQ&gt;12</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-04</td><td class="tc-desc">Repayment Plan blocked when cannot repay within 24mo</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-05</td><td class="tc-desc">Repayment Plan blocked by failed TPP</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-06</td><td class="tc-desc">Formal Forbearance blocked by disaster hardship</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-07</td><td class="tc-desc">Formal Forbearance blocked when DLQ&gt;=12 (12-month outer cap)</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-08</td><td class="tc-desc">Formal Forbearance blocked — no repay6 and no servicer request</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-09</td><td class="tc-desc">FHA Payment Deferral blocked by disaster hardship</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-10</td><td class="tc-desc">FHA Payment Deferral blocked when DLQ&lt;3</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-11</td><td class="tc-desc">FHA Payment Deferral blocked when DLQ&gt;12</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-12</td><td class="tc-desc">FHA Payment Deferral blocked when hardship not resolved</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-13</td><td class="tc-desc">FHA Payment Deferral blocked by cumulative cap (12mo used)</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-14</td><td class="tc-desc">FHA Payment Deferral blocked by prior deferral spacing &lt;12mo</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-15</td><td class="tc-desc">FHA 30-Year Mod blocked by disaster hardship</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-16</td><td class="tc-desc">FHA 30-Year Mod blocked when intent=dispose</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-17</td><td class="tc-desc">FHA 30-Year Mod blocked by prior mod cooldown &lt;24mo</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-18</td><td class="tc-desc">FHA 30-Year Mod blocked when DLQ=0</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-19</td><td class="tc-desc">FHA 40-Year Combo blocked when 360mo achieves target</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-20</td><td class="tc-desc">FHA 40-Year Combo blocked when 480mo cannot achieve target</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-21</td><td class="tc-desc">FHA Standalone PC blocked by disaster hardship</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-22</td><td class="tc-desc">FHA Standalone PC blocked — cannot resume pre-hardship payment</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-23</td><td class="tc-desc">Payment Supplement blocked by disaster hardship</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-24</td><td class="tc-desc">PFS blocked when borrower intent is retention</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SAD-FHA-25</td><td class="tc-desc">DIL blocked when PFS has not been attempted/failed</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <!-- USDA -->
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-01</td><td class="tc-desc">Reinstatement ineligible when DLQ=0</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-02</td><td class="tc-desc">Informal Forbearance blocked by disaster hardship</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-03</td><td class="tc-desc">Informal Forbearance blocked — not Short Term (Long Term)</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-04</td><td class="tc-desc">Informal Forbearance blocked — DLQ&gt;=360d</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-05</td><td class="tc-desc">Informal Forbearance blocked — intent=dispose</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-06</td><td class="tc-desc">Informal Repayment Plan blocked by disaster hardship</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-07</td><td class="tc-desc">Informal Repayment Plan blocked — not Resolved (Long Term)</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-08</td><td class="tc-desc">Informal Repayment Plan blocked — DLQ=0</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-09</td><td class="tc-desc">Informal Repayment Plan blocked — no positive net income</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-10</td><td class="tc-desc">Streamline Mod blocked by disaster hardship</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-11</td><td class="tc-desc">Streamline Mod blocked — DLQ&lt;90d</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-12</td><td class="tc-desc">Streamline Mod blocked — UPB&lt;$5k</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-13</td><td class="tc-desc">Streamline Mod blocked — prior mods&gt;=2</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-14</td><td class="tc-desc">Streamline Mod blocked by failed TPP</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-15</td><td class="tc-desc">Streamline Mod blocked — property listed for sale</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-16</td><td class="tc-desc">Mod+MRA blocked — step3 deferral not required</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-17</td><td class="tc-desc">Standalone MRA blocked by disaster hardship</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-18</td><td class="tc-desc">Standalone MRA blocked — cannot resume current payment</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-19</td><td class="tc-desc">Standalone MRA blocked — DLQ&lt;30d</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-20</td><td class="tc-desc">Disaster Forbearance blocked — not disaster hardship</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-21</td><td class="tc-desc">Disaster Forbearance blocked — not current at disaster</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-22</td><td class="tc-desc">Disaster Modification blocked — not disaster hardship</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-23</td><td class="tc-desc">Disaster Term Extension blocked — not disaster hardship</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-24</td><td class="tc-desc">Compromise Sale blocked — retention intent</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SAD-USDA-25</td><td class="tc-desc">Deed-in-Lieu blocked — no prior Comp Sale failed</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <!-- VA -->
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-01</td><td class="tc-desc">Reinstatement ineligible when DLQ=0</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-02</td><td class="tc-desc">Reinstatement blocked by active foreclosure</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-03</td><td class="tc-desc">Reinstatement blocked — cannot afford reinstatement</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-04</td><td class="tc-desc">Repayment Plan blocked by disaster hardship</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-05</td><td class="tc-desc">Repayment Plan blocked — hardship not resolved (Long Term)</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-06</td><td class="tc-desc">Repayment Plan blocked — DLQ&lt;30d</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-07</td><td class="tc-desc">Repayment Plan blocked — cannot afford RPP</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-08</td><td class="tc-desc">Special Forbearance blocked by disaster hardship</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-09</td><td class="tc-desc">Special Forbearance blocked — not Long Term (Resolved)</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-10</td><td class="tc-desc">Special Forbearance blocked — forbearance and DLQ both &gt;=12</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-11</td><td class="tc-desc">Traditional Mod blocked by disaster hardship</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-12</td><td class="tc-desc">Traditional Mod blocked — DLQ&lt;61d</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-13</td><td class="tc-desc">Traditional Mod blocked — cannot confirm cannot afford current</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-14</td><td class="tc-desc">Traditional Mod blocked — cannot afford modified payment</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-15</td><td class="tc-desc">VA 30-Year Mod blocked by disaster hardship</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-16</td><td class="tc-desc">VA 30-Year Mod blocked — can afford current monthly</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-17</td><td class="tc-desc">VA 40-Year Mod blocked by disaster hardship</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-18</td><td class="tc-desc">VA 40-Year Mod blocked — DLQ&lt;61d</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-19</td><td class="tc-desc">Compromise Sale blocked — retention intent</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-20</td><td class="tc-desc">Compromise Sale blocked — Short Term hardship</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-21</td><td class="tc-desc">Deed-in-Lieu blocked — no prior Comp Sale failed</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-22</td><td class="tc-desc">Disaster Forbearance blocked — not current at disaster</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-23</td><td class="tc-desc">Disaster Modification blocked — active RPP</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-24</td><td class="tc-desc">Disaster Modification blocked — no prior forbearance workout</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SAD-VA-25</td><td class="tc-desc">Disaster Extend Mod blocked — hardship is Resolved</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <!-- FHLMC -->
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-01</td><td class="tc-desc">Reinstatement ineligible when DLQ=0 and no arrears</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-02</td><td class="tc-desc">Repayment Plan blocked by disaster hardship</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-03</td><td class="tc-desc">Repayment Plan blocked — hardship not resolved</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-04</td><td class="tc-desc">Repayment Plan blocked — property condemned</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-05</td><td class="tc-desc">Payment Deferral blocked by disaster hardship</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-06</td><td class="tc-desc">Payment Deferral blocked — DLQ&lt;2 months</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-07</td><td class="tc-desc">Payment Deferral blocked — DLQ&gt;6 months</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-08</td><td class="tc-desc">Payment Deferral blocked — loan age &lt;12 months</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-09</td><td class="tc-desc">Payment Deferral blocked — cumulative deferred &gt;=12</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-10</td><td class="tc-desc">Payment Deferral blocked — prior deferral spacing &lt;12mo</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-11</td><td class="tc-desc">Forbearance Plan blocked by disaster hardship</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-12</td><td class="tc-desc">Forbearance Plan blocked — long term and not unemployed</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-13</td><td class="tc-desc">Forbearance Plan blocked — active liquidation option</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-14</td><td class="tc-desc">Flex Mod blocked by disaster hardship</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-15</td><td class="tc-desc">Flex Mod blocked — not conventional (FHA mortgage)</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-16</td><td class="tc-desc">Flex Mod blocked — recourse arrangement</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-17</td><td class="tc-desc">Flex Mod blocked — loan age &lt;12 months</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-18</td><td class="tc-desc">Flex Mod blocked — DLQ&lt;2 and no imminent default</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-19</td><td class="tc-desc">Flex Mod blocked — prior mods &gt;=3</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-20</td><td class="tc-desc">Flex Mod (Streamlined) blocked by disaster hardship</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-21</td><td class="tc-desc">Flex Mod (Streamlined) blocked — DLQ&lt;3 months</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-22</td><td class="tc-desc">Flex Mod (Disaster) blocked — no disaster hardship flag</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-23</td><td class="tc-desc">Flex Mod (Disaster) blocked — no FEMA designation</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-24</td><td class="tc-desc">Short Sale blocked — retention intent</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">SAD-FHLMC-25</td><td class="tc-desc">Deed-in-Lieu blocked — no DIL requirements met</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <!-- FNMA -->
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-01</td><td class="tc-desc">Reinstatement ineligible when DLQ=0 and no arrears</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-02</td><td class="tc-desc">Forbearance Plan blocked — hardship=None</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-03</td><td class="tc-desc">Forbearance Plan blocked — not principal residence and no disaster flag</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-04</td><td class="tc-desc">Forbearance Plan blocked — property condemned</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-05</td><td class="tc-desc">Repayment Plan blocked by disaster hardship</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-06</td><td class="tc-desc">Repayment Plan blocked — hardship not resolved</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-07</td><td class="tc-desc">Repayment Plan blocked — property condemned</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-08</td><td class="tc-desc">Payment Deferral blocked by disaster hardship</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-09</td><td class="tc-desc">Payment Deferral blocked — DLQ&lt;2 months</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-10</td><td class="tc-desc">Payment Deferral blocked — DLQ&gt;6 months</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-11</td><td class="tc-desc">Payment Deferral blocked — loan age &lt;12 months</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-12</td><td class="tc-desc">Payment Deferral blocked — cumulative deferred &gt;=12</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-13</td><td class="tc-desc">Payment Deferral blocked — prior deferral spacing &lt;12mo</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-14</td><td class="tc-desc">Payment Deferral blocked — within 36 months of maturity</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-15</td><td class="tc-desc">Payment Deferral blocked — recourse arrangement</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-16</td><td class="tc-desc">Flex Mod blocked by disaster hardship</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-17</td><td class="tc-desc">Flex Mod blocked — loan age &lt;12 months</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-18</td><td class="tc-desc">Flex Mod blocked — DLQ&lt;2 and no imminent default</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-19</td><td class="tc-desc">Flex Mod blocked — prior mods &gt;=3</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-20</td><td class="tc-desc">Flex Mod blocked — failed TPP within 12 months</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-21</td><td class="tc-desc">Flex Mod (Streamlined) blocked by disaster hardship</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-22</td><td class="tc-desc">Flex Mod (Streamlined) blocked — DLQ&lt;3 months</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-23</td><td class="tc-desc">Flex Mod (Disaster) blocked — no disaster hardship flag</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-24</td><td class="tc-desc">Short Sale blocked — retention intent</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">SAD-FNMA-25</td><td class="tc-desc">Mortgage Release blocked — no DIL requirements met</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════ SUITE 3 — ID & SEVERE DLQ ════════════════════════════ -->
+
+<div class="test-page">
+  <div class="investor-header" style="border-color:#7c3aed">
+    <span class="investor-badge" style="background:#7c3aed">ID &amp; SEVERE</span>
+    <div>
+      <div class="investor-title" style="color:#7c3aed">Suite 3 — Imminent Default &amp; Severe DLQ (All Investors)</div>
+      <div class="investor-subtitle">test_evaluations_id_severe.mjs &nbsp;·&nbsp; Imminent default path rules (FNMA/FHLMC) + severe-DLQ boundary behavior (all 5 investors) &nbsp;·&nbsp; 50 cases</div>
+    </div>
+    <span class="suite-label" style="color:#7c3aed;border-color:#7c3aed">50 Cases</span>
+  </div>
+
+  <table class="test-table">
+    <thead><tr><th width="130">Case ID</th><th>Description</th><th width="60">Investor</th></tr></thead>
+    <tbody>
+      <!-- FHLMC ID -->
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-01</td><td class="tc-desc">Flex Mod eligible — imminent default, FICO&lt;=620</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-02</td><td class="tc-desc">Flex Mod eligible — imminent default, prior 30d DLQ</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-03</td><td class="tc-desc">Flex Mod eligible — imminent default, housing ratio &gt;40%</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-04</td><td class="tc-desc">Flex Mod ineligible — imminent default, not primary res</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-05</td><td class="tc-desc">Flex Mod ineligible — imminent default, cash reserves &gt;=$25k</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-06</td><td class="tc-desc">Flex Mod ineligible — imminent default, no Rule 2 criteria met</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-07</td><td class="tc-desc">Payment Deferral ineligible — imminent default but DLQ=0</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-08</td><td class="tc-desc">Flex Mod (Streamlined) eligible — 6mo DLQ</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-09</td><td class="tc-desc">Flex Mod eligible — 12mo severe DLQ</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-10</td><td class="tc-desc">Flex Mod eligible — 24mo severe DLQ</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-11</td><td class="tc-desc">Payment Deferral ineligible — 7mo DLQ (exceeds 6mo cap)</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-12</td><td class="tc-desc">Repayment Plan eligible — 13mo DLQ with resolved hardship</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-13</td><td class="tc-desc">Reinstatement ineligible — current loan (DLQ=0)</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-14</td><td class="tc-desc">Flex Mod ineligible — investment property, DLQ&lt;2</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fhlmc)">ID-FHLMC-15</td><td class="tc-desc">Flex Mod eligible — investment property, DLQ&gt;=2</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <!-- FNMA ID -->
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-01</td><td class="tc-desc">Flex Mod eligible — imminent default, FICO&lt;=620</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-02</td><td class="tc-desc">Flex Mod eligible — imminent default, housing ratio &gt;55%</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-03</td><td class="tc-desc">Flex Mod eligible — imminent default, prior 30d DLQ</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-04</td><td class="tc-desc">Flex Mod ineligible — imminent default, not principal res</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-05</td><td class="tc-desc">Flex Mod ineligible — imminent default, not long-term hardship</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-06</td><td class="tc-desc">Flex Mod ineligible — imminent default, no Rule 2 criteria</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-07</td><td class="tc-desc">Payment Deferral eligible — imminent default determination</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-08</td><td class="tc-desc">Payment Deferral ineligible — DLQ&lt;2 months (below threshold)</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-09</td><td class="tc-desc">Flex Mod (Streamlined) eligible — 6mo DLQ</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-10</td><td class="tc-desc">Flex Mod eligible — 12mo severe DLQ</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-11</td><td class="tc-desc">Flex Mod eligible — 18mo severe DLQ</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-12</td><td class="tc-desc">Payment Deferral ineligible — 7mo DLQ (exceeds 6mo cap)</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-13</td><td class="tc-desc">Reinstatement eligible — 24mo DLQ</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-14</td><td class="tc-desc">Reinstatement ineligible — current loan (DLQ=0)</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fnma)">ID-FNMA-15</td><td class="tc-desc">Short Sale eligible — 18mo DLQ, disposition intent</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <!-- FHA Severe -->
+      <tr><td class="tc-id" style="color:var(--fha)">SEV-FHA-01</td><td class="tc-desc">Repayment Plan ineligible — 13mo DLQ (exceeds 12-month cap)</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SEV-FHA-02</td><td class="tc-desc">Formal Forbearance ineligible — 13mo DLQ</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SEV-FHA-03</td><td class="tc-desc">Payment Deferral ineligible — 13mo DLQ</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SEV-FHA-04</td><td class="tc-desc">30-Year Mod eligible — 13mo DLQ (no DLQ cap on mods)</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SEV-FHA-05</td><td class="tc-desc">30-Year Mod eligible — 24mo DLQ</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SEV-FHA-06</td><td class="tc-desc">40-Year Combo eligible — 24mo DLQ, 480mo achieves target</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SEV-FHA-07</td><td class="tc-desc">Payment Supplement eligible — 24mo DLQ</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SEV-FHA-08</td><td class="tc-desc">PFS eligible — 24mo DLQ, disposition intent</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SEV-FHA-09</td><td class="tc-desc">DIL eligible — 24mo DLQ, PFS failed</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--fha)">SEV-FHA-10</td><td class="tc-desc">Repayment Plan eligible — exactly 12mo DLQ (boundary)</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <!-- USDA Severe -->
+      <tr><td class="tc-id" style="color:var(--usda)">SEV-USDA-01</td><td class="tc-desc">Informal Forbearance ineligible — 360d DLQ (cap exceeded)</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SEV-USDA-02</td><td class="tc-desc">Streamline Mod eligible — 6mo (180d) DLQ</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SEV-USDA-03</td><td class="tc-desc">Streamline Mod eligible — 12mo (360d) DLQ (boundary)</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SEV-USDA-04</td><td class="tc-desc">Special Forbearance eligible — 3mo DLQ</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--usda)">SEV-USDA-05</td><td class="tc-desc">Special Forbearance ineligible — 13mo DLQ (exceeds 12mo cap)</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <!-- VA Severe -->
+      <tr><td class="tc-id" style="color:var(--va)">SEV-VA-01</td><td class="tc-desc">Traditional/30yr/40yr Mod eligible — 61d DLQ (minimum boundary)</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SEV-VA-02</td><td class="tc-desc">Traditional Mod ineligible — 60d DLQ (boundary, one day short)</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SEV-VA-03</td><td class="tc-desc">VA mods eligible — 12mo severe DLQ</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SEV-VA-04</td><td class="tc-desc">Compromise Sale eligible — 24mo severe DLQ, disposition intent</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id" style="color:var(--va)">SEV-VA-05</td><td class="tc-desc">Repayment Plan eligible — 30d DLQ (boundary minimum)</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════ SUITE 4 — WATERFALL ════════════════════════════ -->
+
+<div class="test-page">
+  <div class="investor-header" style="border-color:var(--wf)">
+    <span class="investor-badge" style="background:var(--wf)">WATERFALL</span>
+    <div>
+      <div class="investor-title" style="color:var(--wf)">Suite 4 — Waterfall Ordering (All Investors)</div>
+      <div class="investor-subtitle">test_waterfall.mjs &nbsp;·&nbsp; Validates priority ordering and topOption selection across all investors + edge cases &nbsp;·&nbsp; 10 cases</div>
+    </div>
+    <span class="suite-label" style="color:var(--wf);border-color:var(--wf)">10 Cases</span>
+  </div>
+
+  <table class="test-table">
+    <thead><tr><th width="90">Case ID</th><th>Description</th><th width="100">Investor(s)</th></tr></thead>
+    <tbody>
+      <tr><td class="tc-id">WF-01</td><td class="tc-desc">FHA waterfall puts Reinstatement before Modification — validates retention-before-liquidation ordering</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id">WF-02</td><td class="tc-desc">FHA topOption is Reinstatement when eligible — highest-priority option is surfaced correctly</td><td><span class="pill pill-fha" style="font-size:9px;padding:2px 7px">FHA</span></td></tr>
+      <tr><td class="tc-id">WF-03</td><td class="tc-desc">VA waterfall puts Repayment Plan before Modification — validates VA-specific priority sequence</td><td><span class="pill pill-va" style="font-size:9px;padding:2px 7px">VA</span></td></tr>
+      <tr><td class="tc-id">WF-04</td><td class="tc-desc">FHLMC waterfall puts Payment Deferral before Flex Modification — validates deferred-first ordering</td><td><span class="pill pill-fhlmc" style="font-size:9px;padding:2px 7px">FHLMC</span></td></tr>
+      <tr><td class="tc-id">WF-05</td><td class="tc-desc">Empty eligible list returns empty waterfall — no crash on zero-option result</td><td><span class="pill" style="background:#6b7280;font-size:9px;padding:2px 7px">Edge</span></td></tr>
+      <tr><td class="tc-id">WF-06</td><td class="tc-desc">Options not in waterfall order go to extras — unrecognized options placed in extras bucket</td><td><span class="pill" style="background:#6b7280;font-size:9px;padding:2px 7px">Edge</span></td></tr>
+      <tr><td class="tc-id">WF-07</td><td class="tc-desc">USDA waterfall starts with Reinstatement — confirms USDA hierarchy top priority</td><td><span class="pill pill-usda" style="font-size:9px;padding:2px 7px">USDA</span></td></tr>
+      <tr><td class="tc-id">WF-08</td><td class="tc-desc">FNMA waterfall puts Payment Deferral before Flex Modification — validates deferred-first ordering</td><td><span class="pill pill-fnma" style="font-size:9px;padding:2px 7px">FNMA</span></td></tr>
+      <tr><td class="tc-id">WF-09</td><td class="tc-desc">Unknown loan type puts all options in extras — graceful handling of unrecognized investor type</td><td><span class="pill" style="background:#6b7280;font-size:9px;padding:2px 7px">Edge</span></td></tr>
+      <tr><td class="tc-id">WF-10</td><td class="tc-desc">Single eligible option is the topOption — confirms single-result behavior</td><td><span class="pill" style="background:#6b7280;font-size:9px;padding:2px 7px">Edge</span></td></tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:24px;padding:16px 20px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;font-size:10.5px;color:#374151;line-height:1.7">
+    <strong style="display:block;margin-bottom:8px;color:#1e3a5f">Waterfall Priority Order — By Investor</strong>
+    <table style="width:100%;border-collapse:collapse;font-size:10px">
+      <tr>
+        <th style="text-align:left;padding:4px 10px;background:#e5e7eb;border-radius:4px 0 0 4px">FHA</th>
+        <td style="padding:4px 10px;border-bottom:1px solid #e5e7eb">Reinstatement → Repayment Plan → Formal Forbearance → Payment Deferral → 30-Year Mod → 40-Year Combo → Standalone PC → Payment Supplement → Disaster options → PFS → DIL</td>
+      </tr>
+      <tr>
+        <th style="text-align:left;padding:4px 10px;background:#e5e7eb">USDA</th>
+        <td style="padding:4px 10px;border-bottom:1px solid #e5e7eb">Reinstatement → Informal Forbearance → Informal Repayment → Special Forbearance → Streamline Mod → Standalone MRA → Mod+MRA → Disaster options → Compromise Sale → DIL</td>
+      </tr>
+      <tr>
+        <th style="text-align:left;padding:4px 10px;background:#e5e7eb">VA</th>
+        <td style="padding:4px 10px;border-bottom:1px solid #e5e7eb">Reinstatement → Repayment Plan → Special Forbearance → Traditional Mod → 30-Year Mod → 40-Year Mod → Disaster options → Compromise Sale → DIL</td>
+      </tr>
+      <tr>
+        <th style="text-align:left;padding:4px 10px;background:#e5e7eb">FHLMC</th>
+        <td style="padding:4px 10px;border-bottom:1px solid #e5e7eb">Reinstatement → Repayment Plan → Payment Deferral → Forbearance Plan → Standard Flex Mod → Streamlined Flex Mod → Disaster Flex Mod → Short Sale → DIL</td>
+      </tr>
+      <tr>
+        <th style="text-align:left;padding:4px 10px;background:#e5e7eb;border-radius:0 0 0 4px">FNMA</th>
+        <td style="padding:4px 10px">Reinstatement → Forbearance Plan → Repayment Plan → Payment Deferral → Disaster Payment Deferral → Standard Flex Mod → Streamlined Flex Mod → Disaster Flex Mod → Short Sale → Mortgage Release</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ SUMMARY / APPENDIX ════════════════════════════ -->
+
+<div class="summary-page">
+  <div class="page-header">
+    <h2>Test Coverage Summary</h2>
+    <span class="page-header-sub">All 450 cases passing as of March 2026</span>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-card-top" style="background:var(--fha)">
+        <div class="summary-card-name">FHA</div>
+        <div style="font-size:10px;opacity:0.8;margin-top:2px">HUD Handbook 4000.1</div>
+      </div>
+      <div class="summary-card-body">
+        <div class="summary-row"><span>Suite 1 (Standard)</span><span class="summary-num" style="color:var(--fha)">50</span></div>
+        <div class="summary-row"><span>Suite 2 (Sad Path)</span><span class="summary-num" style="color:var(--fha)">25</span></div>
+        <div class="summary-row"><span>Suite 3 (Severe DLQ)</span><span class="summary-num" style="color:var(--fha)">10</span></div>
+        <div class="summary-row"><span>Suite 4 (Waterfall)</span><span class="summary-num" style="color:var(--fha)">2</span></div>
+        <div class="summary-row" style="border-top:2px solid var(--border);margin-top:4px;padding-top:6px"><strong>Total</strong><span class="summary-num" style="color:var(--fha);font-size:18px">87</span></div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-top" style="background:var(--usda)">
+        <div class="summary-card-name">USDA</div>
+        <div style="font-size:10px;opacity:0.8;margin-top:2px">HB-1-3555 Chapter 18</div>
+      </div>
+      <div class="summary-card-body">
+        <div class="summary-row"><span>Suite 1 (Standard)</span><span class="summary-num" style="color:var(--usda)">50</span></div>
+        <div class="summary-row"><span>Suite 2 (Sad Path)</span><span class="summary-num" style="color:var(--usda)">25</span></div>
+        <div class="summary-row"><span>Suite 3 (Severe DLQ)</span><span class="summary-num" style="color:var(--usda)">5</span></div>
+        <div class="summary-row"><span>Suite 4 (Waterfall)</span><span class="summary-num" style="color:var(--usda)">1</span></div>
+        <div class="summary-row" style="border-top:2px solid var(--border);margin-top:4px;padding-top:6px"><strong>Total</strong><span class="summary-num" style="color:var(--usda);font-size:18px">81</span></div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-top" style="background:var(--va)">
+        <div class="summary-card-name">VA</div>
+        <div style="font-size:10px;opacity:0.8;margin-top:2px">VA M26-4 / Circulars 26-24-2, 26-24-3, 26-25-2</div>
+      </div>
+      <div class="summary-card-body">
+        <div class="summary-row"><span>Suite 1 (Standard)</span><span class="summary-num" style="color:var(--va)">50</span></div>
+        <div class="summary-row"><span>Suite 2 (Sad Path)</span><span class="summary-num" style="color:var(--va)">25</span></div>
+        <div class="summary-row"><span>Suite 3 (Severe DLQ)</span><span class="summary-num" style="color:var(--va)">5</span></div>
+        <div class="summary-row"><span>Suite 4 (Waterfall)</span><span class="summary-num" style="color:var(--va)">1</span></div>
+        <div class="summary-row" style="border-top:2px solid var(--border);margin-top:4px;padding-top:6px"><strong>Total</strong><span class="summary-num" style="color:var(--va);font-size:18px">81</span></div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-top" style="background:var(--fhlmc)">
+        <div class="summary-card-name">FHLMC</div>
+        <div style="font-size:10px;opacity:0.8;margin-top:2px">Freddie Mac Guide Ch. 9200 + Bulletin 2026-2</div>
+      </div>
+      <div class="summary-card-body">
+        <div class="summary-row"><span>Suite 1 (Standard)</span><span class="summary-num" style="color:var(--fhlmc)">49</span></div>
+        <div class="summary-row"><span>Suite 2 (Sad Path)</span><span class="summary-num" style="color:var(--fhlmc)">25</span></div>
+        <div class="summary-row"><span>Suite 3 (ID / Severe)</span><span class="summary-num" style="color:var(--fhlmc)">15</span></div>
+        <div class="summary-row"><span>Suite 4 (Waterfall)</span><span class="summary-num" style="color:var(--fhlmc)">1</span></div>
+        <div class="summary-row" style="border-top:2px solid var(--border);margin-top:4px;padding-top:6px"><strong>Total</strong><span class="summary-num" style="color:var(--fhlmc);font-size:18px">90</span></div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-top" style="background:var(--fnma)">
+        <div class="summary-card-name">FNMA</div>
+        <div style="font-size:10px;opacity:0.8;margin-top:2px">Fannie Mae Guide D2-3 / LL-2021-01 / LL-2024-02</div>
+      </div>
+      <div class="summary-card-body">
+        <div class="summary-row"><span>Suite 1 (Standard)</span><span class="summary-num" style="color:var(--fnma)">50</span></div>
+        <div class="summary-row"><span>Suite 2 (Sad Path)</span><span class="summary-num" style="color:var(--fnma)">25</span></div>
+        <div class="summary-row"><span>Suite 3 (ID / Severe)</span><span class="summary-num" style="color:var(--fnma)">15</span></div>
+        <div class="summary-row"><span>Suite 4 (Waterfall)</span><span class="summary-num" style="color:var(--fnma)">1</span></div>
+        <div class="summary-row" style="border-top:2px solid var(--border);margin-top:4px;padding-top:6px"><strong>Total</strong><span class="summary-num" style="color:var(--fnma);font-size:18px">91</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pass-rate-bar">
+    <div class="bar-title">Pass Rate by Suite</div>
+    <div class="bar-row">
+      <div class="bar-label">Suite 1 — Standard</div>
+      <div class="bar-track"><div class="bar-fill" style="width:100%">100%</div></div>
+      <div class="bar-count">249 / 249</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Suite 2 — Sad Path</div>
+      <div class="bar-track"><div class="bar-fill" style="width:100%">100%</div></div>
+      <div class="bar-count">125 / 125</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Suite 3 — ID / Severe</div>
+      <div class="bar-track"><div class="bar-fill" style="width:100%">100%</div></div>
+      <div class="bar-count">50 / 50</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">Suite 4 — Waterfall</div>
+      <div class="bar-track"><div class="bar-fill" style="width:100%">100%</div></div>
+      <div class="bar-count">10 / 10</div>
+    </div>
+    <div class="bar-row" style="margin-top:8px">
+      <div class="bar-label" style="font-weight:700">TOTAL</div>
+      <div class="bar-track"><div class="bar-fill" style="width:100%;background:linear-gradient(90deg,#1e3a5f,#1a56db)">100%</div></div>
+      <div class="bar-count" style="font-weight:700">449 / 449</div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <strong>Important Distinction:</strong> A 100% test pass rate reflects <em>internal consistency</em> — the engine produces the same output as its coded rule set on every case.
+    It does not guarantee 100% real-world accuracy. Real-world accuracy is estimated at <strong>97–99%</strong> for standard delinquency scenarios, <strong>93–97%</strong> for disaster / imminent default cases,
+    and <strong>90–95%</strong> where borrower-provided inputs are incomplete. The primary sources of potential divergence are:
+    (1) regulatory rules gaps (~1.5% residual post-16 compliance fixes), (2) servicer discretion and variance not codeable as binary logic, and (3) input quality.
+    See <em>ResolutionIQ_Accuracy_Brief.html</em> for full real-world accuracy analysis.
+  </div>
+
+  <div style="margin-top:32px;text-align:center;font-size:10px;color:#9ca3af;padding-top:16px;border-top:1px solid #e5e7eb">
+    ResolutionIQ &nbsp;·&nbsp; Test Case Suite &nbsp;·&nbsp; 449 Cases &nbsp;·&nbsp; 4 Suites &nbsp;·&nbsp; 5 Investors &nbsp;·&nbsp; 100% Pass Rate &nbsp;·&nbsp; March 2026
+    <br>Regulatory sources: HUD 4000.1 · USDA HB-1-3555 · VA M26-4 · Freddie Mac Guide Ch.9200 (Bulletin 2026-2) · Fannie Mae Guide D2-3 (LL-2024-02)
+    <br>Print to PDF: Ctrl+P in Chrome or Edge → Destination: Save as PDF → Paper: Letter · Margins: Default
+  </div>
+</div>
+
+</body>
+</html>

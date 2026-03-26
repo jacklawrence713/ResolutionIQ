@@ -4272,6 +4272,8 @@ CREATE TABLE IF NOT EXISTS evaluations (
   evaluated_at timestamptz,
   status text DEFAULT 'open',
   user_id uuid REFERENCES auth.users(id),
+  checked_docs jsonb,
+  assignee_email text,
   sla_start_date date,
   foreclosure_sale_date date
 );
@@ -4279,9 +4281,13 @@ CREATE TABLE IF NOT EXISTS evaluations (
 -- Enable Row Level Security
 ALTER TABLE evaluations ENABLE ROW LEVEL SECURITY;
 
--- Users see only their own cases
-CREATE POLICY "Users see own cases" ON evaluations
+-- Allow users to manage their own cases
+CREATE POLICY "Users manage own cases" ON evaluations
   FOR ALL USING (auth.uid() = user_id);
+
+-- Allow insert for authenticated users (needed for new cases)
+CREATE POLICY "Authenticated users can insert" ON evaluations
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Version history table
 CREATE TABLE IF NOT EXISTS evaluation_versions (
@@ -4296,8 +4302,15 @@ CREATE TABLE IF NOT EXISTS evaluation_versions (
   created_at timestamptz DEFAULT now()
 );
 ALTER TABLE evaluation_versions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (auth.uid() = user_id);`}</pre>
-              <button onClick={()=>{navigator.clipboard.writeText(`CREATE TABLE IF NOT EXISTS evaluations (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  loan_number text,\n  borrower_name text,\n  loan_type text,\n  created_at timestamptz DEFAULT now(),\n  loan_data jsonb NOT NULL,\n  results jsonb,\n  notes text,\n  guideline_version text,\n  evaluated_at timestamptz,\n  status text DEFAULT 'open',\n  user_id uuid REFERENCES auth.users(id)\n);\n\nALTER TABLE evaluations ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY "Users see own cases" ON evaluations\n  FOR ALL USING (auth.uid() = user_id);`);}} className="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all">📋 Copy SQL</button>
+CREATE POLICY "Users manage own versions" ON evaluation_versions FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Authenticated users insert versions" ON evaluation_versions FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- If table already exists, add missing columns:
+ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS checked_docs jsonb;
+ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS assignee_email text;
+ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS sla_start_date date;
+ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS foreclosure_sale_date date;`}</pre>
+              <button onClick={()=>{navigator.clipboard.writeText(`CREATE TABLE IF NOT EXISTS evaluations (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  loan_number text,\n  borrower_name text,\n  loan_type text,\n  created_at timestamptz DEFAULT now(),\n  loan_data jsonb NOT NULL,\n  results jsonb,\n  notes text,\n  guideline_version text,\n  evaluated_at timestamptz,\n  status text DEFAULT 'open',\n  user_id uuid REFERENCES auth.users(id),\n  checked_docs jsonb,\n  assignee_email text,\n  sla_start_date date,\n  foreclosure_sale_date date\n);\n\nALTER TABLE evaluations ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY "Users manage own cases" ON evaluations\n  FOR ALL USING (auth.uid() = user_id);\n\nCREATE POLICY "Authenticated users can insert" ON evaluations\n  FOR INSERT WITH CHECK (auth.uid() = user_id);\n\nCREATE TABLE IF NOT EXISTS evaluation_versions (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  evaluation_id uuid REFERENCES evaluations(id) ON DELETE CASCADE,\n  user_id uuid REFERENCES auth.users(id),\n  version_number integer NOT NULL DEFAULT 1,\n  loan_data jsonb NOT NULL,\n  results jsonb,\n  notes text,\n  change_summary text,\n  created_at timestamptz DEFAULT now()\n);\nALTER TABLE evaluation_versions ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Users manage own versions" ON evaluation_versions FOR ALL USING (auth.uid() = user_id);\nCREATE POLICY "Authenticated users insert versions" ON evaluation_versions FOR INSERT WITH CHECK (auth.uid() = user_id);\n\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS checked_docs jsonb;\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS assignee_email text;\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS sla_start_date date;\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS foreclosure_sale_date date;`);setSaveToast("✅ SQL copied to clipboard!");setTimeout(()=>setSaveToast(""),3000);}} className="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all">📋 Copy SQL</button>
             </div>
           </div>
         </div>

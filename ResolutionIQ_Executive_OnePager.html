@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResolutionIQ — Executive One-Pager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --navy-deep: #0f172a;
+      --navy-mid: #1e3a5f;
+      --navy-light: #1e40af;
+      --blue-accent: #3b82f6;
+      --blue-bright: #60a5fa;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-400: #94a3b8;
+      --slate-600: #475569;
+      --slate-800: #1e293b;
+      --white: #ffffff;
+      --green: #22c55e;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f8fafc;
+      color: var(--slate-800);
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1040px;
+      margin: 0 auto;
+      background: var(--white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 32px rgba(15,23,42,0.10);
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy-mid) 60%, #1a4a7a 100%);
+      padding: 28px 40px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: rgba(59,130,246,0.08);
+      pointer-events: none;
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      right: 120px;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: rgba(96,165,250,0.06);
+      pointer-events: none;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-name {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .brand-name span {
+      color: var(--blue-bright);
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--slate-400);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .tagline {
+      font-size: 13px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.72);
+      font-style: italic;
+      text-align: right;
+      max-width: 340px;
+      line-height: 1.4;
+      padding-top: 4px;
+    }
+
+    .tagline strong {
+      color: var(--blue-bright);
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    /* ── STATS ROW ── */
+    .stats-bar {
+      background: var(--navy-deep);
+      border-bottom: 1px solid rgba(59,130,246,0.25);
+      padding: 14px 40px;
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    .stat-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      position: relative;
+    }
+
+    .stat-item + .stat-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 10%;
+      height: 80%;
+      width: 1px;
+      background: rgba(59,130,246,0.22);
+    }
+
+    .stat-number {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--blue-bright);
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--slate-400);
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 3px;
+      line-height: 1.3;
+    }
+
+    /* ── BODY ── */
+    .body {
+      padding: 20px 40px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── WHAT IT DOES ── */
+    .what-it-does {
+      background: var(--slate-100);
+      border-left: 3px solid var(--blue-accent);
+      border-radius: 0 6px 6px 0;
+      padding: 12px 16px;
+    }
+
+    .section-eyebrow {
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--blue-accent);
+      margin-bottom: 6px;
+    }
+
+    .what-it-does p {
+      font-size: 12.5px;
+      color: var(--slate-800);
+      line-height: 1.6;
+    }
+
+    /* ── GRID: PILLARS + RIGHT COLUMN ── */
+    .mid-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .pillar-card {
+      border: 1px solid var(--slate-200);
+      border-top: 3px solid var(--blue-accent);
+      border-radius: 6px;
+      padding: 12px 13px;
+      background: var(--white);
+    }
+
+    .pillar-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--navy-deep), var(--navy-mid));
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .pillar-icon svg {
+      width: 15px;
+      height: 15px;
+      stroke: var(--blue-bright);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .pillar-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--navy-deep);
+      margin-bottom: 5px;
+      letter-spacing: -0.1px;
+    }
+
+    .pillar-body {
+      font-size: 10.5px;
+      color: var(--slate-600);
+      line-height: 1.55;
+    }
+
+    .pillar-body em {
+      font-style: normal;
+      color: var(--slate-800);
+      font-weight: 500;
+    }
+
+    /* ── BOTTOM GRID ── */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ── COMPARISON TABLE ── */
+    .comp-section {}
+
+    .comp-table-wrap {
+      border: 1px solid var(--slate-200);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5px;
+    }
+
+    .comp-table thead tr {
+      background: var(--navy-deep);
+      color: var(--white);
+    }
+
+    .comp-table thead th {
+      padding: 7px 9px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 10px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .comp-table thead th:first-child {
+      width: 34%;
+    }
+
+    .comp-table tbody tr:nth-child(even) {
+      background: var(--slate-100);
+    }
+
+    .comp-table tbody tr:nth-child(odd) {
+      background: var(--white);
+    }
+
+    .comp-table td {
+      padding: 6px 9px;
+      color: var(--slate-600);
+      border-bottom: 1px solid var(--slate-200);
+      vertical-align: middle;
+    }
+
+    .comp-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .comp-table td:first-child {
+      font-weight: 500;
+      color: var(--slate-800);
+    }
+
+    .comp-table td.yes {
+      color: #16a34a;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .comp-table td.partial {
+      color: #b45309;
+      font-weight: 500;
+    }
+
+    .comp-table td.iq-col {
+      background: rgba(59,130,246,0.06);
+      color: #1d4ed8;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    /* ── TARGET MARKET ── */
+    .target-section {}
+
+    .target-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .target-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      font-size: 10.5px;
+      color: var(--slate-600);
+      line-height: 1.4;
+    }
+
+    .target-list li::before {
+      content: '';
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--blue-accent);
+      margin-top: 4.5px;
+      flex-shrink: 0;
+    }
+
+    .target-list li strong {
+      color: var(--slate-800);
+      font-weight: 600;
+    }
+
+    /* ── FOOTER / CTA ── */
+    .footer {
+      background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy-mid) 100%);
+      padding: 14px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .footer-cta {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.90);
+      font-style: italic;
+      flex: 1;
+    }
+
+    .footer-cta strong {
+      font-style: normal;
+      color: var(--blue-bright);
+    }
+
+    .footer-meta {
+      font-size: 9.5px;
+      color: var(--slate-400);
+      text-align: right;
+      line-height: 1.5;
+      flex-shrink: 0;
+    }
+
+    .footer-meta span {
+      display: block;
+    }
+
+    /* ── PRINT ── */
+    @page {
+      size: letter landscape;
+      margin: 0.45in 0.5in;
+    }
+
+    @media print {
+      html, body {
+        background: white;
+        font-size: 11px;
+      }
+
+      .page {
+        box-shadow: none;
+        max-width: 100%;
+        min-height: unset;
+      }
+
+      .header {
+        padding: 18px 30px 14px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .brand-name {
+        font-size: 22px;
+      }
+
+      .stats-bar {
+        padding: 10px 30px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .stat-number {
+        font-size: 22px;
+      }
+
+      .body {
+        padding: 14px 30px 10px;
+        gap: 12px;
+      }
+
+      .footer {
+        padding: 10px 30px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .pillar-card,
+      .comp-table-wrap,
+      .what-it-does {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="header-top">
+        <div class="brand">
+          <div class="brand-name">Resolution<span>IQ</span></div>
+          <div class="brand-sub">Loss Mitigation Rules Engine</div>
+        </div>
+        <div class="tagline">
+          <strong>"Compliance-Grade Eligibility Decisions at Servicer Speed"</strong><br />
+          Automated investor waterfall logic — built from primary regulatory sources
+        </div>
+      </div>
+    </header>
+
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-number">5</div>
+        <div class="stat-label">Investors<br />FHA · FNMA · FHLMC · VA · USDA</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">40+</div>
+        <div class="stat-label">Loss Mitigation<br />Options Covered</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">97–99%</div>
+        <div class="stat-label">Real-World<br />Accuracy</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">449</div>
+        <div class="stat-label">Test Cases<br />100% Pass Rate</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">Mar 2026</div>
+        <div class="stat-label">Regulatory<br />Currency</div>
+      </div>
+    </div>
+
+    <!-- BODY -->
+    <main class="body">
+
+      <!-- WHAT IT DOES -->
+      <div class="what-it-does">
+        <div class="section-eyebrow">What It Does</div>
+        <p>ResolutionIQ is an automated loss mitigation eligibility engine that evaluates any delinquent mortgage loan against the complete regulatory requirements of all five major investors — instantly. Given a loan's financial profile and hardship details, it produces a ranked waterfall of eligible workout options with full audit-node justification for every decision, exactly as required by investor guidelines.</p>
+      </div>
+
+      <!-- THREE PILLARS -->
+      <div class="mid-grid">
+
+        <div class="pillar-card">
+          <div class="pillar-icon">
+            <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <div class="pillar-title">Regulatory Accuracy</div>
+          <div class="pillar-body">Rules built from primary sources: <em>HUD 4000.1, USDA HB-1-3555, VA M26-4, Fannie Mae Servicing Guide (LL-2024-02), Freddie Mac Guide Ch. 9200 (Bulletin 2026-2, Feb 2026).</em> 16 compliance fixes applied through current review cycle. 97–99% accuracy validated on standard production cases.</div>
+        </div>
+
+        <div class="pillar-card">
+          <div class="pillar-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h8m-8 4h5"/><circle cx="17" cy="17" r="4"/><path d="M17 15v2l1 1"/></svg>
+          </div>
+          <div class="pillar-title">Complete Coverage</div>
+          <div class="pillar-body">Every option for every investor: <em>modifications (30yr, 40yr, combo, disaster, flex), deferrals, forbearance, repayment plans, partial claims, payment supplements, short sale, deed-in-lieu,</em> and more. Waterfall priority ordering per investor hierarchy — all five investors in a single evaluation pass.</div>
+        </div>
+
+        <div class="pillar-card">
+          <div class="pillar-icon">
+            <svg viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <div class="pillar-title">Audit-Ready Output</div>
+          <div class="pillar-body">Every eligibility decision accompanied by a full audit trail of <em>pass/fail nodes with regulatory citations.</em> Designed for servicer examination readiness and investor repurchase defense. No black-box decisions — every conclusion is traceable to its governing guideline.</div>
+        </div>
+
+      </div>
+
+      <!-- BOTTOM GRID: TABLE + TARGET -->
+      <div class="bottom-grid">
+
+        <!-- COMPARISON TABLE -->
+        <div class="comp-section">
+          <div class="section-eyebrow" style="margin-bottom:6px;">Competitive Position</div>
+          <div class="comp-table-wrap">
+            <table class="comp-table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>ResolutionIQ</th>
+                  <th>SMDU (Fannie)</th>
+                  <th>Resolve (Freddie)</th>
+                  <th>Black Knight</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>All 5 investors</td>
+                  <td class="iq-col">&#10003;</td>
+                  <td class="partial">FNMA only</td>
+                  <td class="partial">FHLMC only</td>
+                  <td class="partial">Partial</td>
+                </tr>
+                <tr>
+                  <td>Real-time / instant</td>
+                  <td class="iq-col">&#10003;</td>
+                  <td class="partial">Batch</td>
+                  <td class="partial">Batch</td>
+                  <td class="partial">Varies</td>
+                </tr>
+                <tr>
+                  <td>Audit node trail</td>
+                  <td class="iq-col">&#10003;</td>
+                  <td class="partial">Limited</td>
+                  <td class="partial">Limited</td>
+                  <td class="partial">Limited</td>
+                </tr>
+                <tr>
+                  <td>Disaster pathway rules</td>
+                  <td class="iq-col">&#10003;</td>
+                  <td class="partial">Limited</td>
+                  <td class="partial">Limited</td>
+                  <td class="partial">Limited</td>
+                </tr>
+                <tr>
+                  <td>Regulatory currency</td>
+                  <td class="iq-col" style="font-size:10px;font-weight:600;">March 2026</td>
+                  <td class="partial">Periodic</td>
+                  <td class="partial">Periodic</td>
+                  <td class="partial">Periodic</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TARGET MARKET -->
+        <div class="target-section">
+          <div class="section-eyebrow" style="margin-bottom:6px;">Target Market</div>
+          <ul class="target-list">
+            <li><strong>Independent mortgage servicers (IMBs)</strong> managing FHA, VA, USDA, and GSE portfolios requiring multi-investor waterfall coverage</li>
+            <li><strong>Bank servicers</strong> seeking a single integrated tool to replace disparate investor system lookups</li>
+            <li><strong>Loss mitigation teams</strong> replacing manual guideline lookups and spreadsheet-based eligibility tracking</li>
+            <li><strong>Compliance officers</strong> requiring fully documented, citation-backed decision trails for examination readiness and repurchase defense</li>
+          </ul>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- FOOTER / CTA -->
+    <footer class="footer">
+      <div class="footer-cta">
+        <strong>Ready for integration into your loss mitigation workflow.</strong><br />
+        Contact for demo and implementation details.
+      </div>
+      <div class="footer-meta">
+        <span>ResolutionIQ</span>
+        <span>Built on React 18 + TypeScript</span>
+        <span>March 2026</span>
+      </div>
+    </footer>
+
+  </div>
+</body>
+</html>

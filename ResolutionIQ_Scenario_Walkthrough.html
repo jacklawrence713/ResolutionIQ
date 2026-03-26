@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResolutionIQ — Scenario Walkthroughs</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & Base ─────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11pt;
+    color: #1a1a2e;
+    background: #f8f9fc;
+    line-height: 1.5;
+  }
+
+  /* ── Investor Color Tokens ────────────────────────────────────────────── */
+  :root {
+    --fha:   #1a56db;
+    --fnma:  #e02424;
+    --fhlmc: #7e3af2;
+    --va:    #c27803;
+    --usda:  #0e9f6e;
+    --navy:  #0f1f40;
+    --slate: #374151;
+    --muted: #6b7280;
+    --border:#e5e7eb;
+    --pass-bg: #f0fdf4;
+    --pass-tx: #166534;
+    --fail-bg: #fef2f2;
+    --fail-tx: #991b1b;
+    --warn-bg: #fffbeb;
+    --warn-tx: #92400e;
+    --rec-bg:  #eff6ff;
+    --rec-tx:  #1e40af;
+  }
+
+  /* ── Page / Section Containers ───────────────────────────────────────── */
+  .page {
+    max-width: 850px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 48px 52px;
+    position: relative;
+  }
+
+  .page + .page {
+    margin-top: 32px;
+    border-top: 3px solid var(--border);
+    padding-top: 52px;
+  }
+
+  /* ── Cover Page ───────────────────────────────────────────────────────── */
+  .cover {
+    min-height: 680px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    background: var(--navy);
+    color: #fff;
+    border-radius: 0;
+  }
+
+  .cover-logo {
+    font-size: 13pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #93c5fd;
+    margin-bottom: 36px;
+  }
+
+  .cover-logo span {
+    color: #fff;
+  }
+
+  .cover-title {
+    font-size: 34pt;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .cover-title em {
+    font-style: normal;
+    color: #93c5fd;
+  }
+
+  .cover-sub {
+    font-size: 13pt;
+    color: #cbd5e1;
+    font-weight: 400;
+    max-width: 520px;
+    line-height: 1.6;
+    margin-bottom: 52px;
+  }
+
+  .cover-divider {
+    width: 64px;
+    height: 4px;
+    background: #3b82f6;
+    border-radius: 2px;
+    margin-bottom: 36px;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  .cover-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .cover-meta-label {
+    font-size: 8.5pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #64748b;
+  }
+
+  .cover-meta-value {
+    font-size: 11pt;
+    font-weight: 500;
+    color: #e2e8f0;
+  }
+
+  .cover-investor-chips {
+    display: flex;
+    gap: 10px;
+    margin-top: 52px;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .chip-fha   { background: var(--fha);   color: #fff; }
+  .chip-fnma  { background: var(--fnma);  color: #fff; }
+  .chip-fhlmc { background: var(--fhlmc); color: #fff; }
+  .chip-va    { background: var(--va);    color: #fff; }
+  .chip-usda  { background: var(--usda);  color: #fff; }
+
+  /* ── Scenario Header ──────────────────────────────────────────────────── */
+  .scenario-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+
+  .scenario-badge {
+    width: 54px;
+    height: 54px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .scenario-badge-num {
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    color: #fff;
+  }
+
+  .scenario-badge-n {
+    font-size: 22pt;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .scenario-title-block h2 {
+    font-size: 18pt;
+    font-weight: 800;
+    color: var(--navy);
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+
+  .scenario-title-block .scenario-sub {
+    font-size: 10pt;
+    color: var(--muted);
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  .investor-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* ── Loan Profile Box ─────────────────────────────────────────────────── */
+  .profile-box {
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .profile-box-header {
+    padding: 10px 16px;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  .profile-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+
+  .profile-cell {
+    padding: 10px 16px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .profile-cell:nth-child(3n) { border-right: none; }
+
+  .profile-cell-label {
+    font-size: 8pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .profile-cell-value {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: var(--slate);
+  }
+
+  /* ── Section Headings ─────────────────────────────────────────────────── */
+  .section-heading {
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 10px;
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Waterfall Table ──────────────────────────────────────────────────── */
+  .waterfall-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+    margin-bottom: 6px;
+  }
+
+  .waterfall-table th {
+    background: #f1f5f9;
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 8.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--slate);
+    border-bottom: 2px solid var(--border);
+  }
+
+  .waterfall-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .waterfall-table tr:last-child td { border-bottom: none; }
+
+  .rank-cell {
+    font-weight: 800;
+    font-size: 11pt;
+    width: 36px;
+    text-align: center;
+  }
+
+  .option-name {
+    font-weight: 600;
+    color: var(--slate);
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .tag-rec     { background: var(--rec-bg);  color: var(--rec-tx); }
+  .tag-elig    { background: var(--pass-bg); color: var(--pass-tx); }
+  .tag-inelig  { background: var(--fail-bg); color: var(--fail-tx); }
+
+  .denial-reason {
+    font-size: 9pt;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ── Audit Trail ──────────────────────────────────────────────────────── */
+  .audit-box {
+    border-radius: 10px;
+    background: #fafbff;
+    border: 1.5px solid #dbeafe;
+    padding: 18px 20px;
+    margin-bottom: 24px;
+  }
+
+  .audit-box-title {
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: #1e40af;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .audit-box-title::before {
+    content: '⬡';
+    font-size: 11pt;
+  }
+
+  .audit-node {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 5px 0;
+    border-bottom: 1px dashed #e0e7ff;
+    font-size: 9.5pt;
+  }
+
+  .audit-node:last-child { border-bottom: none; }
+
+  .audit-icon {
+    font-weight: 800;
+    font-size: 9pt;
+    min-width: 34px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .audit-pass { background: var(--pass-bg); color: var(--pass-tx); }
+  .audit-fail { background: var(--fail-bg); color: var(--fail-tx); }
+  .audit-note { background: var(--warn-bg); color: var(--warn-tx); }
+
+  .audit-text { color: var(--slate); line-height: 1.45; }
+
+  .audit-text strong { color: var(--navy); }
+
+  .audit-indent {
+    padding-left: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .audit-sub {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 3px 0;
+    font-size: 9pt;
+    color: var(--slate);
+  }
+
+  .audit-result {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 7px;
+    font-weight: 700;
+    font-size: 10pt;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .audit-result-pass {
+    background: var(--pass-bg);
+    color: var(--pass-tx);
+    border: 1.5px solid #bbf7d0;
+  }
+
+  /* ── Terms Box ────────────────────────────────────────────────────────── */
+  .terms-box {
+    border-radius: 8px;
+    background: #fffbeb;
+    border: 1.5px solid #fde68a;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+  }
+
+  .terms-box-title {
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #92400e;
+    margin-bottom: 10px;
+  }
+
+  .terms-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .terms-list li {
+    font-size: 9.5pt;
+    color: var(--slate);
+    display: flex;
+    gap: 8px;
+  }
+
+  .terms-list li::before {
+    content: '—';
+    color: #d97706;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* ── Action Box ───────────────────────────────────────────────────────── */
+  .action-box {
+    border-radius: 10px;
+    background: #f0fdf4;
+    border: 1.5px solid #bbf7d0;
+    padding: 16px 18px;
+    margin-top: 22px;
+  }
+
+  .action-box-title {
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #166534;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .action-box-body {
+    font-size: 9.5pt;
+    color: #1f4032;
+    line-height: 1.65;
+  }
+
+  /* ── Note Box ─────────────────────────────────────────────────────────── */
+  .note-box {
+    border-radius: 8px;
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    padding: 10px 14px;
+    font-size: 9pt;
+    color: #1e3a5f;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .note-box strong { color: #1e40af; }
+
+  /* ── Summary Table ────────────────────────────────────────────────────── */
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+    margin-bottom: 16px;
+  }
+
+  .summary-table th {
+    background: var(--navy);
+    color: #e2e8f0;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 8.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  .summary-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .summary-table tr:nth-child(even) td { background: #f8fafc; }
+  .summary-table tr:last-child td { border-bottom: none; }
+
+  .inv-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  /* ── Footer ───────────────────────────────────────────────────────────── */
+  .footer-note {
+    background: #f1f5f9;
+    border-top: 2px solid var(--border);
+    padding: 20px 28px;
+    font-size: 8.5pt;
+    color: var(--muted);
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  .footer-note strong { color: var(--slate); }
+
+  .page-divider {
+    border: none;
+    border-top: 1px dashed #d1d5db;
+    margin: 32px 0;
+  }
+
+  /* ── Print Styles ─────────────────────────────────────────────────────── */
+  @media print {
+    body { background: #fff; font-size: 10pt; }
+
+    @page {
+      size: letter;
+      margin: 0.5in;
+    }
+
+    .page {
+      max-width: 100%;
+      padding: 0;
+      margin: 0;
+      background: #fff;
+    }
+
+    .page + .page {
+      page-break-before: always;
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    .cover {
+      page-break-after: always;
+      min-height: auto;
+    }
+
+    .scenario-page {
+      page-break-before: always;
+    }
+
+    .scenario-page:first-of-type {
+      page-break-before: auto;
+    }
+
+    .no-break {
+      page-break-inside: avoid;
+    }
+
+    .action-box { page-break-inside: avoid; }
+    .audit-box  { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!--  COVER PAGE                                                            -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="page cover">
+  <div class="cover-logo"><span>Resolution</span>IQ</div>
+  <div class="cover-title">
+    ResolutionIQ —<br>
+    <em>Scenario Walkthroughs</em>
+  </div>
+  <div class="cover-divider"></div>
+  <div class="cover-sub">
+    5 Representative Borrower Cases · Eligibility Decisions with Audit Trail<br>
+    Loss Mitigation Eligibility Engine · Waterfall Output with Regulatory Basis
+  </div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Document Type</span>
+      <span class="cover-meta-value">Scenario Walkthrough</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Engine Version</span>
+      <span class="cover-meta-value">ResolutionIQ v2026-Q1</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Date</span>
+      <span class="cover-meta-value">March 2026</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Scenarios</span>
+      <span class="cover-meta-value">5 (FHA · FNMA · FHLMC · VA · USDA)</span>
+    </div>
+  </div>
+  <div class="cover-investor-chips">
+    <span class="chip chip-fha">FHA</span>
+    <span class="chip chip-fnma">Fannie Mae</span>
+    <span class="chip chip-fhlmc">Freddie Mac</span>
+    <span class="chip chip-va">VA</span>
+    <span class="chip chip-usda">USDA RD</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!--  SCENARIO 1 — FHA                                                      -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="page scenario-page">
+
+  <div class="scenario-header">
+    <div class="scenario-badge" style="background: var(--fha);">
+      <span class="scenario-badge-num">Case</span>
+      <span class="scenario-badge-n">1</span>
+    </div>
+    <div class="scenario-title-block">
+      <h2>Maria Santos</h2>
+      <div class="scenario-sub">Standard Delinquency · Modification Pathway · Loan #4421893</div>
+      <div class="investor-label" style="background: #dbeafe; color: var(--fha);">
+        <span>●</span> FHA — HUD Insured
+      </div>
+    </div>
+  </div>
+
+  <!-- Loan Profile -->
+  <div class="section-heading">Loan &amp; Borrower Profile</div>
+  <div class="profile-box no-break">
+    <div class="profile-box-header" style="background: var(--fha);">Scenario 1 — FHA · Loan #4421893 · Standard Delinquency / Modification Pathway</div>
+    <div class="profile-grid">
+      <div class="profile-cell"><div class="profile-cell-label">Borrower</div><div class="profile-cell-value">Maria Santos</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Investor</div><div class="profile-cell-value">FHA (HUD Insured)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Loan Number</div><div class="profile-cell-value">4421893</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">UPB</div><div class="profile-cell-value">$187,450</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Original UPB</div><div class="profile-cell-value">$210,000</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Interest Rate</div><div class="profile-cell-value">6.875%</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Current P&amp;I</div><div class="profile-cell-value">$1,124 / mo</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Current PITIA</div><div class="profile-cell-value">$1,387 / mo</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Note Term</div><div class="profile-cell-value">360 months</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Gross Monthly Income</div><div class="profile-cell-value">$4,200 / mo</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Monthly Expenses</div><div class="profile-cell-value">$1,100 / mo</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">PITIA / GMI Ratio</div><div class="profile-cell-value">33.0%</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">DLQ Status</div><div class="profile-cell-value">6 Months</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Hardship Type</div><div class="profile-cell-value">Reduction in Income (Long Term)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Property Type</div><div class="profile-cell-value">Principal Residence</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Arrearages</div><div class="profile-cell-value">$8,340</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Legal Fees</div><div class="profile-cell-value">$450</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Escrow Shortage</div><div class="profile-cell-value">$620</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Prior HR Mods</div><div class="profile-cell-value">None</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Prior Deferrals</div><div class="profile-cell-value">None</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Property Condition</div><div class="profile-cell-value">Standard</div></div>
+    </div>
+  </div>
+
+  <!-- Waterfall -->
+  <div class="section-heading">Engine Output — Eligibility Waterfall</div>
+  <table class="waterfall-table no-break">
+    <thead>
+      <tr>
+        <th style="width:42px;">Rank</th>
+        <th>Option</th>
+        <th style="width:130px;">Status</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:#eff6ff;">
+        <td class="rank-cell" style="color:var(--fha);">1</td>
+        <td class="option-name">FHA 30-Year Modification</td>
+        <td><span class="tag tag-rec">Recommended</span></td>
+        <td style="font-size:9pt; color:var(--slate);">Top priority eligible modification — rate reduction to achieve target PITIA</td>
+      </tr>
+      <tr>
+        <td class="rank-cell" style="color:var(--slate);">2</td>
+        <td class="option-name">FHA 40-Year Combination Mod + Partial Claim</td>
+        <td><span class="tag tag-elig">Eligible</span></td>
+        <td style="font-size:9pt; color:var(--slate);">Eligible — extended term with partial claim capitalization</td>
+      </tr>
+      <tr>
+        <td class="rank-cell" style="color:var(--slate);">3</td>
+        <td class="option-name">Payment Supplement</td>
+        <td><span class="tag tag-elig">Eligible</span></td>
+        <td style="font-size:9pt; color:var(--slate);">Last resort — temporary monthly subsidy if modification insufficient</td>
+      </tr>
+      <tr>
+        <td class="rank-cell" style="color:var(--slate);">4</td>
+        <td class="option-name">Pre-Foreclosure Sale</td>
+        <td><span class="tag tag-elig">Eligible</span></td>
+        <td style="font-size:9pt; color:var(--slate);">Available if borrower intent changes to liquidation</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">Reinstatement</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">Borrower cannot afford to reinstate arrearages in full</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">Repayment Plan</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">Cannot repay arrearages within 24-month maximum window</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">Formal Forbearance</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">Hardship is long-term — forbearance reserved for short-term hardship</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">FHA Payment Deferral</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">Hardship not yet resolved — deferral requires resolved hardship</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Audit Trail -->
+  <div class="section-heading">Audit Node Trail — FHA 30-Year Modification</div>
+  <div class="audit-box no-break">
+    <div class="audit-box-title">Decision Audit: FHA 30-Year Modification (Recommended Option)</div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text">Loan is <strong>FHA insured</strong> — investor eligibility confirmed</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Not a disaster hardship</strong> — standard modification pathway available</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>DLQ &gt; 0</strong> (6 months) — loan is delinquent, modification eligible</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Borrower intent: Retention</strong> — owner-occupant retention path confirmed</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>No prior modification within 24 months</strong> — modification cooldown not triggered</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Property: Principal Residence</strong> — occupancy standard met</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>360-month re-amortization does NOT achieve target payment</strong> — rate reduction required; engine escalates to rate-reduction mod</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>480-month re-amortization</strong> achieves target payment alternative — 40-year combo path also available</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>PITIA / GMI ratio: 33%</strong> — within ≤ 40% target (HUD 4000.1 §III.A.2)</span></div>
+    <div class="audit-result audit-result-pass">✔ RESULT: FHA 30-Year Modification — ELIGIBLE · RECOMMENDED</div>
+  </div>
+
+  <!-- Servicer Action -->
+  <div class="action-box no-break">
+    <div class="action-box-title">▶ Servicer Action Summary</div>
+    <div class="action-box-body">
+      Prepare Loan Modification Agreement. Target modified rate using PMMS-based rate reduction per HUD 4000.1 §III.A.2. Capitalize total arrearages: $8,340 arrearages + $450 legal fees + $620 escrow shortage = <strong>$9,410 capitalized balance</strong>. Verify partial claim balance (if applicable) does not exceed 30% of original UPB — cap is <strong>$63,000</strong> ($210,000 × 30%). Confirm PITIA / GMI post-modification ≤ 40%. Document borrower hardship and intent to retain.
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!--  SCENARIO 2 — FNMA                                                     -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="page scenario-page">
+
+  <div class="scenario-header">
+    <div class="scenario-badge" style="background: var(--fnma);">
+      <span class="scenario-badge-num">Case</span>
+      <span class="scenario-badge-n">2</span>
+    </div>
+    <div class="scenario-title-block">
+      <h2>James &amp; Kelly Whitmore</h2>
+      <div class="scenario-sub">Imminent Default · Flex Modification via ID Path · Loan #7734521</div>
+      <div class="investor-label" style="background: #fee2e2; color: var(--fnma);">
+        <span>●</span> FNMA — Fannie Mae Conventional
+      </div>
+    </div>
+  </div>
+
+  <!-- Loan Profile -->
+  <div class="section-heading">Loan &amp; Borrower Profile</div>
+  <div class="profile-box no-break">
+    <div class="profile-box-header" style="background: var(--fnma);">Scenario 2 — FNMA · Loan #7734521 · Imminent Default / Flex Mod (ID Path)</div>
+    <div class="profile-grid">
+      <div class="profile-cell"><div class="profile-cell-label">Borrowers</div><div class="profile-cell-value">James &amp; Kelly Whitmore</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Investor</div><div class="profile-cell-value">FNMA (Fannie Mae)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Loan Number</div><div class="profile-cell-value">7734521</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">UPB</div><div class="profile-cell-value">$342,100</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Current P&amp;I</div><div class="profile-cell-value">$2,156 / mo</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Housing Expense Ratio</div><div class="profile-cell-value">58%</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Gross Monthly Income</div><div class="profile-cell-value">$5,800 / mo</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">FICO Score</div><div class="profile-cell-value">604</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Cash Reserves</div><div class="profile-cell-value">$3,200 (&lt; 3 mo PITIA)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">DLQ Status</div><div class="profile-cell-value">0 months (Current)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Hardship Type</div><div class="profile-cell-value">Long-Term (Permanent Income Reduction)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Loan Age</div><div class="profile-cell-value">48 months</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Property Type</div><div class="profile-cell-value">Principal Residence</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Prior Modifications</div><div class="profile-cell-value">0</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Prior Deferrals</div><div class="profile-cell-value">0</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Imminent Default</div><div class="profile-cell-value">Documented (D2-3.2-06)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Prior TPP Failures</div><div class="profile-cell-value">None (12 months)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Recourse Arrangement</div><div class="profile-cell-value">None</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Active Liquidation</div><div class="profile-cell-value">None</div></div>
+    </div>
+  </div>
+
+  <!-- Waterfall -->
+  <div class="section-heading">Engine Output — Eligibility Waterfall</div>
+  <table class="waterfall-table no-break">
+    <thead>
+      <tr>
+        <th style="width:42px;">Rank</th>
+        <th>Option</th>
+        <th style="width:130px;">Status</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:#fff5f5;">
+        <td class="rank-cell" style="color:var(--fnma);">1</td>
+        <td class="option-name">FNMA Standard Flex Modification</td>
+        <td><span class="tag tag-rec">Recommended</span></td>
+        <td style="font-size:9pt; color:var(--slate);">ID path — DLQ=0 but imminent default fully documented per D2-3.2-06</td>
+      </tr>
+      <tr>
+        <td class="rank-cell" style="color:var(--slate);">2</td>
+        <td class="option-name">FNMA Forbearance Plan</td>
+        <td><span class="tag tag-elig">Eligible</span></td>
+        <td style="font-size:9pt; color:var(--slate);">Temporary relief option while full BRP is processed</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">Reinstatement</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">DLQ = 0 — nothing to reinstate</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">Payment Deferral</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">DLQ &lt; 2 months — threshold not met even with documented ID</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">Streamlined Flex Mod</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">Requires 90+ days DLQ — borrower is current (DLQ=0)</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">Disaster Flex Mod</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">No disaster hardship designation — income reduction hardship only</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Audit Trail -->
+  <div class="section-heading">Audit Node Trail — FNMA Standard Flex Modification (ID Path)</div>
+  <div class="audit-box no-break">
+    <div class="audit-box-title">Decision Audit: FNMA Standard Flex Modification — Imminent Default Path</div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>FNMA conventional loan</strong> confirmed — investor eligibility satisfied</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Loan age: 48 months</strong> — meets ≥ 12-month minimum requirement</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Prior modification count: 0</strong> — below 3-modification maximum lifetime cap</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>No failed TPP within 12 months</strong> — TPP recidivism gate cleared</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>No active liquidation option</strong> — borrower not in active short sale / DIL</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>No active TPP or pending sale offer</strong> — no competing workout active</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>No recourse arrangement</strong> — standard modification available</span></div>
+    <div class="audit-node">
+      <span class="audit-icon audit-pass">PASS</span>
+      <span class="audit-text"><strong>Imminent Default documented</strong> per Selling Guide D2-3.2-06 — all three rules verified:
+        <div class="audit-indent" style="margin-top:6px;">
+          <div class="audit-sub"><span class="audit-icon audit-pass" style="font-size:8pt; padding:1px 4px;">PASS</span><span>Rule 1: Primary residence ✓ · Long-term hardship ✓ · Cash reserves &lt; 3 months PITIA ($3,200) ✓</span></div>
+          <div class="audit-sub"><span class="audit-icon audit-pass" style="font-size:8pt; padding:1px 4px;">PASS</span><span>Rule 2: FICO 604 ≤ 620 threshold ✓ — credit-based imminent default trigger satisfied</span></div>
+        </div>
+      </span>
+    </div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Property: Principal Residence</strong> — standard modification path available (non-primary requires case review)</span></div>
+    <div class="audit-result audit-result-pass">✔ RESULT: FNMA Standard Flex Modification — ELIGIBLE (via Imminent Default path)</div>
+  </div>
+
+  <!-- Servicer Action -->
+  <div class="action-box no-break">
+    <div class="action-box-title">▶ Servicer Action Summary</div>
+    <div class="action-box-body">
+      Document imminent default per Selling Guide D2-3.2-06 — retain all qualifying evidence (income reduction documentation, bank statements confirming &lt; 3 months reserves, FICO verification). Obtain complete Borrower Response Package (BRP). Calculate MTMLTV post-capitalization: if MTMLTV ≥ 50%, rate reduction step applies; if MTMLTV &gt; 50%, principal forbearance step available per LL-2024-02. Issue Trial Period Plan (TPP) — <strong>QRPC (Quality Right Party Contact) must be achieved prior to TPP issuance</strong>. Confirm housing expense ratio post-modification target.
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!--  SCENARIO 3 — FHLMC                                                    -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="page scenario-page">
+
+  <div class="scenario-header">
+    <div class="scenario-badge" style="background: var(--fhlmc);">
+      <span class="scenario-badge-num">Case</span>
+      <span class="scenario-badge-n">3</span>
+    </div>
+    <div class="scenario-title-block">
+      <h2>Denise &amp; Robert Harmon</h2>
+      <div class="scenario-sub">Disaster Hardship · Bulletin 2026-2 Dual DLQ Gate · Loan #9918843</div>
+      <div class="investor-label" style="background: #f3e8ff; color: var(--fhlmc);">
+        <span>●</span> FHLMC — Freddie Mac Conventional
+      </div>
+    </div>
+  </div>
+
+  <!-- Loan Profile -->
+  <div class="section-heading">Loan &amp; Borrower Profile</div>
+  <div class="profile-box no-break">
+    <div class="profile-box-header" style="background: var(--fhlmc);">Scenario 3 — FHLMC · Loan #9918843 · Disaster / Bulletin 2026-2 Dual DLQ Gate</div>
+    <div class="profile-grid">
+      <div class="profile-cell"><div class="profile-cell-label">Borrowers</div><div class="profile-cell-value">Denise &amp; Robert Harmon</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Investor</div><div class="profile-cell-value">FHLMC (Freddie Mac)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Loan Number</div><div class="profile-cell-value">9918843</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">UPB</div><div class="profile-cell-value">$224,750</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Current P&amp;I</div><div class="profile-cell-value">$1,445 / mo</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Loan Type</div><div class="profile-cell-value">Conventional</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">DLQ at Disaster</div><div class="profile-cell-value">0 months (Current)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">DLQ at Evaluation</div><div class="profile-cell-value">4 months (120+ days)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Hardship Type</div><div class="profile-cell-value">Disaster (Long Term, Ongoing)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">FEMA Designation</div><div class="profile-cell-value">Yes — DR-4782</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Property Type</div><div class="profile-cell-value">Primary Residence</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Loan Age</div><div class="profile-cell-value">72 months</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Prior Modifications</div><div class="profile-cell-value">0</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Regulatory Basis</div><div class="profile-cell-value">§9206.1(c)(v) + Bulletin 2026-2</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Bulletin 2026-2 Eff.</div><div class="profile-cell-value">Feb 11, 2026</div></div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <strong>Bulletin 2026-2 Dual DLQ Gate:</strong> Effective February 11, 2026, FHLMC Disaster Flex Modification requires satisfaction of BOTH delinquency tests — (1) borrower must be current or &lt; 60 days DLQ at the time of the declared disaster, AND (2) borrower must be ≥ 90 days DLQ at the evaluation date. The Harmons satisfy both gates: 0 months DLQ at DR-4782 disaster event, and 4 months (120+ days) DLQ at evaluation.
+  </div>
+
+  <!-- Waterfall -->
+  <div class="section-heading">Engine Output — Eligibility Waterfall</div>
+  <table class="waterfall-table no-break">
+    <thead>
+      <tr>
+        <th style="width:42px;">Rank</th>
+        <th>Option</th>
+        <th style="width:130px;">Status</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:#faf5ff;">
+        <td class="rank-cell" style="color:var(--fhlmc);">1</td>
+        <td class="option-name">FHLMC Disaster Flex Modification</td>
+        <td><span class="tag tag-rec">Recommended</span></td>
+        <td style="font-size:9pt; color:var(--slate);">Bulletin 2026-2 dual DLQ gate satisfied — disaster-specific modification</td>
+      </tr>
+      <tr>
+        <td class="rank-cell" style="color:var(--slate);">2</td>
+        <td class="option-name">FHLMC Standard Flex Modification</td>
+        <td><span class="tag tag-elig">Eligible</span></td>
+        <td style="font-size:9pt; color:var(--slate);">Technically eligible; disaster hardship flag routes to disaster path first</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">Repayment Plan</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">Disaster hardship — active disaster blocks standard repayment plan</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">Standard Forbearance Plan</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">Disaster hardship blocks standard forbearance — disaster forbearance previously used</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">Payment Deferral</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">Disaster hardship blocks standard payment deferral path</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Audit Trail -->
+  <div class="section-heading">Audit Node Trail — FHLMC Disaster Flex Modification</div>
+  <div class="audit-box no-break">
+    <div class="audit-box-title">Decision Audit: FHLMC Disaster Flex Modification — Bulletin 2026-2</div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Conventional mortgage confirmed</strong> — FHLMC investor eligibility satisfied</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>FEMA disaster designation present</strong> — DR-4782 confirmed for property county/state</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Disaster hardship flag set</strong> — engine routes to disaster modification waterfall</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Gate 1 — DLQ at time of disaster: 0 months</strong> (current) — satisfies &lt; 60 DLQ threshold at disaster per §9206.1(c)(v)</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Gate 2 — DLQ at evaluation date: 4 months / 120+ days</strong> — satisfies ≥ 90-day threshold per Bulletin 2026-2 (eff. Feb 11, 2026)</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Loan age: 72 months</strong> — meets ≥ 12-month minimum requirement</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Prior modification count: 0</strong> — no modification cooldown restriction</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>No non-performing TPP within 12 months</strong> — TPP recidivism gate cleared (§9206.5)</span></div>
+    <div class="audit-result audit-result-pass">✔ RESULT: FHLMC Disaster Flex Modification — ELIGIBLE</div>
+  </div>
+
+  <!-- Servicer Action -->
+  <div class="action-box no-break">
+    <div class="action-box-title">▶ Servicer Action Summary</div>
+    <div class="action-box-body">
+      Document FEMA disaster declaration DR-4782 — retain declaration notice and confirm property county is within the declared disaster area. Confirm borrower was current (0 months DLQ) at the time of the disaster event — this is a hard gate under Bulletin 2026-2. Verify evaluation date DLQ is ≥ 90 days as required. <strong>No BRP (Borrower Response Package) is required</strong> for Disaster Flex Modification. Prepare Trial Period Plan. Important: per Bulletin 2026-2 effective <strong>May 1, 2026</strong>, forbearance increments are now capped at 1–3 months per increment.
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!--  SCENARIO 4 — VA                                                       -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="page scenario-page">
+
+  <div class="scenario-header">
+    <div class="scenario-badge" style="background: var(--va);">
+      <span class="scenario-badge-num">Case</span>
+      <span class="scenario-badge-n">4</span>
+    </div>
+    <div class="scenario-title-block">
+      <h2>Sgt. (Ret.) David Morales</h2>
+      <div class="scenario-sub">Disaster Sequence / Extend Modification · Post-Forbearance · Loan #6612074</div>
+      <div class="investor-label" style="background: #fef3c7; color: var(--va);">
+        <span>●</span> VA — Department of Veterans Affairs
+      </div>
+    </div>
+  </div>
+
+  <!-- Loan Profile -->
+  <div class="section-heading">Loan &amp; Borrower Profile</div>
+  <div class="profile-box no-break">
+    <div class="profile-box-header" style="background: var(--va);">Scenario 4 — VA · Loan #6612074 · Disaster Sequence / Extend Modification (Post-Forbearance)</div>
+    <div class="profile-grid">
+      <div class="profile-cell"><div class="profile-cell-label">Borrower</div><div class="profile-cell-value">Sgt. (Ret.) David Morales</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Investor</div><div class="profile-cell-value">VA (Dept. of Veterans Affairs)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Loan Number</div><div class="profile-cell-value">6612074</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">UPB</div><div class="profile-cell-value">$198,300</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Note Term</div><div class="profile-cell-value">360 months</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Note Date</div><div class="profile-cell-value">June 1, 2018</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Original Maturity</div><div class="profile-cell-value">July 1, 2048</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">DLQ at Disaster</div><div class="profile-cell-value">Current (&lt; 30 days DLQ)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Current DLQ</div><div class="profile-cell-value">5 months (≥ 60 days DLQ)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Hardship Type</div><div class="profile-cell-value">Disaster (Ongoing — Not Resolved)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Prior Workout</div><div class="profile-cell-value">Disaster Forbearance (Completed)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Workout State</div><div class="profile-cell-value">Active / Passed</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">VA Loan Confirmed</div><div class="profile-cell-value">Yes</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Regulatory Basis</div><div class="profile-cell-value">VA M26-4 Ch. 5.06; Circular 26-24-3</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Circular Date</div><div class="profile-cell-value">February 2024</div></div>
+    </div>
+  </div>
+
+  <!-- Waterfall -->
+  <div class="section-heading">Engine Output — Eligibility Waterfall</div>
+  <table class="waterfall-table no-break">
+    <thead>
+      <tr>
+        <th style="width:42px;">Rank</th>
+        <th>Option</th>
+        <th style="width:130px;">Status</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:#fffbeb;">
+        <td class="rank-cell" style="color:var(--va);">1</td>
+        <td class="option-name">VA Disaster Extend Modification</td>
+        <td><span class="tag tag-rec">Recommended</span></td>
+        <td style="font-size:9pt; color:var(--slate);">Maturity extension only — rate and payment unchanged — post-forbearance path</td>
+      </tr>
+      <tr>
+        <td class="rank-cell" style="color:var(--slate);">2</td>
+        <td class="option-name">VA Disaster Modification</td>
+        <td><span class="tag tag-elig">Eligible</span></td>
+        <td style="font-size:9pt; color:var(--slate);">Re-amortization option — prior forbearance requirement satisfied</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">VA Repayment Plan</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">Disaster hardship (ongoing) blocks standard repayment plan path</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">VA Special Forbearance</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">Disaster hardship blocks standard special forbearance</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">VA Traditional / 30-Year / 40-Year Mod</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">Disaster hardship blocks standard modification paths — disaster-specific mod required</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Audit Trail -->
+  <div class="section-heading">Audit Node Trail — VA Disaster Extend Modification</div>
+  <div class="audit-box no-break">
+    <div class="audit-box-title">Decision Audit: VA Disaster Extend Modification — Circular 26-24-3 §3.a</div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>VA loan confirmed</strong> — borrower eligibility and guaranty status verified</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Hardship is ongoing / not resolved</strong> — Circular 26-24-3 §3.a requires ongoing disaster hardship for Extend Mod eligibility</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Current or &lt; 30 days DLQ at time of disaster</strong> — entry criteria satisfied per Circular 26-24-3</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Loan ≥ 60 days DLQ at evaluation</strong> — 5 months DLQ satisfies post-disaster delinquency threshold per Circular 26-24-3</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Prior workout: Disaster Forbearance completed</strong> — prior forbearance step is a prerequisite condition for the Extend Mod path</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Workout state: Active / Passed</strong> — forbearance completed and workout is in active resolution state</span></div>
+    <div class="audit-result audit-result-pass">✔ RESULT: VA Disaster Extend Modification — ELIGIBLE</div>
+  </div>
+
+  <!-- Terms Output -->
+  <div class="section-heading">Modification Terms Output</div>
+  <div class="terms-box no-break">
+    <div class="terms-box-title">VA Disaster Extend Modification — Key Terms</div>
+    <ul class="terms-list">
+      <li>Extension up to <strong>12 months beyond original maturity date</strong> (2048-07-01 → up to 2049-07-01)</li>
+      <li>Interest rate: <strong>UNCHANGED</strong> from note rate — no rate modification</li>
+      <li>Monthly payment: <strong>UNCHANGED</strong> — no re-amortization of principal and interest</li>
+      <li>VA Prior Approval: <strong>Required</strong> if maturity extension exceeds 12 months</li>
+      <li>Authority: VA Servicer Handbook M26-4 Ch. 5.06; Circular 26-24-3 §3.a (February 2024)</li>
+      <li>Note: Disaster Extend Mod extends maturity date only — <em>distinct</em> from VA Disaster Modification which re-amortizes. Does NOT require prior Disaster Modification as a prerequisite.</li>
+    </ul>
+  </div>
+
+  <!-- Servicer Action -->
+  <div class="action-box no-break">
+    <div class="action-box-title">▶ Servicer Action Summary</div>
+    <div class="action-box-body">
+      Document disaster hardship as ongoing — retain supporting documentation demonstrating hardship has not been resolved. Confirm prior Disaster Forbearance workout is complete and workout state is Active/Passed. Submit to VA Regional Loan Center (RLC) for review. Calculate new maturity date — <strong>cannot exceed 12 months beyond original maturity of July 1, 2048</strong> (maximum: July 1, 2049). Rate and payment remain unchanged; modification agreement documents maturity date change only. Obtain VA prior approval before extending beyond 12-month cap.
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!--  SCENARIO 5 — USDA                                                     -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="page scenario-page">
+
+  <div class="scenario-header">
+    <div class="scenario-badge" style="background: var(--usda);">
+      <span class="scenario-badge-num">Case</span>
+      <span class="scenario-badge-n">5</span>
+    </div>
+    <div class="scenario-title-block">
+      <h2>Patricia &amp; Leon Washington</h2>
+      <div class="scenario-sub">USDA Streamline Modification + MRA Combination · Loan #3302918</div>
+      <div class="investor-label" style="background: #d1fae5; color: var(--usda);">
+        <span>●</span> USDA Rural Development
+      </div>
+    </div>
+  </div>
+
+  <!-- Loan Profile -->
+  <div class="section-heading">Loan &amp; Borrower Profile</div>
+  <div class="profile-box no-break">
+    <div class="profile-box-header" style="background: var(--usda);">Scenario 5 — USDA RD · Loan #3302918 · Streamline Modification + MRA Combination</div>
+    <div class="profile-grid">
+      <div class="profile-cell"><div class="profile-cell-label">Borrowers</div><div class="profile-cell-value">Patricia &amp; Leon Washington</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Investor</div><div class="profile-cell-value">USDA Rural Development</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Loan Number</div><div class="profile-cell-value">3302918</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">UPB</div><div class="profile-cell-value">$142,600</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">UPB at Initial Default</div><div class="profile-cell-value">$148,000</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Current P&amp;I</div><div class="profile-cell-value">$978 / mo</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Gross Monthly Income</div><div class="profile-cell-value">$3,100 / mo</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">DLQ Status</div><div class="profile-cell-value">5 months (150 days)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Hardship Type</div><div class="profile-cell-value">Long Term (Income Reduction)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Property Type</div><div class="profile-cell-value">Rural Primary Residence</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Property Condition</div><div class="profile-cell-value">Standard</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Prior USDA Mods</div><div class="profile-cell-value">1 (max: 2)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Failed TPP (Prior)</div><div class="profile-cell-value">No</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Property Listed for Sale</div><div class="profile-cell-value">No</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">UPB ≥ $5,000</div><div class="profile-cell-value">Yes ($142,600)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Payments Made ≥ 12</div><div class="profile-cell-value">Yes</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Step 3 Deferral Required</div><div class="profile-cell-value">Yes — capitalization creates gap</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">MRA Cap (30% of UPB@ID)</div><div class="profile-cell-value">$44,400 ($148,000 × 30%)</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Post-Mod Performance Req.</div><div class="profile-cell-value">36 consecutive timely payments</div></div>
+      <div class="profile-cell"><div class="profile-cell-label">Total DTI Cap</div><div class="profile-cell-value">≤ 55% post-modification</div></div>
+    </div>
+  </div>
+
+  <!-- Waterfall -->
+  <div class="section-heading">Engine Output — Eligibility Waterfall</div>
+  <table class="waterfall-table no-break">
+    <thead>
+      <tr>
+        <th style="width:42px;">Rank</th>
+        <th>Option</th>
+        <th style="width:130px;">Status</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:#ecfdf5;">
+        <td class="rank-cell" style="color:var(--usda);">1</td>
+        <td class="option-name">USDA Streamline Modification + MRA (Combo)</td>
+        <td><span class="tag tag-rec">Recommended</span></td>
+        <td style="font-size:9pt; color:var(--slate);">Step 3 deferral required — MRA combination path triggered; maximizes payment reduction</td>
+      </tr>
+      <tr>
+        <td class="rank-cell" style="color:var(--slate);">2</td>
+        <td class="option-name">USDA Streamline Modification</td>
+        <td><span class="tag tag-elig">Eligible</span></td>
+        <td style="font-size:9pt; color:var(--slate);">Eligible without MRA — less optimal if capitalization creates affordability gap</td>
+      </tr>
+      <tr>
+        <td class="rank-cell" style="color:var(--slate);">3</td>
+        <td class="option-name">USDA Standalone MRA</td>
+        <td><span class="tag tag-elig">Eligible</span></td>
+        <td style="font-size:9pt; color:var(--slate);">Mortgage Recovery Advance as standalone subordinate lien option</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">USDA Informal Forbearance</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">Hardship is long-term — informal forbearance reserved for short-term, resolved hardship</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">USDA Informal Repayment Plan</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">Hardship not resolved — repayment plan requires resolved hardship and ability to repay</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td class="rank-cell" style="color:#9ca3af;">—</td>
+        <td class="option-name" style="color:var(--muted);">USDA Disaster Options</td>
+        <td><span class="tag tag-inelig">Ineligible</span></td>
+        <td class="denial-reason">No disaster hardship — income reduction hardship only; disaster path not available</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Audit Trail -->
+  <div class="section-heading">Audit Node Trail — USDA Streamline Mod + MRA (Combo)</div>
+  <div class="audit-box no-break">
+    <div class="audit-box-title">Decision Audit: USDA Streamline Modification + MRA Combination</div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Not a disaster hardship</strong> — standard modification path (HB-1-3555 §18.7) available</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>DLQ: 5 months / 150 days</strong> — within eligible 90–360 day delinquency window (§18.7)</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>UPB $142,600 ≥ $5,000 minimum</strong> — minimum loan balance threshold satisfied</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Prior USDA modifications: 1</strong> — below 2-modification maximum lifetime cap</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>No prior failed TPP</strong> on a Streamline Modification — TPP recidivism gate cleared</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Property not listed for sale</strong> — borrower intent is retention</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Step 3 deferral required</strong> — capitalization creates payment gap triggering MRA combination path</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Capitalized UPB within MRA cap</strong> — deferral amount ≤ $44,400 maximum (30% of $148,000 UPB at initial default) per §3555.304(d)</span></div>
+    <div class="audit-node"><span class="audit-icon audit-pass">PASS</span><span class="audit-text"><strong>Post-modification PITIA ≤ pre-modification PITIA</strong> — payment reduction requirement satisfied</span></div>
+    <div class="audit-result audit-result-pass">✔ RESULT: USDA Streamline Modification + MRA (Combo) — ELIGIBLE</div>
+  </div>
+
+  <!-- Terms Output -->
+  <div class="section-heading">Modification Terms Output</div>
+  <div class="terms-box no-break">
+    <div class="terms-box-title">USDA Streamline Mod + MRA — Key Terms</div>
+    <ul class="terms-list">
+      <li>Capitalized UPB: <strong>$142,600 + arrearages</strong> (capitalized into new principal balance)</li>
+      <li>MRA Amount: Deferred to <strong>subordinate lien</strong> — non-interest bearing, non-amortizing</li>
+      <li>MRA Cap: <strong>$44,400</strong> maximum (30% of $148,000 UPB at initial default)</li>
+      <li>Post-Modification Performance: <strong>36 consecutive timely payments required</strong> before MRA release (§3555.304(d))</li>
+      <li>Total DTI Post-Modification: Must be <strong>≤ 55%</strong> — verified at modification closing</li>
+      <li>Authority: HB-1-3555 §18.7; 7 CFR §3555.304</li>
+    </ul>
+  </div>
+
+  <!-- Servicer Action -->
+  <div class="action-box no-break">
+    <div class="action-box-title">▶ Servicer Action Summary</div>
+    <div class="action-box-body">
+      Complete Borrower Response Package (BRP). Calculate Step 3 MRA deferral amount — <strong>must not exceed $44,400</strong> (30% of $148,000 UPB at initial default). Prepare USDA Streamline Modification Agreement with MRA subordinate lien instrument. Document 36-month performance monitoring requirement per §3555.304(d) — borrower must make 36 consecutive timely payments before MRA lien is eligible for release. Verify total post-modification DTI does not exceed 55%. Submit to USDA RD Servicing Office per HB-1-3555 servicer guidance.
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!--  SUMMARY COMPARISON TABLE                                              -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="page scenario-page">
+
+  <div style="margin-bottom:28px;">
+    <h2 style="font-size:20pt; font-weight:800; color:var(--navy); letter-spacing:-0.015em; margin-bottom:6px;">Summary Comparison</h2>
+    <p style="font-size:10pt; color:var(--muted);">All 5 scenarios side by side — investor, delinquency, hardship, top option, and regulatory basis</p>
+  </div>
+
+  <table class="summary-table no-break">
+    <thead>
+      <tr>
+        <th>Borrower</th>
+        <th>Investor</th>
+        <th>DLQ</th>
+        <th>Hardship</th>
+        <th>Top Option</th>
+        <th>Key Regulatory Basis</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:600; color:var(--navy);">Maria Santos</td>
+        <td><span class="inv-dot" style="background:var(--fha);"></span><strong style="color:var(--fha);">FHA</strong></td>
+        <td>6 months</td>
+        <td>Long Term — Income</td>
+        <td><span style="font-weight:600;">30-Year Modification</span></td>
+        <td style="font-size:9pt; color:var(--muted);">HUD 4000.1 §III.A.2</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600; color:var(--navy);">Whitmore</td>
+        <td><span class="inv-dot" style="background:var(--fnma);"></span><strong style="color:var(--fnma);">FNMA</strong></td>
+        <td>0 (ID Documented)</td>
+        <td>Long Term — Income</td>
+        <td><span style="font-weight:600;">Flex Mod (ID Path)</span></td>
+        <td style="font-size:9pt; color:var(--muted);">Selling Guide D2-3.2-06</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600; color:var(--navy);">Harmon</td>
+        <td><span class="inv-dot" style="background:var(--fhlmc);"></span><strong style="color:var(--fhlmc);">FHLMC</strong></td>
+        <td>0 at disaster / 4 mo at eval</td>
+        <td>Disaster</td>
+        <td><span style="font-weight:600;">Disaster Flex Mod</span></td>
+        <td style="font-size:9pt; color:var(--muted);">§9206.1(c)(v) + Bulletin 2026-2</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600; color:var(--navy);">Morales</td>
+        <td><span class="inv-dot" style="background:var(--va);"></span><strong style="color:var(--va);">VA</strong></td>
+        <td>5 months</td>
+        <td>Disaster (Ongoing)</td>
+        <td><span style="font-weight:600;">Disaster Extend Mod</span></td>
+        <td style="font-size:9pt; color:var(--muted);">Circular 26-24-3 §3.a; M26-4 Ch. 5.06</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600; color:var(--navy);">Washington</td>
+        <td><span class="inv-dot" style="background:var(--usda);"></span><strong style="color:var(--usda);">USDA</strong></td>
+        <td>5 months</td>
+        <td>Long Term — Income</td>
+        <td><span style="font-weight:600;">Streamline Mod + MRA</span></td>
+        <td style="font-size:9pt; color:var(--muted);">HB-1-3555 §18.7 + §3555.304</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Cross-Scenario Notes -->
+  <div style="margin-top:32px; margin-bottom:18px;">
+    <div class="section-heading">Cross-Scenario Observations</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:4px;">
+
+      <div style="background:#f8fafc; border:1.5px solid var(--border); border-radius:9px; padding:14px 16px;">
+        <div style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--slate); margin-bottom:8px;">Disaster vs. Standard Pathways</div>
+        <p style="font-size:9pt; color:var(--muted); line-height:1.6;">Scenarios 3, 4, and 5 illustrate how disaster hardship flags override or redirect standard eligibility paths. Each investor has distinct entry criteria — FHLMC requires a dual DLQ gate under Bulletin 2026-2; VA requires ongoing hardship and prior forbearance; USDA routes to non-disaster modifications when no disaster designation exists.</p>
+      </div>
+
+      <div style="background:#f8fafc; border:1.5px solid var(--border); border-radius:9px; padding:14px 16px;">
+        <div style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--slate); margin-bottom:8px;">Imminent Default Gate (FNMA)</div>
+        <p style="font-size:9pt; color:var(--muted); line-height:1.6;">Scenario 2 demonstrates that DLQ=0 does not preclude modification eligibility under FNMA when imminent default is properly documented per D2-3.2-06. The engine applies all three ID rules in sequence and routes to the Flex Mod ID path when any qualifying rule passes.</p>
+      </div>
+
+      <div style="background:#f8fafc; border:1.5px solid var(--border); border-radius:9px; padding:14px 16px;">
+        <div style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--slate); margin-bottom:8px;">FHA Partial Claim Cap Monitoring</div>
+        <p style="font-size:9pt; color:var(--muted); line-height:1.6;">Scenario 1 highlights the importance of tracking the 30% original UPB partial claim ceiling ($63,000 cap for Santos). The engine validates capitalized balance against this limit before recommending the 40-year combo path as an alternative.</p>
+      </div>
+
+      <div style="background:#f8fafc; border:1.5px solid var(--border); border-radius:9px; padding:14px 16px;">
+        <div style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--slate); margin-bottom:8px;">USDA MRA Subordination Structure</div>
+        <p style="font-size:9pt; color:var(--muted); line-height:1.6;">Scenario 5 shows the engine's Step 3 deferral logic: when capitalization alone cannot resolve the payment gap, the MRA subordinate lien path is triggered. The 36-payment performance requirement and 30% cap are hard constraints validated before the combo option is presented.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer Note -->
+  <div class="footer-note" style="margin: 36px -52px -48px; border-radius:0;">
+    <strong>Disclaimer:</strong> These scenarios are illustrative. Actual eligibility determinations depend on complete and accurate borrower data. ResolutionIQ engine output should be validated against current investor guidelines and reviewed by qualified loss mitigation personnel. Regulatory references reflect guidelines in effect as of March 2026; servicers should confirm against current published guidelines from HUD, Fannie Mae, Freddie Mac, VA, and USDA Rural Development.
+  </div>
+
+</div>
+
+</body>
+</html>

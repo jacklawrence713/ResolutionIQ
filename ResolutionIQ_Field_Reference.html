@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResolutionIQ — Field Reference Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root {
+    --fha:#1a56db; --usda:#0e9f6e; --va:#c27803; --fhlmc:#7e3af2; --fnma:#e02424;
+    --navy:#1e3a5f; --bg:#f9fafb; --border:#e5e7eb; --text:#111827; --muted:#6b7280;
+    --pass:#d1fae5; --warn:#fef3c7; --req:#fee2e2;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',system-ui,sans-serif; font-size:10.5px; color:var(--text); background:#fff; line-height:1.45; }
+
+  /* Cover */
+  .cover { min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;
+    background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f172a 100%); color:#fff; text-align:center;
+    padding:60px 40px; page-break-after:always; }
+  .cover-badge { display:inline-block; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
+    color:#93c5fd; font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase;
+    padding:5px 18px; border-radius:20px; margin-bottom:28px; }
+  .cover h1 { font-size:38px; font-weight:700; letter-spacing:-1px; line-height:1.1; margin-bottom:10px; }
+  .cover h1 span { color:#60a5fa; }
+  .cover-sub { font-size:16px; color:#94a3b8; font-weight:300; margin-bottom:40px; }
+  .cover-stats { display:flex; gap:36px; justify-content:center; margin-bottom:40px; flex-wrap:wrap; }
+  .cover-stat-num { font-size:42px; font-weight:700; color:#60a5fa; line-height:1; }
+  .cover-stat-label { font-size:11px; color:#94a3b8; text-transform:uppercase; letter-spacing:1.5px; margin-top:4px; }
+  .cover-meta { font-size:10px; color:#64748b; }
+
+  /* How to Use */
+  .how-page { padding:40px 56px; page-break-after:always; }
+
+  /* Section header */
+  .section-break { page-break-before:always; }
+  .section-header { padding:16px 20px; color:#fff; border-radius:8px 8px 0 0; display:flex; align-items:center; gap:12px; margin-bottom:0; }
+  .section-header h2 { font-size:16px; font-weight:700; }
+  .section-header .sh-sub { font-size:10px; opacity:.8; margin-top:2px; }
+  .section-header .sh-count { margin-left:auto; font-size:22px; font-weight:800; opacity:.9; }
+
+  /* Field table */
+  .field-table { width:100%; border-collapse:collapse; margin-bottom:32px; }
+  .field-table thead tr { background:#f3f4f6; border-bottom:2px solid #d1d5db; }
+  .field-table th { padding:7px 10px; text-align:left; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#374151; }
+  .field-table td { padding:6px 10px; border-bottom:1px solid #f0f0f0; vertical-align:top; }
+  .field-table tbody tr:nth-child(even) { background:#fafafa; }
+
+  .field-name { font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:600; color:#1e3a5f; white-space:nowrap; }
+  .field-label { font-weight:600; font-size:10.5px; }
+  .field-desc { color:#374151; line-height:1.5; font-size:10px; }
+  .field-type { font-size:9.5px; font-weight:600; padding:2px 7px; border-radius:10px; white-space:nowrap; display:inline-block; }
+  .type-text    { background:#dbeafe; color:#1e40af; }
+  .type-number  { background:#dcfce7; color:#166534; }
+  .type-bool    { background:#f3e8ff; color:#6b21a8; }
+  .type-select  { background:#fef9c3; color:#854d0e; }
+  .type-date    { background:#ffedd5; color:#9a3412; }
+
+  .req-tag { font-size:9px; font-weight:700; padding:1px 6px; border-radius:8px; margin-top:3px; display:inline-block; }
+  .req-always  { background:#fee2e2; color:#991b1b; }
+  .req-cond    { background:#fef3c7; color:#92400e; }
+  .req-opt     { background:#d1fae5; color:#065f46; }
+
+  .affects { font-size:9.5px; color:var(--muted); margin-top:2px; }
+  .affects strong { color:var(--text); }
+
+  /* Page header */
+  .page-header { padding:14px 20px 12px; margin-bottom:16px; border-bottom:2px solid var(--navy); display:flex; align-items:baseline; gap:14px; }
+  .page-header h3 { font-size:18px; font-weight:700; color:var(--navy); }
+  .page-header-sub { font-size:11px; color:var(--muted); }
+
+  .page-body { padding:0 24px 32px; }
+
+  /* Legend */
+  .legend { display:flex; gap:12px; flex-wrap:wrap; margin:16px 0 24px; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:10px; }
+
+  /* Notes box */
+  .note-box { background:#eff6ff; border-left:4px solid #1a56db; border-radius:4px; padding:12px 16px; margin:16px 0; font-size:10px; color:#1e40af; line-height:1.6; }
+  .warn-box  { background:#fefce8; border-left:4px solid #ca8a04; border-radius:4px; padding:12px 16px; margin:16px 0; font-size:10px; color:#713f12; line-height:1.6; }
+
+  /* Print */
+  @media print {
+    body { font-size:9.5px; }
+    .cover { min-height:100vh; }
+  }
+  @page { size:letter; margin:0.45in 0.55in; }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-badge">ResolutionIQ — Technical Reference</div>
+  <h1><span>Field Reference</span> Guide</h1>
+  <div class="cover-sub">Every Input Field Explained · Valid Values · Eligibility Impact</div>
+  <div class="cover-stats">
+    <div><div class="cover-stat-num">110+</div><div class="cover-stat-label">Input Fields</div></div>
+    <div><div class="cover-stat-num">8</div><div class="cover-stat-label">Field Sections</div></div>
+    <div><div class="cover-stat-num">5</div><div class="cover-stat-label">Investors Covered</div></div>
+  </div>
+  <div class="cover-meta">
+    ResolutionIQ v1.0 · March 2026 · For servicer implementation and onboarding use<br>
+    Sections: Common · Financial · Dates · Delinquency · Hardship & Property · FHA · USDA · FNMA · FHLMC · VA
+  </div>
+</div>
+
+<!-- HOW TO USE -->
+<div class="how-page">
+  <div class="page-header"><h3>How to Use This Guide</h3><span class="page-header-sub">Field conventions, required vs. optional, data types</span></div>
+  <div class="page-body">
+
+    <div class="legend">
+      <div class="legend-item"><span class="req-tag req-always">Required</span><span>Must be provided for any evaluation</span></div>
+      <div class="legend-item"><span class="req-tag req-cond">Conditional</span><span>Required only in specific scenarios</span></div>
+      <div class="legend-item"><span class="req-tag req-opt">Optional</span><span>Enhances output but not blocking</span></div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><span class="field-type type-text">Text</span><span>Free text string</span></div>
+      <div class="legend-item"><span class="field-type type-number">Number</span><span>Numeric value (dollar amount, rate, count)</span></div>
+      <div class="legend-item"><span class="field-type type-bool">Boolean</span><span>true / false toggle</span></div>
+      <div class="legend-item"><span class="field-type type-select">Select</span><span>Pick from a defined list of values</span></div>
+      <div class="legend-item"><span class="field-type type-date">Date</span><span>YYYY-MM-DD format</span></div>
+    </div>
+
+    <div class="note-box">
+      <strong>Engine behavior with missing data:</strong> Fields left blank are treated as their default value (shown in the "Valid Values / Default" column). Boolean fields default to false unless noted otherwise. Numeric fields default to 0. Missing critical fields (e.g., DLQ months, UPB) will result in most options being ineligible — always populate the core financial and delinquency fields for a meaningful evaluation.
+    </div>
+
+    <div class="warn-box">
+      <strong>Investor-specific fields:</strong> Fields prefixed with <code>fnma</code>, <code>fhlmc</code>, <code>usda</code>, or <code>va</code> only affect the named investor's evaluation. Common fields (no prefix) affect all investors. When evaluating a loan, populate the common fields plus the investor-specific section matching the loan's investor.
+    </div>
+
+    <table class="field-table" style="margin-top:16px">
+      <thead><tr>
+        <th width="110">Field Name</th><th width="140">UI Label</th><th>Description &amp; Purpose</th>
+        <th width="55">Type</th><th width="65">Req?</th><th width="130">Valid Values / Default</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="field-name">loanType</td><td class="field-label">Investor / Loan Type</td>
+          <td class="field-desc">Determines which investor engine to run. This is the primary routing field — all evaluation logic branches from this value.</td>
+          <td><span class="field-type type-select">Select</span></td><td><span class="req-tag req-always">Required</span></td>
+          <td class="field-desc"><strong>FHA</strong> · FNMA · FHLMC · VA · USDA<br>Default: FHA</td></tr>
+        <tr><td class="field-name">loanNumber</td><td class="field-label">Loan Number</td>
+          <td class="field-desc">Servicer loan number for reference/audit purposes. Does not affect eligibility logic.</td>
+          <td><span class="field-type type-text">Text</span></td><td><span class="req-tag req-opt">Optional</span></td>
+          <td class="field-desc">Any string. Appears in output header.</td></tr>
+        <tr><td class="field-name">borrowerName</td><td class="field-label">Borrower Name</td>
+          <td class="field-desc">Borrower name for reference. Does not affect eligibility logic.</td>
+          <td><span class="field-type type-text">Text</span></td><td><span class="req-tag req-opt">Optional</span></td>
+          <td class="field-desc">Any string.</td></tr>
+      </tbody>
+    </table>
+
+    <div style="font-size:11px;font-weight:700;color:var(--navy);margin:16px 0 8px">Organization of Remaining Sections</div>
+    <table class="field-table">
+      <thead><tr><th>Section</th><th>Fields</th><th>Applies To</th></tr></thead>
+      <tbody>
+        <tr><td class="field-label">1. Financial</td><td class="field-desc">UPB, payments, income, expenses, arrearages, rates, caps</td><td class="field-desc">All investors</td></tr>
+        <tr><td class="field-label">2. Dates</td><td class="field-desc">Note date, first payment date, maturity date, approval date</td><td class="field-desc">All investors</td></tr>
+        <tr><td class="field-label">3. Delinquency</td><td class="field-desc">DLQ months, DLQ days, prior deferral/mod history</td><td class="field-desc">All investors</td></tr>
+        <tr><td class="field-label">4. Hardship &amp; Property</td><td class="field-desc">Hardship type, duration, property condition, disposition, intent</td><td class="field-desc">All investors</td></tr>
+        <tr><td class="field-label">5. Modification Flags</td><td class="field-desc">Affordability, payment targets, PFS/DIL conditions, foreclosure</td><td class="field-desc">All investors</td></tr>
+        <tr><td class="field-label">6. FHA-Specific</td><td class="field-desc">Disaster flags, PC balance, forbearance triggers, Payment Supplement cooldown</td><td class="field-desc">FHA only</td></tr>
+        <tr><td class="field-label">7. USDA-Specific</td><td class="field-desc">UPB at initial default, MRA cap, mod count, BRP, step 3 deferral</td><td class="field-desc">USDA only</td></tr>
+        <tr><td class="field-label">8. FNMA-Specific</td><td class="field-desc">Loan age, property type, ID flags, deferral history, MTMLTV inputs, FICO</td><td class="field-desc">FNMA only</td></tr>
+        <tr><td class="field-label">9. FHLMC-Specific</td><td class="field-desc">Loan age, mortgage type, solicitation flag, Bulletin 2026-2 disaster gate, FICO</td><td class="field-desc">FHLMC only</td></tr>
+        <tr><td class="field-label">10. VA-Specific</td><td class="field-desc">RPP, forbearance history, PDMA, disaster at-disaster DLQ, mod seasoning</td><td class="field-desc">VA only</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- SECTION 1: FINANCIAL -->
+<div class="section-break">
+  <div class="section-header" style="background:var(--navy)">
+    <div><h2>Section 1 — Financial Fields</h2><div class="sh-sub">Core loan financials · Apply to all 5 investors</div></div>
+    <div class="sh-count">17</div>
+  </div>
+  <div class="page-body" style="padding-top:16px">
+    <table class="field-table">
+      <thead><tr><th width="140">Field Name</th><th width="155">UI Label</th><th>Description &amp; Eligibility Impact</th><th width="55">Type</th><th width="65">Req?</th><th width="135">Values / Default</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">upb</td><td class="field-label">Current UPB</td>
+          <td class="field-desc">Unpaid principal balance as of the evaluation date. Used in partial claim cap calculations (FHA 30% cap), MTMLTV (FNMA/FHLMC), MRA cap (USDA), and to compute post-modification payment amounts.<br><span class="affects"><strong>Affects:</strong> FHA PC cap, FNMA/FHLMC MTMLTV, USDA MRA cap, all mod term calculations</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">Dollar amount. e.g., 187450<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">originalUpb</td><td class="field-label">Original UPB</td>
+          <td class="field-desc">UPB at origination. Used for FHA partial claim 30% statutory cap calculation (cap = 30% × originalUpb).<br><span class="affects"><strong>Affects:</strong> FHA — PC eligibility and cap amount</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Dollar amount.<br>Required for FHA partial claim cap check.</td></tr>
+
+        <tr><td class="field-name">currentPI</td><td class="field-label">Current P&amp;I Payment</td>
+          <td class="field-desc">Current monthly principal and interest payment. Used to assess affordability (repayment plan, reinstatement) and as the baseline for modification payment reduction targets.<br><span class="affects"><strong>Affects:</strong> All investors — repayment plan affordability, mod payment comparison</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">Dollar amount.<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">currentPITI</td><td class="field-label">Current PITIA</td>
+          <td class="field-desc">Current total monthly payment (P&I + taxes + insurance + association dues). Used for PITIA/GMI ratio tests (≤ 40% target for modifications) and affordability assessments.<br><span class="affects"><strong>Affects:</strong> FHA — mod payment target test; FNMA/FHLMC — housing expense ratio</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">Dollar amount.<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">currentEscrow</td><td class="field-label">Monthly Escrow</td>
+          <td class="field-desc">Current monthly escrow amount (taxes + insurance). Used in PITIA build-up and mod payment calculations.<br><span class="affects"><strong>Affects:</strong> All — mod payment computation</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Dollar amount.<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">grossMonthlyIncome</td><td class="field-label">Gross Monthly Income</td>
+          <td class="field-desc">Borrower's total verified gross monthly income. Critical for PITIA/GMI ratio (≤ 40% target), combo payment test (FHA 40yr combo ≤ 40% GMI), USDA DTI test (≤ 55%), and payment supplement combo payment test.<br><span class="affects"><strong>Affects:</strong> All investors — payment-to-income ratio eligibility gates</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">Dollar/month.<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">monthlyExpenses</td><td class="field-label">Total Monthly Expenses</td>
+          <td class="field-desc">Total monthly debt obligations excluding housing. Used for USDA net income test (borrower must have positive net income after expenses for Informal Repayment Plan).<br><span class="affects"><strong>Affects:</strong> USDA — Informal Repayment Plan net income gate</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Dollar/month.<br>Required for USDA Repayment Plan.</td></tr>
+
+        <tr><td class="field-name">cashReservesAmount</td><td class="field-label">Cash Reserves ($)</td>
+          <td class="field-desc">Total liquid assets available. Used in imminent default Rule 1 for FNMA (< 3 months PITIA) and FHLMC (< $25,000 threshold).<br><span class="affects"><strong>Affects:</strong> FNMA/FHLMC — Imminent Default determination</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Dollar amount. Required for FNMA/FHLMC ID evaluation.</td></tr>
+
+        <tr><td class="field-name">currentInterestRate</td><td class="field-label">Current Note Rate (%)</td>
+          <td class="field-desc">Current interest rate on the note. Used to compare against PMMS rate for modification rate reduction steps (must reduce by at least 12.5 bps for FNMA/FHLMC).<br><span class="affects"><strong>Affects:</strong> FNMA/FHLMC — Flex Mod rate reduction step eligibility</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Percent. e.g., 6.875<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">pmmsRate</td><td class="field-label">PMMS Rate (%)</td>
+          <td class="field-desc">Freddie Mac Primary Mortgage Market Survey weekly average rate at time of evaluation. VA uses this for mod rate test (PMMS ≤ current rate + 1%). FNMA/FHLMC use investor-published modification rates instead.<br><span class="affects"><strong>Affects:</strong> VA — modification rate eligibility</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Percent. Required for VA evaluations.</td></tr>
+
+        <tr><td class="field-name">modifiedPI</td><td class="field-label">Post-Mod P&amp;I Payment</td>
+          <td class="field-desc">Projected modified monthly P&I after applying the modification terms. Used to verify borrower can afford the modified payment and that modification achieves payment reduction targets.<br><span class="affects"><strong>Affects:</strong> VA — affordability; all mods — target payment verification</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Dollar amount. Input or auto-computed from rate/term.</td></tr>
+
+        <tr><td class="field-name">arrearagesToCapitalize</td><td class="field-label">Arrearages to Capitalize</td>
+          <td class="field-desc">Total missed P&I payments to be added to UPB at modification. Used in MTMLTV calculation (FNMA LL-2024-02), PC cap test (FHA), and post-mod UPB computation.<br><span class="affects"><strong>Affects:</strong> All mods — post-cap UPB; FHA — PC cap; FNMA/FHLMC — MTMLTV</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Dollar amount. Required for mod term calculations.</td></tr>
+
+        <tr><td class="field-name">legalFees</td><td class="field-label">Legal Fees to Capitalize</td>
+          <td class="field-desc">Attorney/legal fees incurred during delinquency that may be capitalized into the modified loan balance.<br><span class="affects"><strong>Affects:</strong> FNMA/FHLMC — MTMLTV; all mods — post-cap UPB</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-opt">Optional</span></td><td class="field-desc">Dollar amount. Default: 0</td></tr>
+
+        <tr><td class="field-name">escrowShortage</td><td class="field-label">Escrow Shortage</td>
+          <td class="field-desc">Escrow deficiency balance to be capitalized. Included in post-capitalization UPB for MTMLTV and PC cap tests.<br><span class="affects"><strong>Affects:</strong> FNMA/FHLMC — MTMLTV; FHA — PC cap computation</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-opt">Optional</span></td><td class="field-desc">Dollar amount. Default: 0</td></tr>
+
+        <tr><td class="field-name">priorPartialClaimBalance</td><td class="field-label">Prior Partial Claim Balance</td>
+          <td class="field-desc">Outstanding balance on any prior FHA partial claim. Added to new PC amount to test against the 30% statutory cap (sum of all partial claims ≤ 30% × originalUpb).<br><span class="affects"><strong>Affects:</strong> FHA — Partial Claim cap, Payment Supplement PC cap</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Dollar amount. Required for FHA PC/PS evaluation.</td></tr>
+
+        <tr><td class="field-name">targetPayment</td><td class="field-label">Target Monthly Payment</td>
+          <td class="field-desc">The target modified payment calculated as a percentage of GMI (typically 31–40% depending on investor). Engine uses this to determine whether re-amortization at various terms (360, 480 months) can achieve the target without rate reduction or principal forbearance.<br><span class="affects"><strong>Affects:</strong> FHA — 30yr vs 40yr combo eligibility routing</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Dollar amount. Required for FHA mod waterfall routing.</td></tr>
+
+        <tr><td class="field-name">repayMonths</td><td class="field-label">Repayment Plan Term (months)</td>
+          <td class="field-desc">Number of months over which arrearages will be repaid on top of regular payments. Must allow repayment within 24 months for FHA/VA; 12 months for USDA. Engine validates feasibility.<br><span class="affects"><strong>Affects:</strong> FHA/VA/USDA — Repayment Plan feasibility test</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Months. Typically 6–24.<br>Default: 24</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- SECTION 2: DATES -->
+<div class="section-break">
+  <div class="section-header" style="background:var(--navy)">
+    <div><h2>Section 2 — Date Fields</h2><div class="sh-sub">Loan dates · YYYY-MM-DD format · Used for age, seasoning, and maturity calculations</div></div>
+    <div class="sh-count">5</div>
+  </div>
+  <div class="page-body" style="padding-top:16px">
+    <table class="field-table">
+      <thead><tr><th width="160">Field Name</th><th width="150">UI Label</th><th>Description &amp; Eligibility Impact</th><th width="55">Type</th><th width="65">Req?</th><th width="130">Values / Default</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">noteDate</td><td class="field-label">Note Date</td>
+          <td class="field-desc">Date the mortgage note was executed. Used to compute loan age (months since origination), which gates FNMA/FHLMC Payment Deferral and Flex Mod (minimum 12 months).<br><span class="affects"><strong>Affects:</strong> FNMA/FHLMC — loan age gate (≥ 12 months required)</span></td>
+          <td><span class="field-type type-date">Date</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">YYYY-MM-DD<br>e.g., 2020-03-15</td></tr>
+
+        <tr><td class="field-name">noteFirstPaymentDate</td><td class="field-label">First Payment Date</td>
+          <td class="field-desc">Date of first scheduled payment. Used with noteTerm to compute remaining term (remaining = noteTerm − months elapsed since first payment). Drives all modification term and maturity calculations.<br><span class="affects"><strong>Affects:</strong> All mods — remaining term; FNMA — 36-month maturity guard for Payment Deferral</span></td>
+          <td><span class="field-type type-date">Date</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">YYYY-MM-DD</td></tr>
+
+        <tr><td class="field-name">noteTerm</td><td class="field-label">Original Loan Term (months)</td>
+          <td class="field-desc">Original term of the loan in months (e.g., 360 for 30-year, 240 for 20-year). Used with noteFirstPaymentDate to calculate remaining term.<br><span class="affects"><strong>Affects:</strong> All — remaining term calculation; VA Disaster Extend Mod — maturity extension cap</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Months. Typically 360.<br>Default: blank</td></tr>
+
+        <tr><td class="field-name">originalMaturityDate</td><td class="field-label">Original Maturity Date</td>
+          <td class="field-desc">Scheduled maturity date of the note. Used for VA Disaster Extend Modification to calculate the maximum allowable extension (cannot exceed original maturity + 12 months per Circular 26-24-3).<br><span class="affects"><strong>Affects:</strong> VA — Disaster Extend Mod maximum extension cap</span></td>
+          <td><span class="field-type type-date">Date</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">YYYY-MM-DD<br>Required for VA Disaster Extend Mod.</td></tr>
+
+        <tr><td class="field-name">approvalEffectiveDate</td><td class="field-label">Evaluation / Approval Date</td>
+          <td class="field-desc">Date as of which the loss mitigation evaluation is being conducted. Used as the reference point for remaining term calculations, DLQ measurement, and FNMA maturity guard (36 months before maturity).<br><span class="affects"><strong>Affects:</strong> All — anchor date for remaining term and maturity proximity tests</span></td>
+          <td><span class="field-type type-date">Date</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">YYYY-MM-DD<br>Defaults to current date if blank.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- SECTION 3: DELINQUENCY -->
+<div class="section-break">
+  <div class="section-header" style="background:var(--navy)">
+    <div><h2>Section 3 — Delinquency Fields</h2><div class="sh-sub">DLQ measurement · Prior workout history · All investors</div></div>
+    <div class="sh-count">4</div>
+  </div>
+  <div class="page-body" style="padding-top:16px">
+    <div class="note-box">DLQ is the most critical eligibility driver. Every investor has DLQ floor and ceiling thresholds for each option. Always populate both <code>delinquencyMonths</code> and <code>delinquencyDays</code> for precise evaluation — the engine uses months for most tests and days for USDA informal forbearance (360-day cap).</div>
+    <table class="field-table">
+      <thead><tr><th width="180">Field Name</th><th width="150">UI Label</th><th>Description &amp; Eligibility Impact</th><th width="55">Type</th><th width="65">Req?</th><th width="120">Values / Default</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">delinquencyMonths</td><td class="field-label">DLQ (Months)</td>
+          <td class="field-desc">Number of months the loan is delinquent (missed payments). Primary DLQ input for all eligibility tests. Key thresholds by investor:
+          <ul style="margin:4px 0 0 16px;font-size:9.5px;line-height:1.7">
+            <li><strong>FHA:</strong> 0 = Reinstatement only; 3–12 = Deferral; any = Mod; ≥12 = Forbearance/Repayment blocked</li>
+            <li><strong>USDA:</strong> 0 = Reinstatement only; ≥1 = Repayment; ≥3 = Streamline Mod (90d); ≤12 = Special Forbearance</li>
+            <li><strong>VA:</strong> ≥1 = Reinstatement; ≥2 (30d) = Repayment; ≥3 (61d) = Modification</li>
+            <li><strong>FNMA:</strong> 2–6 = Payment Deferral; 2–12 = Standard Flex Mod; ≥3 = Streamlined; 0 with ID = Flex Mod</li>
+            <li><strong>FHLMC:</strong> 2–6 = Payment Deferral; 2+ = Standard Flex Mod; ≥3 = Streamlined; ≥3 disaster eval = Disaster Flex Mod</li>
+          </ul></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">Integer months.<br>e.g., 4<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">delinquencyDays</td><td class="field-label">DLQ (Days)</td>
+          <td class="field-desc">Delinquency expressed in calendar days. Used for USDA Informal Forbearance 360-day cap (must be < 360 days), VA 61-day minimum for modifications, and FHLMC disaster dual-DLQ gate (Bulletin 2026-2: ≥ 90 days at evaluation).<br><span class="affects"><strong>Affects:</strong> USDA — Informal Forbearance cap; VA — 61-day modification floor; FHLMC — Disaster Flex Mod evaluation-date gate</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Integer days.<br>e.g., 120<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">fnmaCumulativeDeferredMonths /<br>fhlmcCumulativeDeferredMonths</td><td class="field-label">Cumulative Deferred Months</td>
+          <td class="field-desc">Total number of months previously deferred (across all prior Payment Deferrals on this loan). Must be &lt; 12 months for another deferral to be eligible. FNMA and FHLMC each have their own field.<br><span class="affects"><strong>Affects:</strong> FNMA/FHLMC — Payment Deferral cumulative cap (12-month lifetime limit)</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Integer months.<br>0–12. Default: 0</td></tr>
+
+        <tr><td class="field-name">fnmaPriorDeferralMonths /<br>fhlmcPriorDeferralMonths</td><td class="field-label">Months Since Last Deferral</td>
+          <td class="field-desc">Number of months elapsed since the most recent Payment Deferral on this loan. Must be ≥ 12 months for a new deferral to be eligible (12-month prior spacing requirement).<br><span class="affects"><strong>Affects:</strong> FNMA/FHLMC — Payment Deferral 12-month prior-deferral spacing gate</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Integer months.<br>Default: 24 (FNMA), 0 (FHLMC)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- SECTION 4: HARDSHIP & PROPERTY -->
+<div class="section-break">
+  <div class="section-header" style="background:var(--navy)">
+    <div><h2>Section 4 — Hardship &amp; Property Fields</h2><div class="sh-sub">Hardship classification · Property status · Borrower intent · All investors</div></div>
+    <div class="sh-count">9</div>
+  </div>
+  <div class="page-body" style="padding-top:16px">
+    <table class="field-table">
+      <thead><tr><th width="180">Field Name</th><th width="150">UI Label</th><th>Description &amp; Eligibility Impact</th><th width="55">Type</th><th width="65">Req?</th><th width="130">Values / Default</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">hardshipType</td><td class="field-label">Hardship Type</td>
+          <td class="field-desc">Nature of the financial hardship. Disaster hardship routes borrowers to disaster-specific options (Disaster Mod, Disaster Forbearance, Disaster Extend Mod) and typically blocks standard retention options. All non-disaster types route to standard waterfall.<br><span class="affects"><strong>Affects:</strong> All investors — primary routing between standard and disaster option sets</span></td>
+          <td><span class="field-type type-select">Select</span></td><td><span class="req-tag req-always">Required</span></td>
+          <td class="field-desc">Reduction in Income · Job Loss · Excessive Obligations · Disaster · Death · Divorce · Medical · Other<br>Default: Reduction in Income</td></tr>
+
+        <tr><td class="field-name">hardshipDuration</td><td class="field-label">Hardship Duration</td>
+          <td class="field-desc">Whether the hardship is short-term, long-term, or resolved. Critical routing field:
+          <ul style="margin:4px 0 0 14px;font-size:9.5px;line-height:1.7">
+            <li><strong>Resolved:</strong> Enables Repayment Plan, Payment Deferral (hardship must be resolved)</li>
+            <li><strong>Short Term:</strong> Enables Informal Forbearance (USDA); blocks VA Compromise Sale</li>
+            <li><strong>Long Term:</strong> Enables modification paths; enables Special Forbearance (VA); blocks Repayment Plan for some investors</li>
+          </ul></td>
+          <td><span class="field-type type-select">Select</span></td><td><span class="req-tag req-always">Required</span></td>
+          <td class="field-desc">Resolved · Short Term · Long Term<br>Default: Resolved</td></tr>
+
+        <tr><td class="field-name">borrowerIntentRetention</td><td class="field-label">Borrower Intent: Retain</td>
+          <td class="field-desc">Whether the borrower intends to keep the property. Retention intent opens modification, forbearance, repayment, and deferral paths. When false, liquidation options (Short Sale, DIL, PFS) become available and most retention options are blocked.<br><span class="affects"><strong>Affects:</strong> All investors — retention vs. liquidation pathway gate</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">true = retain<br>false = dispose<br>Default: true</td></tr>
+
+        <tr><td class="field-name">propertyCondition</td><td class="field-label">Property Condition</td>
+          <td class="field-desc">Physical condition of the property. Condemned or abandoned properties block most retention options across all investors.<br><span class="affects"><strong>Affects:</strong> All investors — Forbearance Plan (FNMA/FHLMC); Repayment Plan (FNMA); general retention eligibility</span></td>
+          <td><span class="field-type type-select">Select</span></td><td><span class="req-tag req-always">Required</span></td>
+          <td class="field-desc">Standard · Condemned · Substantially Damaged · Abandoned<br>Default: Standard</td></tr>
+
+        <tr><td class="field-name">propertyDisposition</td><td class="field-label">Property Type / Occupancy</td>
+          <td class="field-desc">Occupancy type of the property. Principal Residence opens the full option set. Non-primary (second home, investment) restricts or blocks many options:
+          <ul style="margin:4px 0 0 14px;font-size:9.5px;line-height:1.7">
+            <li><strong>FNMA:</strong> Non-principal residence requires 60+ DLQ (no imminent default path); advisory node displayed</li>
+            <li><strong>FHLMC:</strong> Investment property requires DLQ ≥ 2 for Flex Mod; prior written approval advisory for some terms</li>
+            <li><strong>FHA:</strong> Non-principal residence blocks standard modification options</li>
+          </ul></td>
+          <td><span class="field-type type-select">Select</span></td><td><span class="req-tag req-always">Required</span></td>
+          <td class="field-desc">Principal Residence · Second Home · Investment Property<br>Default: Principal Residence</td></tr>
+
+        <tr><td class="field-name">occupancyStatus</td><td class="field-label">Occupancy Status</td>
+          <td class="field-desc">Whether borrower currently occupies the property. Abandoned status blocks FNMA Forbearance Plan.<br><span class="affects"><strong>Affects:</strong> FNMA — Forbearance Plan</span></td>
+          <td><span class="field-type type-select">Select</span></td><td><span class="req-tag req-always">Required</span></td>
+          <td class="field-desc">Owner Occupied · Tenant Occupied · Vacant · Abandoned<br>Default: Owner Occupied</td></tr>
+
+        <tr><td class="field-name">foreclosureActive</td><td class="field-label">Active Foreclosure</td>
+          <td class="field-desc">Whether foreclosure proceedings are currently active. Active foreclosure blocks VA reinstatement (unless borrower can cure). May block other options depending on investor guidelines and state law.<br><span class="affects"><strong>Affects:</strong> VA — Reinstatement eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">true / false<br>Default: false</td></tr>
+
+        <tr><td class="field-name">lienPosition</td><td class="field-label">Lien Position</td>
+          <td class="field-desc">Whether the subject mortgage is in first or second lien position. First lien is standard. Second lien or subordinate position may affect investor eligibility rules.<br><span class="affects"><strong>Affects:</strong> General eligibility routing</span></td>
+          <td><span class="field-type type-select">Select</span></td><td><span class="req-tag req-always">Required</span></td>
+          <td class="field-desc">First · Second<br>Default: First</td></tr>
+
+        <tr><td class="field-name">propertyListedForSale</td><td class="field-label">Property Listed for Sale</td>
+          <td class="field-desc">Whether the property is currently listed on the market. Blocks USDA Streamline Modification (§18.7 — property listed for sale is a hard disqualifier).<br><span class="affects"><strong>Affects:</strong> USDA — Streamline Modification eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">true / false<br>Default: false</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- SECTION 5: MODIFICATION FLAGS -->
+<div class="section-break">
+  <div class="section-header" style="background:var(--navy)">
+    <div><h2>Section 5 — Modification &amp; Affordability Flags</h2><div class="sh-sub">Affordability confirmations · Payment targets · PFS/DIL conditions · All investors</div></div>
+    <div class="sh-count">12</div>
+  </div>
+  <div class="page-body" style="padding-top:16px">
+    <table class="field-table">
+      <thead><tr><th width="210">Field Name</th><th width="145">UI Label</th><th>Description &amp; Eligibility Impact</th><th width="55">Type</th><th width="65">Req?</th><th width="120">Default</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">canAchieveTargetByReamort</td><td class="field-label">360mo re-amort achieves target?</td>
+          <td class="field-desc">Whether re-amortizing the loan over 360 months (30 years) achieves the target modified payment without rate reduction. If true, FHA 30-Year Mod is eligible at current rate. If false, rate reduction or 40-year term is needed.<br><span class="affects"><strong>Affects:</strong> FHA — 30-Year Mod waterfall routing</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: true</td></tr>
+
+        <tr><td class="field-name">canAchieveTargetBy480Reamort</td><td class="field-label">480mo re-amort achieves target?</td>
+          <td class="field-desc">Whether re-amortizing over 480 months (40 years) achieves the target payment. Required to be TRUE for the FHA 40-Year Combination Mod + Partial Claim to be eligible (360-month must fail, 480-month must succeed).<br><span class="affects"><strong>Affects:</strong> FHA — 40-Year Combo eligibility (both conditions required)</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">borrowerConfirmedCannotAffordCurrent</td><td class="field-label">Cannot Afford Current Payment</td>
+          <td class="field-desc">Borrower confirmation (via BRP or QRPC) that they cannot afford the current mortgage payment. Required for VA Traditional Modification — must be documented before modification is offered.<br><span class="affects"><strong>Affects:</strong> VA — Traditional Modification eligibility gate</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">borrowerCanAffordModifiedPayment</td><td class="field-label">Can Afford Modified Payment</td>
+          <td class="field-desc">Borrower can sustain the projected modified payment going forward. Required as a positive gate for VA modifications (Traditional, 30-Year, 40-Year).<br><span class="affects"><strong>Affects:</strong> VA — all modification options</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">borrowerCanAffordCurrentMonthly</td><td class="field-label">Can Afford Current Monthly</td>
+          <td class="field-desc">Whether the borrower can afford their current monthly payment. VA 30-Year Mod requires this to be FALSE (modification is only offered when borrower cannot sustain current payment).<br><span class="affects"><strong>Affects:</strong> VA — 30-Year Modification eligibility (must be false)</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">borrowerCanAffordReinstateOrRepay</td><td class="field-label">Can Afford Reinstatement/Repayment</td>
+          <td class="field-desc">Whether borrower can lump-sum reinstate or afford a repayment plan. Required for Reinstatement (must be TRUE) and Repayment Plan eligibility (feasibility check).<br><span class="affects"><strong>Affects:</strong> All investors — Reinstatement and Repayment Plan eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">canRepayWithin24Months</td><td class="field-label">Can Repay Arrears Within 24 Months</td>
+          <td class="field-desc">Whether arrearages can be fully repaid within 24 months through a repayment plan (on top of regular payments). FHA requires this for Repayment Plan eligibility.<br><span class="affects"><strong>Affects:</strong> FHA — Repayment Plan feasibility gate</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: true</td></tr>
+
+        <tr><td class="field-name">canRepayWithin6Months</td><td class="field-label">Can Repay Within 6 Months</td>
+          <td class="field-desc">FHA Formal Forbearance requires either: (a) borrower can repay within 6 months, or (b) servicer specifically requested forbearance for the borrower. This flag drives that gate.<br><span class="affects"><strong>Affects:</strong> FHA — Formal Forbearance eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">meetsPFSRequirements</td><td class="field-label">Meets PFS/Short Sale Requirements</td>
+          <td class="field-desc">Whether the borrower and property meet the investor's requirements for a pre-foreclosure sale (arm's-length transaction, valid purchase offer, BPO/appraisal completed, etc.).<br><span class="affects"><strong>Affects:</strong> FHA — Pre-Foreclosure Sale; FNMA — Short Sale; FHLMC — Short Sale; USDA — Compromise Sale; VA — Compromise Sale</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">meetsDILRequirements</td><td class="field-label">Meets DIL Requirements</td>
+          <td class="field-desc">Whether the property and title meet deed-in-lieu requirements (clear title, no junior liens, property in marketable condition, investor approval).<br><span class="affects"><strong>Affects:</strong> All investors — Deed-in-Lieu / Mortgage Release eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">failedTPP</td><td class="field-label">Prior Failed TPP (any investor)</td>
+          <td class="field-desc">General flag for a failed trial period plan. Used for FHA Repayment Plan block. FNMA and FHLMC use investor-specific TPP fields (<code>fnmaFailedTPP12Months</code>, <code>fhlmcFailedFlexTPP12Mo</code>) for the 12-month bar.<br><span class="affects"><strong>Affects:</strong> FHA — Repayment Plan; USDA — Streamline Mod</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">priorWorkoutCompromiseSaleFailed</td><td class="field-label">Prior Comp Sale Failed</td>
+          <td class="field-desc">Whether a prior compromise sale / pre-foreclosure sale was attempted and failed on this loan. Required prerequisite for Deed-in-Lieu across FHA, VA, and USDA (DIL is the last-resort liquidation option after PFS/Comp Sale fails).<br><span class="affects"><strong>Affects:</strong> FHA/VA/USDA — Deed-in-Lieu eligibility gate</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- SECTION 6: FHA-SPECIFIC -->
+<div class="section-break">
+  <div class="section-header" style="background:var(--fha)">
+    <div><h2>Section 6 — FHA-Specific Fields</h2><div class="sh-sub">HUD 4000.1 · ML 2023-05 · ML 2024-02 / ML 2025-06 (Payment Supplement)</div></div>
+    <div class="sh-count">14</div>
+  </div>
+  <div class="page-body" style="padding-top:16px">
+    <table class="field-table">
+      <thead><tr><th width="200">Field Name</th><th width="150">UI Label</th><th>Description &amp; Eligibility Impact</th><th width="55">Type</th><th width="65">Req?</th><th width="110">Default</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">priorFHAHAMPMonths</td><td class="field-label">Months Since Prior FHA Mod</td>
+          <td class="field-desc">Number of months elapsed since the most recent FHA Home Retention modification. Must be ≥ 24 months for a new standard modification to be eligible (24-month hardship resolution cooldown per HUD 4000.1).<br><span class="affects"><strong>Affects:</strong> FHA — all modification options (24-month cooldown)</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Months. Default: blank (no prior)</td></tr>
+
+        <tr><td class="field-name">priorFHAPaymentSupplementMonths</td><td class="field-label">Months Since Prior Payment Supplement</td>
+          <td class="field-desc">Months elapsed since prior FHA Payment Supplement. Must be ≥ 36 months (PS-specific cooldown per ML 2024-02 — stricter than the general 24-month mod cooldown). Enter 0 if no prior PS.<br><span class="affects"><strong>Affects:</strong> FHA — Payment Supplement eligibility (36-month PS-specific cooldown)</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Months. Default: blank</td></tr>
+
+        <tr><td class="field-name">verifiedDisaster</td><td class="field-label">Verified Disaster</td>
+          <td class="field-desc">Whether hardship is attributable to a presidentially declared major disaster and the property is in the declared area. Enables FHA disaster-specific options (Disaster Standalone PC, Disaster Forbearance, Disaster Mod).<br><span class="affects"><strong>Affects:</strong> FHA — all disaster option eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">propertyInPDMA</td><td class="field-label">Property in PDMA</td>
+          <td class="field-desc">Whether the property is located within the Presidentially Declared Major Disaster Area (PDMA). Required alongside verifiedDisaster for FHA disaster options.<br><span class="affects"><strong>Affects:</strong> FHA — Disaster options (used with verifiedDisaster)</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">currentOrLe30DaysAtDisaster</td><td class="field-label">Current/≤30 DLQ at Disaster</td>
+          <td class="field-desc">Whether the loan was current or ≤ 30 days delinquent at the time of the disaster event. Required for FHA Disaster Forbearance and Disaster Modification eligibility.<br><span class="affects"><strong>Affects:</strong> FHA — Disaster Forbearance, Disaster Modification</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">principalResidencePreDisaster</td><td class="field-label">Principal Residence Pre-Disaster</td>
+          <td class="field-desc">Whether the property was the borrower's principal residence at the time of the disaster. Required for FHA disaster options.<br><span class="affects"><strong>Affects:</strong> FHA — Disaster option eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: true</td></tr>
+
+        <tr><td class="field-name">propertySubstantiallyDamaged</td><td class="field-label">Property Substantially Damaged</td>
+          <td class="field-desc">Whether the property sustained substantial damage in the disaster. Used in FHA disaster option routing (substantially damaged properties may be limited to certain options).<br><span class="affects"><strong>Affects:</strong> FHA — Disaster option routing</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fhaBorrowerCanResumePreHardship</td><td class="field-label">Can Resume Pre-Hardship Payment</td>
+          <td class="field-desc">Whether borrower can resume the pre-hardship payment amount. Required as a positive gate for FHA Standalone Partial Claim (borrower must demonstrate ability to resume payments).<br><span class="affects"><strong>Affects:</strong> FHA — Standalone Partial Claim eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fhaOwlBorrowerUnresponsive</td><td class="field-label">OWL — Borrower Unresponsive</td>
+          <td class="field-desc">FHA Owner Occupant Waiver of Loss flag. If borrower is unresponsive and servicer is processing under OWL provisions, Payment Supplement is blocked (requires QRPC/borrower engagement).<br><span class="affects"><strong>Affects:</strong> FHA — Payment Supplement (OWL unresponsive blocks)</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-opt">Optional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">comboPaymentLe40PctIncome</td><td class="field-label">Combo Payment ≤ 40% GMI</td>
+          <td class="field-desc">Pre-computed flag: combined modified payment (P&I + PC payment + escrow) is ≤ 40% of gross monthly income. Required for FHA 40-Year Combination Mod + Partial Claim eligibility.<br><span class="affects"><strong>Affects:</strong> FHA — 40-Year Combo Mod + PC eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">modPaymentLe40PctGMI</td><td class="field-label">Mod PITIA ≤ 40% GMI</td>
+          <td class="field-desc">Whether the projected modified PITIA is ≤ 40% of GMI. Standard mod payment target test (applies to 30-Year Mod, 40-Year Combo).<br><span class="affects"><strong>Affects:</strong> FHA — 30-Year Mod and 40-Year Combo payment ratio gate</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">requestedForbearance</td><td class="field-label">Servicer Requested Forbearance</td>
+          <td class="field-desc">Whether the servicer specifically identified and requested formal forbearance for this borrower (alternate gate for FHA Formal Forbearance when borrower cannot repay within 6 months).<br><span class="affects"><strong>Affects:</strong> FHA — Formal Forbearance (alternate eligibility gate)</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">ineligibleAllRetention</td><td class="field-label">Ineligible for All Retention</td>
+          <td class="field-desc">Servicer-confirmed that borrower is ineligible for all home retention options. This is a prerequisite to offering FHA Pre-Foreclosure Sale (PFS) in some scenarios.<br><span class="affects"><strong>Affects:</strong> FHA — PFS eligibility pathway</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-opt">Optional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">arrearsExceed30PctLimit</td><td class="field-label">Arrears Exceed 30% PC Cap</td>
+          <td class="field-desc">Pre-computed flag: total partial claim amount (new + prior balance) would exceed 30% of original UPB. When true, blocks FHA Standalone PC and Payment Supplement (PS uses a Partial Claim — ML 2024-02).<br><span class="affects"><strong>Affects:</strong> FHA — Standalone PC, Payment Supplement (30% statutory cap)</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- SECTION 7: USDA-SPECIFIC -->
+<div class="section-break">
+  <div class="section-header" style="background:var(--usda)">
+    <div><h2>Section 7 — USDA-Specific Fields</h2><div class="sh-sub">HB-1-3555 Ch. 18 · 7 CFR §3555.304 · Rural Development Guaranteed Loans</div></div>
+    <div class="sh-count">~18</div>
+  </div>
+  <div class="page-body" style="padding-top:16px">
+    <table class="field-table">
+      <thead><tr><th width="210">Field Name</th><th width="140">UI Label</th><th>Description &amp; Eligibility Impact</th><th width="55">Type</th><th width="65">Req?</th><th width="110">Default</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">usdaUpbGe5000</td><td class="field-label">UPB ≥ $5,000</td>
+          <td class="field-desc">Whether the current UPB is at least $5,000. Hard requirement for USDA Streamline Modification (§18.7).<br><span class="affects"><strong>Affects:</strong> USDA — Streamline Modification hard gate</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: true</td></tr>
+
+        <tr><td class="field-name">usdaNumPrevMods</td><td class="field-label">Number of Prior Mods</td>
+          <td class="field-desc">Count of prior USDA loan modifications on this loan. Must be fewer than 2 (0 or 1) for USDA Streamline Modification eligibility.<br><span class="affects"><strong>Affects:</strong> USDA — Streamline Modification (max 2 prior mods)</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">0, 1, or 2+<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">usdaUpbAtInitialDefault</td><td class="field-label">UPB at Initial Default</td>
+          <td class="field-desc">UPB as of the date of the borrower's initial default. Used as the basis for the 30% MRA (Mortgage Recovery Advance) cap calculation — MRA cannot exceed 30% of this amount per §3555.304.<br><span class="affects"><strong>Affects:</strong> USDA — Standalone MRA and Mod+MRA combo cap calculation</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Dollar amount. Required for MRA evaluation.</td></tr>
+
+        <tr><td class="field-name">usdaBorrowerCanResumeCurrent</td><td class="field-label">Can Resume Current Payment</td>
+          <td class="field-desc">Whether borrower can resume making the current contractual payment. Required positive gate for USDA Standalone MRA (borrower must demonstrate ability to resume current payment).<br><span class="affects"><strong>Affects:</strong> USDA — Standalone MRA eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">usdaBorrowerPositiveNetIncome</td><td class="field-label">Positive Net Income</td>
+          <td class="field-desc">Whether borrower has positive net income (GMI minus all monthly obligations > 0). Required for USDA Informal Repayment Plan.<br><span class="affects"><strong>Affects:</strong> USDA — Informal Repayment Plan eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: true</td></tr>
+
+        <tr><td class="field-name">usdaStep3DeferralRequired</td><td class="field-label">Step 3 Deferral Required</td>
+          <td class="field-desc">Whether the USDA Streamline Mod waterfall step 3 (MRA deferral) is necessary to achieve the target payment. When true, enables USDA Mod+MRA combo option. When false, Mod+MRA combo is ineligible.<br><span class="affects"><strong>Affects:</strong> USDA — Mod+MRA Combo eligibility gate</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">usdaTotalDTILe55</td><td class="field-label">Post-Mod DTI ≤ 55%</td>
+          <td class="field-desc">Whether the borrower's total debt-to-income ratio after modification is ≤ 55% (7 CFR §3555.304 general condition for USDA modifications).<br><span class="affects"><strong>Affects:</strong> USDA — Streamline Modification and Mod+MRA eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: true</td></tr>
+
+        <tr><td class="field-name">usdaDLQAt30AtDisaster</td><td class="field-label">Current/≤30 DLQ at Disaster</td>
+          <td class="field-desc">Whether the loan was current or ≤ 30 days DLQ at the time of the disaster event. Required for USDA Disaster Forbearance and Disaster Modification.<br><span class="affects"><strong>Affects:</strong> USDA — Disaster Forbearance, Disaster Modification</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">usdaPrevWorkoutForbearance</td><td class="field-label">Prior Forbearance Workout</td>
+          <td class="field-desc">Whether borrower previously completed a USDA disaster forbearance. May be required as a prerequisite for USDA Disaster Modification.<br><span class="affects"><strong>Affects:</strong> USDA — Disaster Modification prerequisite</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">usdaHardshipDurationResolved</td><td class="field-label">Hardship Duration Resolved (USDA)</td>
+          <td class="field-desc">USDA-specific resolved hardship flag. Enables USDA Informal Repayment Plan (requires resolved hardship).<br><span class="affects"><strong>Affects:</strong> USDA — Informal Repayment Plan</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">Default: true</td></tr>
+
+        <tr><td class="field-name">usdaPriorFailedStreamlineTPP</td><td class="field-label">Prior Failed Streamline TPP</td>
+          <td class="field-desc">Whether borrower failed a prior USDA Streamline Modification trial period plan. Failed TPP bars a new Streamline Modification.<br><span class="affects"><strong>Affects:</strong> USDA — Streamline Modification eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">usdaForeclosureSaleGe60Away</td><td class="field-label">Foreclosure Sale ≥ 60 Days Away</td>
+          <td class="field-desc">Whether foreclosure sale is at least 60 days in the future. Some USDA workout options require sufficient time to implement before a scheduled sale.<br><span class="affects"><strong>Affects:</strong> USDA — general workout eligibility timing</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: true</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- SECTION 8: FNMA-SPECIFIC -->
+<div class="section-break">
+  <div class="section-header" style="background:var(--fnma)">
+    <div><h2>Section 8 — FNMA-Specific Fields</h2><div class="sh-sub">Fannie Mae Servicing Guide D2-3 · LL-2021-01 · LL-2024-02 (MTMLTV)</div></div>
+    <div class="sh-count">~24</div>
+  </div>
+  <div class="page-body" style="padding-top:16px">
+    <table class="field-table">
+      <thead><tr><th width="210">Field Name</th><th width="140">UI Label</th><th>Description &amp; Eligibility Impact</th><th width="55">Type</th><th width="65">Req?</th><th width="110">Default</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">fnmaLoanAge</td><td class="field-label">Loan Age (months)</td>
+          <td class="field-desc">Months since loan origination. Must be ≥ 12 months for Payment Deferral and Flex Modification eligibility.<br><span class="affects"><strong>Affects:</strong> FNMA — Payment Deferral and Flex Mod (12-month minimum)</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">Months. e.g., 36</td></tr>
+
+        <tr><td class="field-name">fnmaPropertyType</td><td class="field-label">Property Type (FNMA)</td>
+          <td class="field-desc">Property occupancy for FNMA evaluation. Non-principal residence borrowers cannot use the imminent default path and require 60+ DLQ. Advisory node displayed for non-principal residence (D2-3.2-06).<br><span class="affects"><strong>Affects:</strong> FNMA — ID path availability; advisory node for non-primary</span></td>
+          <td><span class="field-type type-select">Select</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">Principal Residence · Second Home · Investment Property<br>Default: Principal Residence</td></tr>
+
+        <tr><td class="field-name">fnmaImminentDefault</td><td class="field-label">Imminent Default Documented</td>
+          <td class="field-desc">Whether imminent default has been determined per D2-3.2-06 requirements. Enables Flex Mod for current or 1-month DLQ borrowers (Rule 1 + Rule 2 both required). Payment Deferral via ID requires DLQ ≥ 2.<br><span class="affects"><strong>Affects:</strong> FNMA — Standard Flex Mod ID eligibility path</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fnmaFICO</td><td class="field-label">FICO Score</td>
+          <td class="field-desc">Borrower's FICO credit score. Used in FNMA Imminent Default Rule 2 determination (FICO ≤ 620 satisfies one Rule 2 criterion).<br><span class="affects"><strong>Affects:</strong> FNMA — Imminent Default Rule 2 (FICO ≤ 620)</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">300–850. Required for FNMA ID evaluation.</td></tr>
+
+        <tr><td class="field-name">fnmaHousingRatio</td><td class="field-label">Housing Expense Ratio (%)</td>
+          <td class="field-desc">Pre-modification housing expense ratio (current PITIA / GMI × 100). Used in FNMA Imminent Default Rule 2 (housing ratio > 55% satisfies one Rule 2 criterion).<br><span class="affects"><strong>Affects:</strong> FNMA — Imminent Default Rule 2 (ratio &gt; 55%)</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Percent. Required for FNMA ID evaluation.</td></tr>
+
+        <tr><td class="field-name">fnmaPrior30DLQ12Mo</td><td class="field-label">2+ Prior 30-Day DLQs in 12 Months</td>
+          <td class="field-desc">Whether borrower had 2 or more 30-day delinquencies in the past 12 months. Satisfies FNMA Imminent Default Rule 2 criteria.<br><span class="affects"><strong>Affects:</strong> FNMA — Imminent Default Rule 2</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fnmaLongTermHardship</td><td class="field-label">Long-Term/Permanent Hardship</td>
+          <td class="field-desc">Whether the hardship is long-term or permanent. Required as part of FNMA Imminent Default Rule 1 (must have long-term hardship to qualify for ID path).<br><span class="affects"><strong>Affects:</strong> FNMA — Imminent Default Rule 1</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fnmaCashReservesLt3Mo</td><td class="field-label">Cash Reserves &lt; 3 Months PITIA</td>
+          <td class="field-desc">Whether cash reserves are less than 3 months of current PITIA. Part of FNMA Imminent Default Rule 1.<br><span class="affects"><strong>Affects:</strong> FNMA — Imminent Default Rule 1</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fnmaPropertyValue</td><td class="field-label">Estimated Property Value</td>
+          <td class="field-desc">Estimated current market value of the property. Used to compute post-capitalization MTMLTV per LL-2024-02. MTMLTV ≥ 50% enables rate reduction step; &gt; 50% enables principal forbearance step.<br><span class="affects"><strong>Affects:</strong> FNMA — Flex Mod MTMLTV informational audit node (LL-2024-02)</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-opt">Optional</span></td><td class="field-desc">Dollar amount. Enhances audit output.</td></tr>
+
+        <tr><td class="field-name">fnmaPriorModCount</td><td class="field-label">Prior Modification Count</td>
+          <td class="field-desc">Number of prior Fannie Mae modifications on this loan. Must be fewer than 3 for Standard Flex Mod eligibility.<br><span class="affects"><strong>Affects:</strong> FNMA — Flex Mod 3-prior-mod limit</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">0, 1, 2, 3+<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">fnmaFailedTPP12Months</td><td class="field-label">Failed TPP Within 12 Months</td>
+          <td class="field-desc">Whether a Fannie Mae Flex Mod trial period plan was cancelled by the servicer for non-performance within the past 12 months. Servicer-cancelled TPP bars next Flex Mod for 12 months.<br><span class="affects"><strong>Affects:</strong> FNMA — Flex Mod 12-month TPP bar; Payment Deferral (failed TPP also blocks)</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fnmaDisasterHardship</td><td class="field-label">Disaster Hardship (FNMA)</td>
+          <td class="field-desc">Whether borrower's hardship is attributable to a FEMA-declared disaster. Routes to FNMA disaster-specific options (Disaster Flex Mod, Disaster Payment Deferral) and blocks standard retention options.<br><span class="affects"><strong>Affects:</strong> FNMA — disaster vs. standard option routing</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fnmaFEMADesignation</td><td class="field-label">FEMA Disaster Designation</td>
+          <td class="field-desc">Whether a FEMA Major Disaster Declaration covers the borrower's property location. Required for FNMA Disaster Flex Mod and Disaster Payment Deferral.<br><span class="affects"><strong>Affects:</strong> FNMA — Disaster Flex Mod, Disaster Payment Deferral</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fnmaDelinquencyAtDisaster</td><td class="field-label">DLQ at Time of Disaster (months)</td>
+          <td class="field-desc">Number of months DLQ at the time the disaster occurred. FNMA Disaster Flex Mod requires loan to be current or &lt; 2 months DLQ at disaster (same as FHLMC Bulletin 2026-2 standard).<br><span class="affects"><strong>Affects:</strong> FNMA — Disaster Flex Mod DLQ-at-disaster gate</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Months. 0=current.<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">fnmaWithin36MonthsMaturity</td><td class="field-label">Within 36 Months of Maturity</td>
+          <td class="field-desc">Whether the loan matures within the next 36 months. Loans within 36 months of maturity are ineligible for FNMA Payment Deferral (deferred amounts cannot be recovered).<br><span class="affects"><strong>Affects:</strong> FNMA — Payment Deferral maturity guard</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fnmaRecourseArrangement</td><td class="field-label">Recourse Arrangement</td>
+          <td class="field-desc">Whether a recourse arrangement or shared-appreciation agreement exists on the loan. Blocks both FNMA Flex Modification and Payment Deferral.<br><span class="affects"><strong>Affects:</strong> FNMA — Flex Mod and Payment Deferral (hard block)</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- SECTION 9: FHLMC-SPECIFIC -->
+<div class="section-break">
+  <div class="section-header" style="background:var(--fhlmc)">
+    <div><h2>Section 9 — FHLMC-Specific Fields</h2><div class="sh-sub">Freddie Mac Guide Ch. 9200 · Bulletin 2026-2 (Feb 11, 2026) — Disaster Flex Mod dual DLQ gate</div></div>
+    <div class="sh-count">~20</div>
+  </div>
+  <div class="page-body" style="padding-top:16px">
+    <div class="warn-box"><strong>Bulletin 2026-2 (effective Feb 11, 2026):</strong> The FHLMC Disaster Flex Modification now requires TWO DLQ conditions: (1) current or &lt; 60 DLQ at time of disaster, AND (2) ≥ 90 DLQ at evaluation date. Both <code>fhlmcDLQAtDisaster</code> and <code>delinquencyDays</code> must be populated for correct Disaster Flex Mod evaluation.</div>
+    <table class="field-table">
+      <thead><tr><th width="210">Field Name</th><th width="140">UI Label</th><th>Description &amp; Eligibility Impact</th><th width="55">Type</th><th width="65">Req?</th><th width="110">Default</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">fhlmcLoanAge</td><td class="field-label">Loan Age (months)</td>
+          <td class="field-desc">Months since loan origination. Must be ≥ 12 months for Payment Deferral and Flex Modification eligibility.<br><span class="affects"><strong>Affects:</strong> FHLMC — Payment Deferral and Flex Mod (12-month minimum)</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">Months.<br>Default: 24</td></tr>
+
+        <tr><td class="field-name">fhlmcMortgageType</td><td class="field-label">Mortgage Type</td>
+          <td class="field-desc">Loan type/insurance type. Flex Modification is only available for Conventional loans — FHA, VA, and RHS (USDA) loans are not eligible for FHLMC Flex Mod.<br><span class="affects"><strong>Affects:</strong> FHLMC — Flex Mod hard gate (Conventional only)</span></td>
+          <td><span class="field-type type-select">Select</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">Conventional · FHA · VA · RHS<br>Default: Conventional</td></tr>
+
+        <tr><td class="field-name">fhlmcPropertyType</td><td class="field-label">Property Type (FHLMC)</td>
+          <td class="field-desc">Property occupancy type. Investment properties require DLQ ≥ 2 months for Flex Mod (no ID path). Advisory node displayed for non-primary residence per §9206.2.<br><span class="affects"><strong>Affects:</strong> FHLMC — Flex Mod ID path; non-primary advisory</span></td>
+          <td><span class="field-type type-select">Select</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">Primary Residence · Second Home · Investment Property<br>Default: Primary Residence</td></tr>
+
+        <tr><td class="field-name">fhlmcImminentDefault</td><td class="field-label">Imminent Default (FHLMC)</td>
+          <td class="field-desc">Whether imminent default has been determined per FHLMC §9203.2 criteria (Rule 1 + Rule 2). Enables Standard Flex Mod for current or under-DLQ-threshold borrowers on primary residence.<br><span class="affects"><strong>Affects:</strong> FHLMC — Standard Flex Mod ID eligibility path</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fhlmcFICO</td><td class="field-label">FICO Score (FHLMC)</td>
+          <td class="field-desc">Borrower's FICO credit score. FHLMC Imminent Default Rule 2: FICO ≤ 660 satisfies one Rule 2 criterion (note: FHLMC threshold is 660, vs. FNMA's 620).<br><span class="affects"><strong>Affects:</strong> FHLMC — Imminent Default Rule 2 (FICO ≤ 660)</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">300–850.<br>Default: 680</td></tr>
+
+        <tr><td class="field-name">fhlmcHousingExpenseRatio</td><td class="field-label">Housing Expense Ratio (%)</td>
+          <td class="field-desc">Pre-modification housing expense ratio (current PITIA / GMI × 100). FHLMC Imminent Default Rule 2: housing ratio &gt; 40% satisfies one Rule 2 criterion (FHLMC threshold: 40%, vs. FNMA's 55%).<br><span class="affects"><strong>Affects:</strong> FHLMC — Imminent Default Rule 2 (&gt;40%)</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Percent.</td></tr>
+
+        <tr><td class="field-name">fhlmcCashReservesLt25k</td><td class="field-label">Cash Reserves &lt; $25,000</td>
+          <td class="field-desc">Whether borrower's liquid assets are below $25,000. Part of FHLMC Imminent Default Rule 1 (primary residence + long-term hardship + reserves &lt; $25k).<br><span class="affects"><strong>Affects:</strong> FHLMC — Imminent Default Rule 1</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: true</td></tr>
+
+        <tr><td class="field-name">fhlmcPrior30DayDLQ6Mo</td><td class="field-label">2+ Prior 30-Day DLQs in 6 Months</td>
+          <td class="field-desc">Whether borrower had 2 or more 30-day delinquencies in the past 6 months. FHLMC Imminent Default Rule 2 criterion (note: FHLMC uses 6-month lookback vs. FNMA's 12-month).<br><span class="affects"><strong>Affects:</strong> FHLMC — Imminent Default Rule 2</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fhlmcStreamlinedSolicitation</td><td class="field-label">Solicitation Letter Sent (§9206.7)</td>
+          <td class="field-desc">Whether the servicer sent a solicitation letter to the borrower during the 90–105 DLQ window, as required by §9206.7. This is a HARD GATE for Streamlined Flex Mod — without it, the streamlined path is unavailable regardless of DLQ.<br><span class="affects"><strong>Affects:</strong> FHLMC — Streamlined Flex Modification eligibility (required)</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fhlmcDisasterHardship</td><td class="field-label">Disaster Hardship (FHLMC)</td>
+          <td class="field-desc">Whether hardship is attributable to a FEMA-declared disaster. Routes to Disaster Flex Mod; blocks standard retention options (Repayment Plan, standard Forbearance, Payment Deferral).<br><span class="affects"><strong>Affects:</strong> FHLMC — disaster vs. standard option routing</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fhlmcFEMADesignation</td><td class="field-label">FEMA Designation (FHLMC)</td>
+          <td class="field-desc">Whether a FEMA Major Disaster Declaration covers the property's location. Required for Disaster Flex Mod eligibility.<br><span class="affects"><strong>Affects:</strong> FHLMC — Disaster Flex Mod</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fhlmcDLQAtDisaster</td><td class="field-label">DLQ at Time of Disaster (months)</td>
+          <td class="field-desc">Months DLQ at the time of the disaster event. Per §9206.1(c)(v) as amended by Bulletin 2026-2 (eff. Feb 11, 2026): must be current or &lt; 2 months DLQ at disaster for Disaster Flex Mod. Evaluated alongside evaluation-date DLQ (dual gate).<br><span class="affects"><strong>Affects:</strong> FHLMC — Disaster Flex Mod DLQ-at-disaster gate (Bulletin 2026-2)</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Months. 0=current.<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">fhlmcPriorModCount</td><td class="field-label">Prior Modification Count</td>
+          <td class="field-desc">Number of prior FHLMC Flex Modifications on this loan. Must be fewer than 3 for Standard Flex Mod eligibility.<br><span class="affects"><strong>Affects:</strong> FHLMC — Flex Mod 3-prior-mod limit</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-always">Required</span></td><td class="field-desc">0, 1, 2, 3+<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">fhlmcFailedFlexTPP12Mo</td><td class="field-label">Servicer-Cancelled TPP Within 12 Mo</td>
+          <td class="field-desc">Whether the servicer cancelled a Flex Mod TPP for non-performance within the past 12 months. Per §9206.5: servicer-cancelled (non-performing) TPP bars next Flex Mod. Borrower-initiated withdrawal does NOT trigger the bar.<br><span class="affects"><strong>Affects:</strong> FHLMC — all Flex Mod variants (12-month bar)</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">fhlmcRecourse</td><td class="field-label">Recourse Arrangement</td>
+          <td class="field-desc">Whether a recourse arrangement exists. Recourse loans are ineligible for FHLMC Flex Modification (all three variants).<br><span class="affects"><strong>Affects:</strong> FHLMC — Flex Mod hard block</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- SECTION 10: VA-SPECIFIC -->
+<div class="section-break">
+  <div class="section-header" style="background:var(--va)">
+    <div><h2>Section 10 — VA-Specific Fields</h2><div class="sh-sub">VA M26-4 · Circular 26-24-2 (Compromise Sale) · Circular 26-24-3 (Disaster Extend Mod) · Circular 26-25-2 (VASP wind-down)</div></div>
+    <div class="sh-count">~15</div>
+  </div>
+  <div class="page-body" style="padding-top:16px">
+    <div class="note-box"><strong>VA Compromise Sale — No Delegated Authority:</strong> All VA Compromise Sales require VA Regional Loan Center (RLC) approval. Servicers have NO delegated authority per M26-4 Ch. 5 §3.A and Circular 26-24-2. The engine displays this as a required audit node on every eligible Compromise Sale result.</div>
+    <table class="field-table">
+      <thead><tr><th width="210">Field Name</th><th width="145">UI Label</th><th>Description &amp; Eligibility Impact</th><th width="55">Type</th><th width="65">Req?</th><th width="110">Default</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">activeRPP</td><td class="field-label">Active Repayment Plan</td>
+          <td class="field-desc">Whether borrower is currently in an active repayment plan. Active RPP blocks VA Disaster Modification (Circular 26-24-3 requirement — borrower must not be in active RPP at time of Disaster Mod offer).<br><span class="affects"><strong>Affects:</strong> VA — Disaster Modification eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">pmmsLeCurrentPlus1</td><td class="field-label">PMMS ≤ Current Rate + 1%</td>
+          <td class="field-desc">Whether the current PMMS rate is at or below the borrower's current note rate plus 1%. Used for VA modification rate test — VA modifications generally require rate to be at or below market (PMMS-based).<br><span class="affects"><strong>Affects:</strong> VA — modification rate eligibility gate</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: true</td></tr>
+
+        <tr><td class="field-name">dlqAtDisasterLt30</td><td class="field-label">Current/&lt;30 DLQ at Disaster (VA)</td>
+          <td class="field-desc">Whether the VA loan was current or less than 30 days delinquent at the time of the disaster event. Required for VA Disaster Forbearance, Disaster Modification, and Disaster Extend Modification.<br><span class="affects"><strong>Affects:</strong> VA — all disaster workout options</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">loanGe60DaysDLQ</td><td class="field-label">Loan ≥ 60 Days DLQ (VA)</td>
+          <td class="field-desc">Whether the loan is at least 60 days delinquent at the evaluation date. Required for VA Disaster Extend Modification (Circular 26-24-3 §3.a) — loan must be sufficiently delinquent at evaluation even if it was current at disaster.<br><span class="affects"><strong>Affects:</strong> VA — Disaster Extend Modification eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">previousWorkoutForbearance</td><td class="field-label">Prior Workout: Forbearance</td>
+          <td class="field-desc">Whether the borrower previously completed a VA disaster forbearance workout on this loan. Required as a prerequisite for VA Disaster Modification and Disaster Extend Modification.<br><span class="affects"><strong>Affects:</strong> VA — Disaster Modification, Disaster Extend Modification (prerequisite)</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">workoutStateActivePassed</td><td class="field-label">Workout State: Active/Passed</td>
+          <td class="field-desc">Whether the prior forbearance workout is in an active or completed/passed state (as opposed to pending or failed). Required alongside previousWorkoutForbearance for VA Disaster Modification eligibility.<br><span class="affects"><strong>Affects:</strong> VA — Disaster Modification, Disaster Extend Modification</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">borrowerIntentDisposition</td><td class="field-label">Borrower Intent: Disposition</td>
+          <td class="field-desc">Whether borrower intends to dispose of (sell) the property. Required to be TRUE for VA Compromise Sale eligibility (disposition intent is required; short-term hardship blocks). Complements <code>borrowerIntentRetention</code> (which must be false for liquidation options).<br><span class="affects"><strong>Affects:</strong> VA — Compromise Sale eligibility pathway</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">completeBRP</td><td class="field-label">BRP Complete (VA)</td>
+          <td class="field-desc">Whether a complete Borrower Response Package has been received and reviewed. Required for VA modifications (Traditional, 30-Year, 40-Year) — BRP provides income documentation and hardship attestation.<br><span class="affects"><strong>Affects:</strong> VA — Traditional Mod, 30-Year Mod, 40-Year Mod</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">forbearancePeriodLt12</td><td class="field-label">Forbearance Period &lt; 12 Months</td>
+          <td class="field-desc">Whether the total forbearance period on this loan is less than 12 months. VA Special Forbearance is blocked when forbearance period AND DLQ are both ≥ 12 months (§ combined threshold).<br><span class="affects"><strong>Affects:</strong> VA — Special Forbearance eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: true</td></tr>
+
+        <tr><td class="field-name">totalDLQLt12</td><td class="field-label">Total DLQ &lt; 12 Months</td>
+          <td class="field-desc">Whether total delinquency is less than 12 months. VA Special Forbearance is blocked when both forbearance period and DLQ are ≥ 12 months. This field captures the DLQ side of that combined test.<br><span class="affects"><strong>Affects:</strong> VA — Special Forbearance</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: true</td></tr>
+
+        <tr><td class="field-name">priorWorkoutCompromiseSaleFailed</td><td class="field-label">Prior Comp Sale Failed (VA)</td>
+          <td class="field-desc">Whether a prior VA Compromise Sale was attempted and failed. Required prerequisite for VA Deed-in-Lieu of Foreclosure (DIL is last-resort after failed Compromise Sale).<br><span class="affects"><strong>Affects:</strong> VA — Deed-in-Lieu eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+
+        <tr><td class="field-name">vaPriorModCount</td><td class="field-label">Prior VA Modification Count</td>
+          <td class="field-desc">Number of prior VA modifications. Used for seasoning and modification count eligibility checks per VA M26-4.<br><span class="affects"><strong>Affects:</strong> VA — modification history review</span></td>
+          <td><span class="field-type type-number">Number</span></td><td><span class="req-tag req-opt">Optional</span></td><td class="field-desc">0, 1, 2+<br>Default: 0</td></tr>
+
+        <tr><td class="field-name">vaLastModDate</td><td class="field-label">Last VA Modification Date</td>
+          <td class="field-desc">Date of most recent VA modification. Used for 12-month modification seasoning requirement per 38 CFR §36.4315(a)(3).<br><span class="affects"><strong>Affects:</strong> VA — modification seasoning (12-month minimum since last mod)</span></td>
+          <td><span class="field-type type-date">Date</span></td><td><span class="req-tag req-opt">Optional</span></td><td class="field-desc">YYYY-MM-DD</td></tr>
+
+        <tr><td class="field-name">vaPDMA</td><td class="field-label">Property in VA PDMA</td>
+          <td class="field-desc">Whether the property is in a Presidentially Declared Major Disaster Area per VA M26-4 Ch. 8 disaster guidelines. Enables VA disaster workout options alongside the hardshipType = "Disaster" flag.<br><span class="affects"><strong>Affects:</strong> VA — all disaster option eligibility</span></td>
+          <td><span class="field-type type-bool">Boolean</span></td><td><span class="req-tag req-cond">Conditional</span></td><td class="field-desc">Default: false</td></tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:28px;padding:14px 18px;background:#fafafa;border:1px solid var(--border);border-radius:8px;font-size:10px;color:var(--muted);line-height:1.7">
+      <strong style="color:var(--text)">Note on VASP (VA Servicing Purchase Program):</strong> VASP was fully wound down per Circular 26-25-2. All VASP pipeline deadlines elapsed August 31 / September 30, 2025. VASP is no longer available as a loss mitigation option and has been removed from the engine's evaluation waterfall.
+    </div>
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div style="padding:32px 56px;border-top:1px solid var(--border);margin-top:24px;text-align:center;font-size:9.5px;color:#9ca3af">
+  ResolutionIQ Field Reference Guide · v1.0 · March 2026 · 110+ fields across 10 sections · 5 investors<br>
+  This reference is for implementation and onboarding use. Field behavior reflects engine logic as of March 2026.<br>
+  Regulatory sources: HUD 4000.1 · USDA HB-1-3555 · VA M26-4 · Fannie Mae Guide D2-3 (LL-2024-02) · Freddie Mac Guide Ch. 9200 (Bulletin 2026-2)
+</div>
+
+</body>
+</html>
