@@ -3743,11 +3743,12 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
       };
       if (currentCaseId) {
         // Update existing case
-        await supabase.from("evaluations").update(casePayload).eq("id", currentCaseId);
+        const { error: updateErr } = await supabase.from("evaluations").update(casePayload).eq("id", currentCaseId);
+        if (updateErr) throw new Error("Update failed: " + updateErr.message);
         // Get current version count
         const { data: versionData } = await supabase.from("evaluation_versions").select("version_number").eq("evaluation_id", currentCaseId).order("version_number", { ascending: false }).limit(1);
         const nextVersion = versionData && versionData.length > 0 ? versionData[0].version_number + 1 : 1;
-        await supabase.from("evaluation_versions").insert({
+        const { error: verErr } = await supabase.from("evaluation_versions").insert({
           evaluation_id: currentCaseId,
           user_id: userId||null,
           version_number: nextVersion,
@@ -3756,12 +3757,14 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
           notes: caseNotes||null,
           change_summary: changeSummary||null,
         });
+        if (verErr) throw new Error("Version save failed: " + verErr.message);
         setChangeSummary("");
         setSaveToast("✅ Case updated — version "+nextVersion+" saved!");
         loadVersions();
       } else {
         // Insert new case
-        const { data: inserted } = await supabase.from("evaluations").insert(casePayload).select("id").single();
+        const { data: inserted, error: insertErr } = await supabase.from("evaluations").insert(casePayload).select("id").single();
+        if (insertErr) throw new Error("Insert failed: " + insertErr.message);
         if (inserted?.id) setCurrentCaseId(inserted.id);
         setSaveToast("✅ Case saved!");
       }
