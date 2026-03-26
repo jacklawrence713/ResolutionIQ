@@ -3606,7 +3606,7 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
     setDashLoading(true);
     const { data } = await supabase
       .from("evaluations")
-      .select("id, loan_number, borrower_name, loan_type, created_at, notes, results, status, loan_data")
+      .select("id, loan_number, borrower_name, loan_type, created_at, notes, results, status, loan_data, user_id, assignee_email")
       .order("created_at", { ascending: false })
       .limit(200);
     setDashCases(data || []);
@@ -3877,7 +3877,7 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
       c.borrower_name?.toLowerCase().includes(dashSearch.toLowerCase());
     const matchType = dashFilter === "all" || c.loan_type === dashFilter;
     const matchStatus = dashStatus === "all" || (c.status || "open") === dashStatus;
-    const matchAssignee = assigneeFilter === "mine" ? (c.assignee_email === profile?.email || !c.assignee_email) : true;
+    const matchAssignee = assigneeFilter === "mine" ? (c.user_id === profile?.id) : true;
     return matchSearch && matchType && matchStatus && matchAssignee;
   });
 
