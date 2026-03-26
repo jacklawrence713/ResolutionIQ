@@ -4396,7 +4396,7 @@ CREATE POLICY "Users see own versions" ON evaluation_versions FOR ALL USING (aut
                 </div>
               )}
               <button onClick={loadDashboard} className="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg">🔄 Refresh</button>
-              <button onClick={() => setTab("inputs")} className="text-xs bg-emerald-700 text-white hover:bg-emerald-800 px-3 py-1.5 rounded-lg ml-auto">+ New Evaluation</button>
+              <button onClick={() => { setLoan({...initLoan}); setEvaluated(false); setTab("inputs"); }} className="text-xs bg-emerald-700 text-white hover:bg-emerald-800 px-3 py-1.5 rounded-lg ml-auto">+ New Evaluation</button>
             </div>
             <div className="flex flex-wrap gap-3 mb-4">
               {Object.entries(GUIDELINE_VERSIONS).map(([type, gv]) => {
