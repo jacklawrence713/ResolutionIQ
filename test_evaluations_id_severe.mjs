@@ -151,12 +151,6 @@ function evaluateFHA(l) {
   const hb = baseEligible && cooldownOK && dlq > 0 && STANDARD_HARDSHIPS.includes(l.hardshipType) && l.borrowerIntentRetention;
   const hn = [...baseNodes,node("Std hardship",l.hardshipType,STANDARD_HARDSHIPS.includes(l.hardshipType)),node("DLQ>0",dlq,dlq>0),node("Prior home retention >=24mo ago or none",priorHR===0?"None":priorHR+"mo",cooldownOK),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention)];
   results.push({option:"FHA Standalone Partial Claim",eligible:hb&&l.fhaBorrowerCanResumePreHardship&&comboCapPass,nodes:[...hn,node("Can resume pre-hardship pmt",l.fhaBorrowerCanResumePreHardship?"Yes":"No",l.fhaBorrowerCanResumePreHardship),node("PC within 30% cap",comboCapLabel,comboCapPass)]});
-  const fhaDeferCumUsed = n(l.fhaCumulativeDeferredMonths);
-  const fhaDeferPrior = n(l.fhaPriorDeferralMonths);
-  const fhaDeferDlqOK = dlq >= 3 && dlq <= 12;
-  const fhaDeferCumOK = fhaDeferCumUsed < 12;
-  const fhaDeferSpacingOK = fhaDeferPrior === 0 || fhaDeferPrior >= 12;
-  results.push({option:"FHA Payment Deferral",eligible:!isDisaster&&baseEligible&&fhaDeferDlqOK&&l.fhaHardshipResolved&&fhaDeferCumOK&&fhaDeferSpacingOK,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),...baseNodes,node("DLQ 3-12 months",dlq+"mo",fhaDeferDlqOK),node("Hardship resolved",l.fhaHardshipResolved?"Yes":"No",l.fhaHardshipResolved),node("Cumulative deferrals < 12mo",fhaDeferCumUsed+"mo",fhaDeferCumOK),node("Prior deferral >=12mo ago or never",fhaDeferPrior===0?"None":fhaDeferPrior+"mo ago",fhaDeferSpacingOK)]});
   results.push({option:"FHA 30-Year Standalone Modification",eligible:hb&&canAchieve360,nodes:[...hn,node("25% P&I reduction achievable by 360mo re-amortization",achieve360Label,canAchieve360)]});
   results.push({option:"FHA 40-Year Combination Modification + Partial Claim",eligible:hb&&!canAchieve360&&cok&&canAchieve480&&upbWithinOrig,nodes:[...hn,node("25% reduction NOT achievable by 360mo",achieve360Label,!canAchieve360),node("PC within 30% cap",comboCapLabel,cok),node("25% reduction achievable by 480mo",achieve480Label,canAchieve480),node("New UPB <= Original UPB",upbWithinOrigLabel,upbWithinOrig)]});
   results.push({option:"Payment Supplement",eligible:!isDisaster&&baseEligible&&dlq>0&&!canAchieve360&&l.comboPaymentLe40PctIncome,nodes:[node("Non-disaster hardship",l.hardshipType,!isDisaster),...baseNodes,node("DLQ>0",dlq,dlq>0),node("25% P&I reduction NOT achievable",achieve360Label,!canAchieve360),node("Combo pmt<=40% GMI",l.comboPaymentLe40PctIncome,l.comboPaymentLe40PctIncome)]});
@@ -542,10 +536,6 @@ check("FHA","SEV-FHA-02 Formal Forbearance ineligible - 13mo DLQ",
   L({delinquencyMonths:"13",canRepayWithin6Months:true}),
   {"Formal Forbearance":false});
 
-// 13mo DLQ - Payment Deferral NOT eligible (>12mo)
-check("FHA","SEV-FHA-03 Payment Deferral ineligible - 13mo DLQ",
-  L({delinquencyMonths:"13",fhaHardshipResolved:true}),
-  {"FHA Payment Deferral":false});
 
 // 13mo DLQ - 30yr Mod still eligible (hb only needs dlq>0)
 check("FHA","SEV-FHA-04 30-Year Mod eligible - 13mo DLQ",
@@ -694,18 +684,6 @@ check("FNMA","BOUND-FNMA-04 Deferral prior+dlq exceeds 12 — NOT eligible (13 <
   L({delinquencyMonths:"2",fnmaHardshipResolved:true,fnmaCanResumeFull:true,
      fnmaCumulativeDeferredMonths:"11",fnmaPriorDeferralMonths:"0"}),
   {"FNMA Payment Deferral":false});
-
-// ── FHA Payment Deferral DLQ Minimum Boundary (requires DLQ >= 3 months) ──────
-
-// DLQ = 3: minimum eligible threshold (3 >= 3)
-check("FHA","BOUND-FHA-01 FHA Deferral DLQ exactly 3mo — eligible (boundary minimum)",
-  L({delinquencyMonths:"3",fhaHardshipResolved:true}),
-  {"FHA Payment Deferral":true});
-
-// DLQ = 2: one below minimum threshold (2 >= 3 is false)
-check("FHA","BOUND-FHA-02 FHA Deferral DLQ 2mo — NOT eligible (below 3mo minimum)",
-  L({delinquencyMonths:"2",fhaHardshipResolved:true}),
-  {"FHA Payment Deferral":false});
 
 // ── USDA Streamline Mod Prior Mods Boundary (max 1 prior mod; nm < 2) ──────────
 
