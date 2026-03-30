@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResolutionIQ — Implementation Checklist</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',system-ui,sans-serif; font-size:10px; color:#111827; background:#fff; line-height:1.5; }
+  .page { width:8.5in; min-height:11in; padding:0.45in 0.55in; display:flex; flex-direction:column; }
+  .header { display:flex; align-items:center; justify-content:space-between; padding-bottom:12px; border-bottom:2px solid #1e3a5f; margin-bottom:16px; }
+  .header-left { display:flex; align-items:center; gap:10px; }
+  .logo-badge { width:36px; height:36px; background:linear-gradient(135deg,#1e3a5f,#2d5fa6); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:15px; font-weight:900; }
+  .header-title { font-size:18px; font-weight:900; color:#1e3a5f; }
+  .header-title span { color:#2d5fa6; }
+  .header-sub { font-size:8.5px; color:#64748b; margin-top:1px; font-weight:500; letter-spacing:0.5px; text-transform:uppercase; }
+  .doc-label { font-size:8px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#2d5fa6; background:#eff6ff; border:1px solid #bfdbfe; padding:3px 8px; border-radius:20px; }
+  .phase { background:linear-gradient(135deg,#0f172a,#1e3a5f); color:#fff; border-radius:8px; padding:10px 14px; margin:16px 0 10px; display:flex; align-items:center; justify-content:space-between; }
+  .phase-left .phase-num { font-size:8px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#93c5fd; margin-bottom:2px; }
+  .phase-left .phase-title { font-size:13px; font-weight:800; }
+  .phase-right { text-align:right; }
+  .phase-days { font-size:11px; font-weight:700; color:#60a5fa; }
+  .phase-label { font-size:7.5px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px; }
+  .checklist { margin-bottom:12px; }
+  .cl-section { font-size:9px; font-weight:700; color:#64748b; letter-spacing:1.5px; text-transform:uppercase; margin:10px 0 5px; }
+  .cl-item { display:flex; align-items:flex-start; gap:8px; padding:5px 8px; border-radius:4px; margin-bottom:3px; }
+  .cl-item:hover { background:#f8fafc; }
+  .checkbox { width:14px; height:14px; border:2px solid #cbd5e1; border-radius:3px; flex-shrink:0; margin-top:1px; }
+  .cl-text { flex:1; }
+  .cl-main { font-size:9.5px; color:#111827; line-height:1.5; }
+  .cl-sub { font-size:8.5px; color:#6b7280; line-height:1.4; margin-top:1px; }
+  .cl-owner { font-size:8px; font-weight:600; color:#2d5fa6; background:#eff6ff; border:1px solid #bfdbfe; padding:1px 6px; border-radius:10px; white-space:nowrap; margin-left:8px; margin-top:2px; display:inline-block; }
+  .note { background:#eff6ff; border-left:3px solid #2d5fa6; padding:6px 10px; border-radius:4px; margin:8px 0; font-size:9px; color:#1e40af; line-height:1.5; }
+  .warn { background:#fefce8; border-left:3px solid #ca8a04; padding:6px 10px; border-radius:4px; margin:8px 0; font-size:9px; color:#713f12; line-height:1.5; }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .info-box { border:1.5px solid #e5e7eb; border-radius:8px; padding:10px 12px; }
+  .info-box-title { font-size:9px; font-weight:700; color:#1e3a5f; margin-bottom:6px; }
+  .footer { margin-top:auto; padding-top:12px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; }
+  .footer-left { font-size:8px; color:#9ca3af; }
+  @media print { .page { padding:0.4in 0.5in; } }
+  @page { size:letter; margin:0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-badge">RQ</div>
+      <div>
+        <div class="header-title"><span>Resolution</span>IQ</div>
+        <div class="header-sub">Go-Live Implementation Checklist</div>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div class="doc-label">Implementation Guide</div>
+      <div style="font-size:7.5px;color:#94a3b8;margin-top:4px;">Version 1.0 · March 2026</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:14px">
+    <div class="info-box">
+      <div class="info-box-title">Servicer / Organization</div>
+      <div style="border-bottom:1px solid #e5e7eb;height:20px;margin-bottom:6px"></div>
+      <div style="font-size:8px;color:#94a3b8">Company Name</div>
+      <div style="border-bottom:1px solid #e5e7eb;height:20px;margin-bottom:6px;margin-top:8px"></div>
+      <div style="font-size:8px;color:#94a3b8">Primary Contact &amp; Email</div>
+    </div>
+    <div class="info-box">
+      <div class="info-box-title">Target Go-Live Date</div>
+      <div style="border-bottom:1px solid #e5e7eb;height:20px;margin-bottom:6px"></div>
+      <div style="font-size:8px;color:#94a3b8">Target Date</div>
+      <div style="border-bottom:1px solid #e5e7eb;height:20px;margin-bottom:6px;margin-top:8px"></div>
+      <div style="font-size:8px;color:#94a3b8">ResolutionIQ Implementation Contact</div>
+    </div>
+  </div>
+
+  <!-- PHASE 1 -->
+  <div class="phase">
+    <div class="phase-left">
+      <div class="phase-num">Phase 1</div>
+      <div class="phase-title">Commercial &amp; Legal</div>
+    </div>
+    <div class="phase-right">
+      <div class="phase-days">Days 1–5</div>
+      <div class="phase-label">Pre-implementation</div>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <div class="cl-section">Agreements</div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Execute NDA <span class="cl-owner">Legal</span></div><div class="cl-sub">Required before code preview or technical due diligence access</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Execute Subscription License Agreement or Source Code Purchase Agreement <span class="cl-owner">Legal</span></div><div class="cl-sub">Choose applicable agreement type; confirm pricing tier and term</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Execute Data Processing Agreement (DPA) <span class="cl-owner">Legal / Privacy</span></div><div class="cl-sub">Required by most servicer vendor management programs before data can be submitted</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Complete vendor registration / vendor management intake <span class="cl-owner">Procurement</span></div><div class="cl-sub">Submit DPA, SOC 2 evidence, Privacy Policy, and security questionnaire to your vendor management team</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Confirm payment terms and remit initial payment <span class="cl-owner">Finance</span></div><div class="cl-sub">50% upfront for source code purchase; annual invoice for subscription</div></div></div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div class="phase">
+    <div class="phase-left">
+      <div class="phase-num">Phase 2</div>
+      <div class="phase-title">Technical Setup</div>
+    </div>
+    <div class="phase-right">
+      <div class="phase-days">Days 5–10</div>
+      <div class="phase-label">Infrastructure &amp; access</div>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <div class="cl-section">SaaS Subscription Setup</div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Receive Supabase project credentials from ResolutionIQ <span class="cl-owner">IT / Admin</span></div><div class="cl-sub">URL, anon key, and service role key for your dedicated project</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Run DB Setup SQL in Supabase dashboard <span class="cl-owner">IT / Admin</span></div><div class="cl-sub">Settings → Database Setup → Copy SQL → Paste in Supabase SQL Editor → Run. See Admin Setup Guide.</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Verify all required tables and columns are created <span class="cl-owner">IT / Admin</span></div><div class="cl-sub">Confirm: profiles, evaluations (incl. checked_docs, assignee_email), evaluation_versions</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Configure OAuth providers (if using Google/Microsoft SSO) <span class="cl-owner">IT</span></div><div class="cl-sub">Enable in Supabase Authentication settings; whitelist your organization's domains</div></div></div>
+    <div class="cl-section">Self-Hosted Setup (Source Code Purchase Only)</div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Set up Supabase project (or use existing) <span class="cl-owner">IT</span></div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Configure .env file with Supabase URL and anon key <span class="cl-owner">IT</span></div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Run npm install and npm run build <span class="cl-owner">IT</span></div><div class="cl-sub">Node.js 18+ required</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Deploy build output to hosting environment <span class="cl-owner">IT</span></div><div class="cl-sub">Static SPA — deploy to S3+CloudFront, Azure Static Web Apps, Nginx, or GitHub Pages</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Configure custom domain and SSL certificate <span class="cl-owner">IT</span></div></div></div>
+  </div>
+
+  <!-- PHASE 3 -->
+  <div class="phase">
+    <div class="phase-left">
+      <div class="phase-num">Phase 3</div>
+      <div class="phase-title">Configuration &amp; UAT</div>
+    </div>
+    <div class="phase-right">
+      <div class="phase-days">Days 10–15</div>
+      <div class="phase-label">Servicer configuration &amp; testing</div>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <div class="cl-section">Admin Configuration</div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Set up first admin user in Supabase <span class="cl-owner">IT / Admin</span></div><div class="cl-sub">Set approved=true, role=admin for bootstrap admin account. See Admin Setup Guide.</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Configure servicer overlays <span class="cl-owner">Loss Mit Manager</span></div><div class="cl-sub">Set minimum FICO, max DLQ, excluded options per servicer policy. Document all overlay settings.</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Set SLA windows by investor <span class="cl-owner">Loss Mit Manager</span></div><div class="cl-sub">Default: 30 days FHA/VA/USDA, 45 days FNMA/FHLMC. Adjust to match servicer policy.</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Set current PMMS rate <span class="cl-owner">Admin</span></div><div class="cl-sub">Enter current week's Freddie Mac PMMS weekly average in Settings</div></div></div>
+    <div class="cl-section">User Acceptance Testing</div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Run 3–5 known-outcome test loans through the engine <span class="cl-owner">Loss Mit Specialist</span></div><div class="cl-sub">Use loans where the correct options are already known; verify Results match expected outcomes</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Test each investor type (FHA, FNMA, FHLMC, VA, USDA) <span class="cl-owner">Loss Mit Specialist</span></div><div class="cl-sub">At least one passing and one failing scenario per investor</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Test case save, retrieve, and version history <span class="cl-owner">Loss Mit Specialist</span></div><div class="cl-sub">Save a case, close, re-open from Dashboard, verify all data persists</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Test Portfolio bulk upload with sample CSV <span class="cl-owner">Loss Mit Specialist</span></div><div class="cl-sub">Use a 5–10 row sample; verify results match individual evaluations</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Compliance/QC review of Audit tab output <span class="cl-owner">Compliance</span></div><div class="cl-sub">Verify audit trail meets your documentation standards for regulatory exams</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Document any UAT issues and resolve with ResolutionIQ support <span class="cl-owner">Admin</span></div></div></div>
+  </div>
+
+  <!-- PHASE 4 -->
+  <div class="phase">
+    <div class="phase-left">
+      <div class="phase-num">Phase 4</div>
+      <div class="phase-title">Training &amp; Go-Live</div>
+    </div>
+    <div class="phase-right">
+      <div class="phase-days">Days 15–20</div>
+      <div class="phase-label">Launch</div>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <div class="cl-section">Training</div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Distribute User Manual to all loss mitigation specialists <span class="cl-owner">Manager</span></div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Conduct specialist training session (recommended: 1–2 hours) <span class="cl-owner">Manager / ResolutionIQ</span></div><div class="cl-sub">Cover: Inputs tab field guidance, how to read Results and Audit tabs, how to save and retrieve cases</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Conduct admin/supervisor training (recommended: 30 minutes) <span class="cl-owner">Admin</span></div><div class="cl-sub">Cover: Dashboard, case assignment, user management, SLA monitoring, PMMS update procedure</div></div></div>
+    <div class="cl-section">Go-Live</div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Provision all Authorized User accounts <span class="cl-owner">Admin</span></div><div class="cl-sub">Users self-register; admin approves from Settings → User Management</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Communicate go-live date and access instructions to team <span class="cl-owner">Manager</span></div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Go live — begin using ResolutionIQ for active loss mitigation pipeline <span class="cl-owner">All</span></div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Schedule 30-day post-launch check-in with ResolutionIQ support <span class="cl-owner">Admin</span></div></div></div>
+  </div>
+
+  <!-- PHASE 5 -->
+  <div class="phase">
+    <div class="phase-left">
+      <div class="phase-num">Phase 5</div>
+      <div class="phase-title">Ongoing Operations</div>
+    </div>
+    <div class="phase-right">
+      <div class="phase-days">Post-Launch</div>
+      <div class="phase-label">Recurring tasks</div>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Update PMMS rate every Thursday <span class="cl-owner">Admin</span></div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Review and approve pending user registrations weekly <span class="cl-owner">Admin</span></div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Review overdue SLA cases weekly <span class="cl-owner">Supervisor</span></div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Export evaluations data monthly for local backup <span class="cl-owner">Admin</span></div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Monitor investor guideline bulletins independently of engine updates <span class="cl-owner">Compliance</span></div><div class="cl-sub">FHA Mortgagee Letters, FNMA Selling/Servicing Guide updates, FHLMC Bulletins, VA Circulars, USDA AN/PN notices</div></div></div>
+    <div class="cl-item"><div class="checkbox"></div><div class="cl-text"><div class="cl-main">Deactivate departed user accounts promptly <span class="cl-owner">Admin</span></div></div></div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-left">ResolutionIQ Implementation Checklist · Version 1.0 · March 2026</div>
+    <div style="font-size:8px;color:#94a3b8">Implementation support: support@resolutioniq.com</div>
+  </div>
+
+</div>
+</body>
+</html>

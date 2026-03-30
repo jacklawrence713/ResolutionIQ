@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResolutionIQ — Admin Setup Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',system-ui,sans-serif; font-size:10.5px; color:#111827; background:#fff; line-height:1.6; }
+  .cover { min-height:45vh; display:flex; flex-direction:column; justify-content:center; align-items:center;
+    background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%); color:#fff; text-align:center;
+    padding:48px 40px; page-break-after:always; }
+  .cover-badge { display:inline-block; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
+    color:#93c5fd; font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase;
+    padding:5px 18px; border-radius:20px; margin-bottom:24px; }
+  .cover h1 { font-size:28px; font-weight:700; margin-bottom:10px; }
+  .cover h1 span { color:#60a5fa; }
+  .cover-sub { font-size:13px; color:#94a3b8; max-width:480px; line-height:1.6; }
+  .cover-meta { font-size:10px; color:#64748b; margin-top:16px; }
+  .body { padding:40px 64px; }
+  h2 { font-size:13px; font-weight:800; color:#1e3a5f; margin:28px 0 10px; padding-bottom:6px; border-bottom:2px solid #e5e7eb; }
+  h3 { font-size:11px; font-weight:700; color:#374151; margin:14px 0 5px; }
+  p { margin-bottom:8px; font-size:10.5px; line-height:1.7; color:#374151; }
+  ul, ol { padding-left:18px; margin-bottom:9px; }
+  li { margin-bottom:4px; font-size:10.5px; line-height:1.6; color:#374151; }
+  .step-block { border:1.5px solid #e5e7eb; border-radius:8px; padding:12px 16px; margin-bottom:10px; }
+  .step-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .step-num { background:#1e3a5f; color:#fff; font-size:9px; font-weight:700; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .step-title { font-size:11px; font-weight:700; color:#1e3a5f; }
+  .note { background:#eff6ff; border-left:3px solid #2d5fa6; padding:8px 12px; border-radius:4px; margin:8px 0; font-size:9.5px; color:#1e40af; line-height:1.6; }
+  .warn { background:#fef2f2; border-left:3px solid #dc2626; padding:8px 12px; border-radius:4px; margin:8px 0; font-size:9.5px; color:#991b1b; line-height:1.6; }
+  .tip { background:#f0fdf4; border-left:3px solid #059669; padding:8px 12px; border-radius:4px; margin:8px 0; font-size:9.5px; color:#065f46; line-height:1.6; }
+  code, pre { font-family:'Courier New',monospace; font-size:9.5px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:4px; padding:1px 5px; }
+  pre { display:block; padding:10px 14px; overflow-x:auto; white-space:pre-wrap; margin:8px 0; line-height:1.5; }
+  table { width:100%; border-collapse:collapse; margin:10px 0; font-size:9.5px; }
+  th { background:#1e3a5f; color:#fff; padding:7px 10px; text-align:left; font-weight:600; }
+  td { border:1px solid #e5e7eb; padding:6px 10px; vertical-align:top; }
+  tr:nth-child(even) td { background:#f8fafc; }
+  .footer { margin-top:40px; padding-top:16px; border-top:1px solid #e5e7eb; text-align:center; font-size:9px; color:#9ca3af; }
+  @media print { body { font-size:9.5px; } }
+  @page { size:letter; margin:0.5in 0.65in; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-badge">Technical · Admin</div>
+  <h1><span>ResolutionIQ</span><br>Admin Setup Guide</h1>
+  <div class="cover-sub">Database provisioning, user management, servicer overlay configuration, and ongoing administration for ResolutionIQ system administrators.</div>
+  <div class="cover-meta">Version 1.0 · March 2026 · Restricted — Admins Only</div>
+</div>
+
+<div class="body">
+
+  <h2>Prerequisites</h2>
+  <ul>
+    <li>Admin access to the ResolutionIQ application (admin role in Supabase profiles table)</li>
+    <li>Access to your organization's Supabase project dashboard (or credentials from ResolutionIQ if hosted)</li>
+    <li>For self-hosted: Node.js 18+, a GitHub account (for deployment via GitHub Actions), and a Supabase project</li>
+  </ul>
+
+  <h2>Phase 1 — Database Setup (First-Time Install)</h2>
+  <div class="warn">This step is required before any users can save evaluations. Skipping it will result in "table not found" errors when saving cases.</div>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title">Generate the Setup SQL</div>
+    </div>
+    <ol>
+      <li>Log in to ResolutionIQ as an admin user</li>
+      <li>Navigate to <strong>Settings → Database Setup</strong></li>
+      <li>Click <strong>Copy SQL</strong> to copy the full setup script to clipboard</li>
+    </ol>
+    <p>The SQL script creates the following tables if they don't exist: <code>profiles</code>, <code>evaluations</code>, <code>evaluation_versions</code>, and configures Row Level Security (RLS) policies.</p>
+  </div>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title">Run the SQL in Supabase</div>
+    </div>
+    <ol>
+      <li>Open your Supabase project dashboard at <a href="https://supabase.com/dashboard">supabase.com/dashboard</a></li>
+      <li>Navigate to <strong>SQL Editor</strong> (left sidebar)</li>
+      <li>Click <strong>New Query</strong></li>
+      <li>Paste the copied SQL</li>
+      <li>Click <strong>Run</strong></li>
+      <li>Verify: look for success messages with no errors. If you see "already exists" notices on some tables, that is expected for re-runs.</li>
+    </ol>
+    <div class="tip">Tip: The setup SQL is idempotent — safe to run multiple times. Running it again on an existing install will add any new columns added in recent versions without dropping data.</div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div class="step-title">Verify Table Creation</div>
+    </div>
+    <p>In Supabase Table Editor, confirm these tables exist:</p>
+    <table>
+      <tr><th>Table</th><th>Key Columns</th></tr>
+      <tr><td>profiles</td><td>id, email, full_name, approved, role</td></tr>
+      <tr><td>evaluations</td><td>id, user_id, loan_data, results, checked_docs, assignee_email, sla_start_date, foreclosure_sale_date, created_at</td></tr>
+      <tr><td>evaluation_versions</td><td>id, evaluation_id, version_number, snapshot, created_at</td></tr>
+    </table>
+    <div class="warn">If <code>checked_docs</code> or <code>assignee_email</code> columns are missing, re-run the DB Setup SQL. These columns are required for case management features.</div>
+  </div>
+
+  <h2>Phase 2 — First Admin User</h2>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div class="step-title">Set Your User as Admin in Supabase</div>
+    </div>
+    <p>The first user to register will be in "Pending" status. To bootstrap the admin account:</p>
+    <ol>
+      <li>In Supabase, open Table Editor → profiles</li>
+      <li>Find your user row (by email)</li>
+      <li>Set <code>approved</code> = <code>true</code></li>
+      <li>Set <code>role</code> = <code>admin</code></li>
+      <li>Save the row</li>
+    </ol>
+    <p>You can now log in and use the in-app User Management panel for all subsequent users — no more direct Supabase edits required.</p>
+  </div>
+
+  <h2>Phase 3 — User Management</h2>
+
+  <h3>Approving New Users</h3>
+  <ol>
+    <li>Navigate to <strong>Settings → User Management</strong></li>
+    <li>Users who have registered but are pending appear in the <strong>Pending Approval</strong> list</li>
+    <li>Click <strong>Approve</strong> to grant access; <strong>Deny</strong> to reject</li>
+    <li>Approved users are notified by email and can log in immediately</li>
+  </ol>
+
+  <h3>User Roles</h3>
+  <table>
+    <tr><th>Role</th><th>Permissions</th></tr>
+    <tr><td><strong>admin</strong></td><td>Full access: all evaluations, user management, servicer overlay configuration, DB setup</td></tr>
+    <tr><td><strong>supervisor</strong></td><td>Can view all cases in the team's pipeline; can reassign cases; cannot modify overlays or manage users</td></tr>
+    <tr><td><strong>specialist</strong></td><td>Can create, edit, and evaluate their own cases; can view cases assigned to them by supervisors</td></tr>
+  </table>
+
+  <h3>Deactivating Users</h3>
+  <p>To remove access for a departed employee: go to User Management, find the user, and click <strong>Deactivate</strong>. Their existing cases remain in the system but are reassigned to the admin pool. Deactivated users cannot log in.</p>
+
+  <h2>Phase 4 — Servicer Overlays</h2>
+  <p>Servicer overlays allow your organization to apply stricter standards on top of investor minimums. Navigate to <strong>Settings → Servicer Overlays</strong>.</p>
+  <table>
+    <tr><th>Overlay Setting</th><th>Description</th><th>Example</th></tr>
+    <tr><td>Minimum FICO Score</td><td>Options requiring FICO below this floor are marked ineligible</td><td>580 — no option recommended below 580 FICO</td></tr>
+    <tr><td>Maximum DLQ Months</td><td>Options only valid below a certain delinquency threshold</td><td>18 — do not offer options on loans &gt;18 months DLQ</td></tr>
+    <tr><td>Excluded Hardship Types</td><td>Remove specific hardship categories from eligibility</td><td>Exclude "investment loss" for certain program types</td></tr>
+    <tr><td>Excluded Options</td><td>Disable specific loss mitigation options globally</td><td>Disable "Deed-in-Lieu" if your servicer does not process DIL</td></tr>
+    <tr><td>Custom SLA Windows</td><td>Set servicer-specific evaluation SLA deadlines by investor</td><td>30 days for FHA, 45 days for FNMA</td></tr>
+  </table>
+  <div class="warn">Overlay changes apply immediately to all future evaluations. They do not retroactively change existing saved evaluations. Document all overlay changes with a dated rationale for your compliance file.</div>
+
+  <h2>Phase 5 — Ongoing Administration</h2>
+
+  <h3>Weekly Tasks</h3>
+  <ul>
+    <li>Update the PMMS Rate in the platform settings with the current week's Freddie Mac Primary Mortgage Market Survey average (published every Thursday)</li>
+    <li>Review pending user approvals</li>
+    <li>Check for any overdue SLA cases in the Dashboard</li>
+  </ul>
+
+  <h3>Guideline Updates</h3>
+  <p>ResolutionIQ subscription includes rule updates within 30 days of material investor guideline changes. When an update is deployed:</p>
+  <ul>
+    <li>A release notification appears in the platform on login</li>
+    <li>The Regulatory Index document is updated to reflect the new citations</li>
+    <li>Existing saved evaluations are NOT retroactively re-evaluated — they reflect the guidelines at the time of evaluation (by design, for audit trail integrity)</li>
+  </ul>
+  <div class="note">Notify your loss mitigation team when a major guideline update is deployed so they know to re-evaluate any pending cases using the updated engine.</div>
+
+  <h3>Data Backup</h3>
+  <p>Supabase automatically backs up your database daily (Point-in-Time Recovery available on Pro plan). Additionally, admins can export the full evaluations dataset from the Portfolio tab as a CSV for local backup. Schedule a monthly export as part of your data retention procedures.</div>
+
+  <h3>Access Log Review</h3>
+  <p>Supabase provides database-level audit logs accessible from the Supabase dashboard under <strong>Logs → Database Logs</strong>. Review these periodically for unusual access patterns or failed authentication attempts.</p>
+
+  <h2>Troubleshooting — Admin</h2>
+  <table>
+    <tr><th>Issue</th><th>Resolution</th></tr>
+    <tr><td>User cannot log in after approval</td><td>Verify profile row has <code>approved = true</code> in Supabase</td></tr>
+    <tr><td>"Permission denied" errors for users</td><td>Check RLS policies are correctly set in Supabase; re-run DB Setup SQL</td></tr>
+    <tr><td>Cases not appearing in Dashboard for supervisor</td><td>Verify supervisor role is set; RLS policy restricts supervisors to their org</td></tr>
+    <tr><td>PMMS rate showing as 0</td><td>Update PMMS Rate in Settings; it is not auto-fetched</td></tr>
+    <tr><td>Overlay changes not taking effect</td><td>Hard-refresh the browser (Ctrl+Shift+R); overlays are cached per session</td></tr>
+  </table>
+
+  <div class="footer">
+    ResolutionIQ Admin Setup Guide · Version 1.0 · March 2026 · Restricted Distribution<br>
+    Admin support: admin@resolutioniq.com
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResolutionIQ — Demo Script</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',system-ui,sans-serif; font-size:10.5px; color:#111827; background:#fff; line-height:1.6; }
+  .page { width:8.5in; min-height:11in; padding:0.45in 0.55in; display:flex; flex-direction:column; }
+  .header { display:flex; align-items:center; justify-content:space-between; padding-bottom:14px; border-bottom:2px solid #1e3a5f; margin-bottom:18px; }
+  .header-left { display:flex; align-items:center; gap:12px; }
+  .logo-badge { width:38px; height:38px; background:linear-gradient(135deg,#1e3a5f,#2d5fa6); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:900; letter-spacing:-1px; }
+  .header-title { font-size:20px; font-weight:900; color:#1e3a5f; }
+  .header-title span { color:#2d5fa6; }
+  .header-sub { font-size:9px; color:#64748b; margin-top:1px; font-weight:500; letter-spacing:0.5px; text-transform:uppercase; }
+  .doc-label { font-size:8.5px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#2d5fa6; background:#eff6ff; border:1px solid #bfdbfe; padding:3px 10px; border-radius:20px; }
+  .doc-date { font-size:8px; color:#94a3b8; margin-top:4px; }
+  h2 { font-size:12px; font-weight:800; color:#1e3a5f; margin:20px 0 8px; padding-bottom:5px; border-bottom:2px solid #e5e7eb; }
+  h3 { font-size:10.5px; font-weight:700; color:#374151; margin:12px 0 4px; }
+  p { margin-bottom:8px; font-size:10px; line-height:1.7; color:#374151; }
+  ul, ol { padding-left:16px; margin-bottom:8px; }
+  li { margin-bottom:4px; font-size:10px; line-height:1.6; color:#374151; }
+  .act { background:linear-gradient(135deg,#0f172a,#1e3a5f); color:#fff; border-radius:10px; padding:12px 16px; margin:16px 0 10px; }
+  .act-label { font-size:7.5px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#93c5fd; margin-bottom:3px; }
+  .act-title { font-size:13px; font-weight:800; }
+  .act-time { font-size:8.5px; color:#94a3b8; margin-top:2px; }
+  .step { border:1.5px solid #e5e7eb; border-radius:8px; padding:10px 14px; margin-bottom:8px; }
+  .step-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .step-num { background:#1e3a5f; color:#fff; font-size:9px; font-weight:700; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .step-title { font-size:10.5px; font-weight:700; color:#1e3a5f; }
+  .step-time { font-size:8px; color:#94a3b8; margin-left:auto; }
+  .say { background:#f0fdf4; border-left:3px solid #059669; padding:8px 10px; border-radius:4px; margin:6px 0; font-size:9.5px; color:#065f46; line-height:1.6; font-style:italic; }
+  .do { background:#eff6ff; border-left:3px solid #2d5fa6; padding:8px 10px; border-radius:4px; margin:6px 0; font-size:9.5px; color:#1e40af; line-height:1.6; }
+  .tip { background:#fefce8; border-left:3px solid #ca8a04; padding:7px 10px; border-radius:4px; margin:6px 0; font-size:9px; color:#713f12; line-height:1.6; }
+  .objection { border:1.5px solid #fca5a5; border-radius:8px; padding:10px 14px; margin-bottom:8px; }
+  .obj-q { font-size:10px; font-weight:700; color:#991b1b; margin-bottom:4px; }
+  .obj-a { font-size:9.5px; color:#374151; line-height:1.6; }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media print { .page { padding:0.4in 0.5in; } }
+  @page { size:letter; margin:0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-badge">RQ</div>
+      <div>
+        <div class="header-title"><span>Resolution</span>IQ</div>
+        <div class="header-sub">Demo Script · Internal Sales Use Only</div>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div class="doc-label">Demo Guide</div>
+      <div class="doc-date">Version 1.0 · March 2026 · Confidential</div>
+    </div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <p><strong>Total Demo Time:</strong> 30–45 minutes. Adjust pacing based on audience. Loss mitigation specialists will want depth on the Audit tab. Ops managers want the Dashboard and Portfolio. C-suite wants ROI and accuracy numbers.</p>
+  <p><strong>Setup before demo:</strong> Log in, pre-load a sample loan in the Inputs tab (FHA, 4 months DLQ, $285,000 UPB, standard income hardship), have the Portfolio CSV ready to upload, and have the Dashboard showing 5–6 sample cases.</p>
+
+  <!-- ACT 1 -->
+  <div class="act">
+    <div class="act-label">Act 1</div>
+    <div class="act-title">The Problem — 5 Investors, 40+ Options, 0 Margin for Error</div>
+    <div class="act-time">3–5 minutes · No screen required</div>
+  </div>
+
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title">Open with the pain point</div>
+      <div class="step-time">2 min</div>
+    </div>
+    <div class="say">"How many loss mitigation evaluations does your team process in a month? And how long does each one take — from pulling the loan to identifying the right option and documenting why?"</div>
+    <p><em>[Let them answer. Most will say 30–90 minutes per loan manually, or will describe spreadsheets and guidebook lookups.]</em></p>
+    <div class="say">"What we hear consistently is that specialists spend more time navigating guidelines than actually helping borrowers. Freddie Mac alone updated their servicing guide twice in the last 6 months. Fannie's imminent default rules are nuanced. VA just discontinued VASP in May 2025 and rescinded their waterfall — that's a guideline change that can trip up any team that hasn't kept up. ResolutionIQ fixes that."</div>
+  </div>
+
+  <!-- ACT 2 -->
+  <div class="act">
+    <div class="act-label">Act 2</div>
+    <div class="act-title">Live Demo — The 8 Tabs</div>
+    <div class="act-time">20–30 minutes</div>
+  </div>
+
+  <div class="two-col">
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <div class="step-title">Dashboard</div>
+        <div class="step-time">2 min</div>
+      </div>
+      <div class="do">Show the Dashboard with active cases. Point out the SLA countdown badges, the case assignment column, and the search/filter bar.</div>
+      <div class="say">"This is command central. Your whole pipeline is here — who owns what, what's approaching its SLA, what's been evaluated vs. pending. Anything in red is overdue. Your supervisors can see the entire team's queue from this view."</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <div class="step-title">Inputs Tab</div>
+        <div class="step-time">4 min</div>
+      </div>
+      <div class="do">Open the pre-loaded FHA loan. Walk through the top section: investor selector, delinquency months, UPB, income, hardship type.</div>
+      <div class="say">"A specialist fills in what they know from the servicing system. Notice the data completeness score in the corner — it tells you exactly what's missing before you evaluate. Fields are organized to match how information flows in a loss mitigation interview."</div>
+      <div class="tip">Tip: Show the Quick LOS Import if the audience uses Encompass or BytePro — it's a major time-saver talking point.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">4</div>
+        <div class="step-title">Results Tab — The Core Value</div>
+        <div class="step-time">6 min</div>
+      </div>
+      <div class="do">Click Evaluate (Ctrl+Enter). Let the results load. Show the eligible options in waterfall order — Payment Supplement, 40-Year Combo Mod, Payment Deferral, etc. Click into one option to show the doc checklist and regulatory citation.</div>
+      <div class="say">"In under 2 seconds, every eligible option is ranked in the investor's preferred evaluation order, with the specific regulatory citation — Mortgagee Letter, Guide section, CFR — for every determination. Your specialists don't have to remember which option goes first. The engine knows."</div>
+      <div class="say">"Click the doc checklist — this is what your specialist hands to the borrower intake team. The list is dynamically generated based on what options are actually eligible. No more printing generic checklists."</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">5</div>
+        <div class="step-title">Audit Tab — The Defensibility Story</div>
+        <div class="step-time">4 min</div>
+      </div>
+      <div class="do">Switch to the Audit tab. Expand a few nodes — show a passing criterion in green and a failing one in red with the reason.</div>
+      <div class="say">"This is what your compliance team and examiners want to see. Every single eligibility criterion — every node in the decision tree — is documented as pass or fail with the specific rule that triggered it. This is your exam-ready file documentation, generated automatically."</div>
+      <div class="say">"If a regulator asks why a borrower was denied a specific option, this tab has the answer, timestamped, with the regulatory citation. You're not reconstructing a decision from notes — it's already built."</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">6</div>
+        <div class="step-title">Report Tab</div>
+        <div class="step-time">2 min</div>
+      </div>
+      <div class="do">Show the print-ready evaluation report. Briefly show the AI underwriting assistant input box.</div>
+      <div class="say">"One click generates a print-ready evaluation report for the file. And if you're hitting an edge case — unusual hardship type, dual-investor overlap, something the guidelines are ambiguous on — the AI assistant gives you a plain-language analysis you can use to document your reasoning."</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">7</div>
+        <div class="step-title">Portfolio Tab — Scale</div>
+        <div class="step-time">3 min</div>
+      </div>
+      <div class="do">Upload the sample CSV. Show the batch results grid loading.</div>
+      <div class="say">"This is where it gets interesting at scale. Upload a CSV of your pipeline — we'll evaluate every loan simultaneously. Your team uses this for triage: which loans have eligible retention options, which are deferral candidates, which are headed toward liquidation. Decisions in seconds, not days."</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">8</div>
+        <div class="step-title">Settings — Servicer Overlays</div>
+        <div class="step-time">2 min</div>
+      </div>
+      <div class="do">Show the servicer overlay config panel — FICO floors, max DLQ caps, excluded hardship types.</div>
+      <div class="say">"The engine knows the investor minimums. Your overlays sit on top. If your servicer requires a 580 FICO minimum when FHA allows lower, that's configured here — and it's applied to every evaluation automatically. Your guidelines, on top of theirs."</div>
+    </div>
+
+  </div>
+
+  <!-- ACT 3 -->
+  <div class="act">
+    <div class="act-label">Act 3</div>
+    <div class="act-title">Accuracy, Pricing &amp; Next Steps</div>
+    <div class="act-time">5–8 minutes</div>
+  </div>
+
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">9</div>
+      <div class="step-title">Accuracy &amp; Test Coverage</div>
+      <div class="step-time">2 min</div>
+    </div>
+    <div class="say">"The engine is tested against 449 scenario cases across all 5 investors — standard paths, sad paths, imminent default, waterfall edge cases. Accuracy runs 97–99% across all investors. We have a full test brief if your compliance team wants to review the methodology."</div>
+  </div>
+
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">10</div>
+      <div class="step-title">Pricing &amp; Next Steps</div>
+      <div class="step-time">3 min</div>
+    </div>
+    <div class="say">"Subscription starts at $18,000/year for teams up to 5. Most mid-size servicers land in the Professional tier at $42k. We also offer outright purchase with full source code if your organization prefers to own and host internally. I'll send you the pricing sheet after this call."</div>
+    <div class="say">"The typical path forward is: sign an NDA, we walk your compliance and tech team through a due diligence session, and then we're usually live within two weeks of an executed agreement. What questions do you have?"</div>
+  </div>
+
+  <!-- OBJECTION HANDLING -->
+  <h2>Common Objections</h2>
+  <div class="two-col">
+
+    <div class="objection">
+      <div class="obj-q">"How do we know the guidelines are current?"</div>
+      <div class="obj-a">Every result shows the specific regulatory citation with the version applied. Subscription includes guaranteed 30-day updates on material guideline changes. The Regulatory Index document lists every citation in the engine by section.</div>
+    </div>
+
+    <div class="objection">
+      <div class="obj-q">"Our examiners won't accept software output."</div>
+      <div class="obj-a">The engine documents your specialist's reasoning — it doesn't replace it. The Audit tab generates the criterion-by-criterion analysis your examiners need, all traceable to the specific guideline section. It's better documentation than a manually-written memo.</div>
+    </div>
+
+    <div class="objection">
+      <div class="obj-q">"We already have a spreadsheet system."</div>
+      <div class="obj-a">Spreadsheets don't update automatically when ML 2025-06 changes the P&amp;I target, or when VA rescinds the waterfall, or when Freddie Mac issues Bulletin 2026-2. One compliance miss costs more than the annual subscription.</div>
+    </div>
+
+    <div class="objection">
+      <div class="obj-q">"We need LOS integration — we can't have a separate system."</div>
+      <div class="obj-a">We have a field mapping guide for Encompass and BytePro — most fields import in minutes. Full LOS integration is available as an add-on service. Alternatively, the source code purchase gives your team the codebase to build native integration.</div>
+    </div>
+
+    <div class="objection">
+      <div class="obj-q">"What about data security? We can't put borrower data in a third-party system."</div>
+      <div class="obj-a">We have a Data Processing Agreement ready to execute. Data is encrypted in transit and at rest. Row-level security isolates your data from all other servicers. For maximum control, the outright purchase option lets you host entirely on your own infrastructure.</div>
+    </div>
+
+    <div class="objection">
+      <div class="obj-q">"What happens if you shut down or change pricing?"</div>
+      <div class="obj-a">The source code purchase eliminates vendor dependency entirely — you own the engine, you host it, you maintain it. For subscribers, annual pricing is locked for the contract term. We can include an escrow arrangement for Commercial Rights purchasers.</div>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

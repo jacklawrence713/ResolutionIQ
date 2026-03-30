@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResolutionIQ — Data Processing Agreement</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',system-ui,sans-serif; font-size:10.5px; color:#111827; background:#fff; line-height:1.6; }
+  .cover { min-height:40vh; display:flex; flex-direction:column; justify-content:center; align-items:center;
+    background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%); color:#fff; text-align:center;
+    padding:48px 40px; page-break-after:always; }
+  .cover-badge { display:inline-block; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
+    color:#93c5fd; font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase;
+    padding:5px 18px; border-radius:20px; margin-bottom:24px; }
+  .cover h1 { font-size:28px; font-weight:700; margin-bottom:10px; }
+  .cover h1 span { color:#60a5fa; }
+  .cover-sub { font-size:13px; color:#94a3b8; margin-bottom:12px; }
+  .cover-meta { font-size:10px; color:#64748b; margin-top:16px; }
+  .body { padding:40px 64px; }
+  h2 { font-size:13px; font-weight:700; color:#1e3a5f; margin:28px 0 10px; padding-bottom:6px; border-bottom:2px solid #e5e7eb; }
+  h3 { font-size:11px; font-weight:700; color:#374151; margin:14px 0 5px; }
+  p { margin-bottom:10px; font-size:10.5px; line-height:1.7; color:#374151; }
+  ol, ul { padding-left:20px; margin-bottom:10px; }
+  li { margin-bottom:5px; font-size:10.5px; line-height:1.6; color:#374151; }
+  .section-num { display:inline-block; background:#1e3a5f; color:#fff; font-size:9px; font-weight:700;
+    padding:2px 8px; border-radius:10px; margin-right:8px; vertical-align:middle; }
+  .highlight-box { background:#eff6ff; border-left:4px solid #1a56db; padding:12px 16px; border-radius:4px; margin:16px 0; font-size:10px; color:#1e40af; line-height:1.7; }
+  table { width:100%; border-collapse:collapse; margin:12px 0; font-size:9.5px; }
+  th { background:#1e3a5f; color:#fff; padding:7px 10px; text-align:left; font-weight:600; }
+  td { border:1px solid #e5e7eb; padding:6px 10px; vertical-align:top; }
+  tr:nth-child(even) td { background:#f8fafc; }
+  .sig-block { display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:40px; }
+  .sig-party { border-top:2px solid #1e3a5f; padding-top:16px; }
+  .sig-party .party-name { font-size:11px; font-weight:700; color:#1e3a5f; margin-bottom:20px; }
+  .sig-line { border-bottom:1px solid #374151; margin-bottom:6px; height:28px; }
+  .sig-label { font-size:8.5px; color:#64748b; margin-bottom:16px; }
+  .fill-line { border-bottom:1px solid #94a3b8; margin-bottom:4px; min-height:18px; }
+  .fill-label { font-size:8.5px; color:#94a3b8; margin-bottom:12px; }
+  .footer { margin-top:40px; padding-top:16px; border-top:1px solid #e5e7eb; text-align:center; font-size:9px; color:#9ca3af; }
+  @media print { body { font-size:9.5px; } }
+  @page { size:letter; margin:0.5in 0.65in; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-badge">Legal · Data Privacy</div>
+  <h1><span>ResolutionIQ</span><br>Data Processing Agreement</h1>
+  <div class="cover-sub">GLBA · CCPA · State Privacy Law Compliance</div>
+  <div class="cover-meta">Version 1.0 · Effective Upon Execution</div>
+</div>
+
+<div class="body">
+
+  <div class="highlight-box">
+    <strong>Purpose:</strong> This Data Processing Agreement ("DPA") supplements the Subscription License Agreement or Source Code Purchase Agreement and governs ResolutionIQ's processing of non-public personal information ("NPI") and other personal data on behalf of the Servicer. This DPA is required by most servicer vendor management programs prior to production use.
+  </div>
+
+  <p>This DPA is entered into between <strong>ResolutionIQ</strong> ("Processor") and the Servicer identified in the applicable agreement ("Controller / Business"), effective as of the date of the applicable agreement.</p>
+
+  <h2><span class="section-num">1</span>Definitions</h2>
+  <p><strong>"Personal Data"</strong> means any information relating to an identified or identifiable individual, including borrower NPI as defined under the GLBA.</p>
+  <p><strong>"Processing"</strong> means any operation performed on Personal Data, including collection, storage, use, retrieval, disclosure, and deletion.</p>
+  <p><strong>"Servicer Personal Data"</strong> means Personal Data that the Servicer submits to the Engine for processing, including borrower name, loan data, and financial information.</p>
+  <p><strong>"Security Incident"</strong> means any accidental or unlawful access, destruction, loss, alteration, or disclosure of Servicer Personal Data.</p>
+  <p><strong>"Sub-processor"</strong> means any third party engaged by Processor to process Servicer Personal Data.</p>
+
+  <h2><span class="section-num">2</span>Processing Instructions</h2>
+  <p>Processor shall process Servicer Personal Data only on documented instructions from the Servicer and solely for the purpose of providing the Engine's loss mitigation eligibility evaluation functionality. Processor shall not process Servicer Personal Data for any other purpose, including for Processor's own commercial purposes, without the Servicer's prior written consent.</p>
+  <p>If Processor is required by applicable law to process Servicer Personal Data in a manner inconsistent with Servicer's instructions, Processor shall notify Servicer before such processing (unless prohibited by law from doing so).</p>
+
+  <h2><span class="section-num">3</span>Data Subject Categories &amp; Processing Activities</h2>
+  <table>
+    <tr><th>Category</th><th>Data Elements</th><th>Processing Purpose</th></tr>
+    <tr><td>Mortgage Borrowers</td><td>Name, loan number, income, property address, hardship information, financial data</td><td>Loss mitigation eligibility evaluation; audit trail generation</td></tr>
+    <tr><td>Authorized Users</td><td>Name, email, employer, login credentials</td><td>Authentication; access control; platform management</td></tr>
+    <tr><td>System/Technical</td><td>IP addresses, session logs, usage events</td><td>Security monitoring; platform operations</td></tr>
+  </table>
+
+  <h2><span class="section-num">4</span>Confidentiality of Processing</h2>
+  <p>Processor shall ensure that all personnel authorized to process Servicer Personal Data are subject to confidentiality obligations. Processor shall implement appropriate vetting of personnel with access to Servicer Personal Data. Access is limited to personnel who require it to provide the Service.</p>
+
+  <h2><span class="section-num">5</span>Security Measures</h2>
+  <p>Processor shall implement and maintain appropriate technical and organizational security measures, including:</p>
+  <ol>
+    <li><strong>Encryption:</strong> TLS 1.2+ for data in transit; AES-256 for data at rest;</li>
+    <li><strong>Access Controls:</strong> Role-based access, row-level security, principle of least privilege;</li>
+    <li><strong>Authentication:</strong> Support for multi-factor authentication; secure credential storage;</li>
+    <li><strong>Network Security:</strong> Firewall controls, DDoS protection, intrusion detection;</li>
+    <li><strong>Vulnerability Management:</strong> Regular security assessments, dependency scanning;</li>
+    <li><strong>Backup &amp; Recovery:</strong> Regular backups with tested recovery procedures.</li>
+  </ol>
+
+  <h2><span class="section-num">6</span>Sub-processors</h2>
+  <p>Servicer provides general authorization for Processor to engage sub-processors for operational purposes. Processor's current sub-processors are listed in Exhibit A. Processor shall notify Servicer at least 30 days before engaging a new sub-processor that will process Servicer Personal Data. Servicer may object to a new sub-processor within 15 days of notification; if the parties cannot resolve the objection, Servicer may terminate the Agreement. Processor shall ensure all sub-processors are bound by DPA obligations at least as protective as those in this DPA.</p>
+
+  <h2><span class="section-num">7</span>Security Incident Notification</h2>
+  <p>Upon becoming aware of a confirmed Security Incident, Processor shall notify Servicer without undue delay and in any event within seventy-two (72) hours. Notification shall include: (a) nature and scope of the incident; (b) categories and approximate number of individuals affected; (c) measures taken or proposed to address the incident. Processor shall cooperate with Servicer's reasonable requests in connection with the incident and any required regulatory notifications.</p>
+
+  <h2><span class="section-num">8</span>Assistance with Data Subject Rights</h2>
+  <p>Processor shall assist Servicer in responding to requests from individuals exercising rights under applicable privacy laws (access, correction, deletion, portability). Servicer acknowledges that the primary relationship is between the Servicer and borrowers, and that Processor's role is limited to the technical capability to export or delete data upon Servicer's instruction.</p>
+
+  <h2><span class="section-num">9</span>Data Retention &amp; Deletion</h2>
+  <p>Upon termination or expiration of the applicable agreement, Processor shall make Servicer Personal Data available for export for thirty (30) days. Upon Servicer's written request, Processor shall delete or return all Servicer Personal Data within sixty (60) days and certify such deletion in writing. Processor may retain Servicer Personal Data as required by applicable law, provided such data is segregated and its use restricted to the legal obligation only.</p>
+
+  <h2><span class="section-num">10</span>Audits &amp; Compliance</h2>
+  <p>Servicer may, upon reasonable notice (no less than 30 days) and at Servicer's expense, audit Processor's compliance with this DPA no more than once per calendar year. Processor shall provide access to relevant documentation, systems, and personnel. In lieu of an on-site audit, Processor may provide a current SOC 2 Type II report or equivalent certification as evidence of compliance.</p>
+
+  <h2><span class="section-num">11</span>GLBA Specific Obligations</h2>
+  <p>To the extent Servicer Personal Data constitutes NPI under the GLBA: (a) Processor shall not disclose NPI to any third party except as permitted under 15 U.S.C. §6802(b)(2) for the purpose of carrying out the service for which NPI was disclosed; (b) Processor acknowledges it is prohibited from using NPI for independent marketing purposes; (c) Processor shall maintain appropriate safeguards consistent with the GLBA Safeguards Rule (16 C.F.R. Part 314).</p>
+
+  <h2><span class="section-num">12</span>Governing Law</h2>
+  <p>This DPA is governed by the same law as the applicable agreement. Nothing in this DPA reduces any rights or remedies available to data subjects under applicable privacy law.</p>
+
+  <!-- Exhibit A -->
+  <h2>Exhibit A — Current Sub-processors</h2>
+  <table>
+    <tr><th>Sub-processor</th><th>Service</th><th>Data Processed</th><th>Location</th></tr>
+    <tr><td>Supabase / AWS</td><td>Database hosting &amp; authentication</td><td>All Servicer Personal Data</td><td>United States</td></tr>
+    <tr><td>Google OAuth</td><td>User authentication (optional)</td><td>User email, auth token</td><td>United States</td></tr>
+    <tr><td>Microsoft OAuth</td><td>User authentication (optional)</td><td>User email, auth token</td><td>United States</td></tr>
+    <tr><td>Vercel / GitHub Pages</td><td>Static asset hosting</td><td>No Personal Data</td><td>United States</td></tr>
+  </table>
+
+  <h2><span class="section-num">13</span>Signatures</h2>
+
+  <div class="sig-block">
+    <div class="sig-party">
+      <div class="party-name">ResolutionIQ (Processor)</div>
+      <div class="sig-line"></div>
+      <div class="sig-label">Authorized Signature</div>
+      <div class="fill-line"></div>
+      <div class="fill-label">Printed Name &amp; Title</div>
+      <div class="fill-line"></div>
+      <div class="fill-label">Date</div>
+    </div>
+    <div class="sig-party">
+      <div class="party-name">Servicer (Controller)</div>
+      <div class="sig-line"></div>
+      <div class="sig-label">Authorized Signature</div>
+      <div class="fill-line"></div>
+      <div class="fill-label">Printed Name &amp; Title</div>
+      <div class="fill-line"></div>
+      <div class="fill-label">Company &amp; Date</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    ResolutionIQ · Data Processing Agreement · Version 1.0<br>
+    This template should be reviewed by qualified legal counsel before execution.
+  </div>
+
+</div>
+</body>
+</html>

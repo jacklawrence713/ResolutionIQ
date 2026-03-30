@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResolutionIQ — LOS Field Mapping Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',system-ui,sans-serif; font-size:10px; color:#111827; background:#fff; line-height:1.5; }
+  .page { width:8.5in; min-height:11in; padding:0.4in 0.5in; display:flex; flex-direction:column; }
+  .header { display:flex; align-items:center; justify-content:space-between; padding-bottom:12px; border-bottom:2px solid #1e3a5f; margin-bottom:14px; }
+  .header-left { display:flex; align-items:center; gap:10px; }
+  .logo-badge { width:36px; height:36px; background:linear-gradient(135deg,#1e3a5f,#2d5fa6); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:15px; font-weight:900; }
+  .header-title { font-size:18px; font-weight:900; color:#1e3a5f; }
+  .header-title span { color:#2d5fa6; }
+  .header-sub { font-size:8.5px; color:#64748b; margin-top:1px; font-weight:500; letter-spacing:0.5px; text-transform:uppercase; }
+  .doc-label { font-size:8px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#2d5fa6; background:#eff6ff; border:1px solid #bfdbfe; padding:3px 8px; border-radius:20px; }
+  h2 { font-size:11px; font-weight:800; color:#1e3a5f; margin:18px 0 8px; padding-bottom:4px; border-bottom:2px solid #e5e7eb; }
+  h3 { font-size:10px; font-weight:700; color:#374151; margin:10px 0 4px; }
+  p { margin-bottom:6px; font-size:9.5px; line-height:1.6; color:#374151; }
+  .note { background:#eff6ff; border-left:3px solid #2d5fa6; padding:6px 10px; border-radius:4px; margin:8px 0; font-size:9px; color:#1e40af; line-height:1.5; }
+  .warn { background:#fefce8; border-left:3px solid #ca8a04; padding:6px 10px; border-radius:4px; margin:8px 0; font-size:9px; color:#713f12; line-height:1.5; }
+  table { width:100%; border-collapse:collapse; margin:8px 0; font-size:8.5px; }
+  th { background:#1e3a5f; color:#fff; padding:5px 8px; text-align:left; font-weight:600; font-size:8px; }
+  td { border:1px solid #e5e7eb; padding:4px 7px; vertical-align:top; line-height:1.4; }
+  tr:nth-child(even) td { background:#f8fafc; }
+  td code { font-family:'Courier New',monospace; font-size:8px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:3px; padding:0 3px; }
+  .req { color:#dc2626; font-weight:700; font-size:7.5px; }
+  .cond { color:#ca8a04; font-weight:700; font-size:7.5px; }
+  .opt { color:#059669; font-size:7.5px; }
+  @media print { .page { padding:0.35in 0.45in; } }
+  @page { size:letter; margin:0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-badge">RQ</div>
+      <div>
+        <div class="header-title"><span>Resolution</span>IQ</div>
+        <div class="header-sub">LOS Field Mapping Guide · Encompass · BytePro · MortgageDirector</div>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div class="doc-label">Integration Reference</div>
+      <div style="font-size:7.5px;color:#94a3b8;margin-top:4px;">Version 1.0 · March 2026</div>
+    </div>
+  </div>
+
+  <p>This guide maps ResolutionIQ input field names to corresponding field identifiers in common Loan Origination/Servicing Systems. Use this reference when setting up LOS exports or configuring the Quick LOS Import feature.</p>
+  <p><span class="req">REQ</span> = Required for evaluation &nbsp;|&nbsp; <span class="cond">COND</span> = Required for specific investors/options &nbsp;|&nbsp; <span class="opt">OPT</span> = Optional / improves accuracy</p>
+
+  <!-- CORE FIELDS -->
+  <h2>Core Loan Fields</h2>
+  <table>
+    <tr><th>ResolutionIQ Field</th><th>Data Type</th><th>Priority</th><th>Encompass Field ID</th><th>BytePro Field</th><th>Description / Notes</th></tr>
+    <tr><td><code>loanNumber</code></td><td>string</td><td><span class="req">REQ</span></td><td>LOAN.LoanNumber</td><td>LoanNumber</td><td>Your internal loan/case number</td></tr>
+    <tr><td><code>borrowerName</code></td><td>string</td><td><span class="req">REQ</span></td><td>BORR.FullName</td><td>BorrowerName</td><td>Primary borrower full name</td></tr>
+    <tr><td><code>loanType</code></td><td>enum</td><td><span class="req">REQ</span></td><td>LOAN.LoanProgramType</td><td>InvestorCode</td><td>Values: FHA, FNMA, FHLMC, VA, USDA</td></tr>
+    <tr><td><code>upb</code></td><td>number</td><td><span class="req">REQ</span></td><td>LOAN.CurrentUPB</td><td>CurrentBalance</td><td>Current unpaid principal balance</td></tr>
+    <tr><td><code>originalUpb</code></td><td>number</td><td><span class="cond">COND</span></td><td>LOAN.OriginalPrincipalBalance</td><td>OriginalBalance</td><td>Required for MTMLTV (FNMA/FHLMC mod eligibility)</td></tr>
+    <tr><td><code>currentInterestRate</code></td><td>number</td><td><span class="req">REQ</span></td><td>LOAN.NoteRate</td><td>InterestRate</td><td>Current note rate as decimal percent (e.g., 6.75)</td></tr>
+    <tr><td><code>pmmsRate</code></td><td>number</td><td><span class="req">REQ</span></td><td>N/A — manual entry</td><td>N/A — manual entry</td><td>Current Freddie Mac PMMS weekly average. Update every Thursday. Not in LOS — must be manually entered or configured as a servicer default.</td></tr>
+    <tr><td><code>noteDate</code></td><td>date</td><td><span class="req">REQ</span></td><td>LOAN.NoteDate</td><td>NoteDate</td><td>Loan origination date. Used to compute loan age.</td></tr>
+    <tr><td><code>noteFirstPaymentDate</code></td><td>date</td><td><span class="cond">COND</span></td><td>LOAN.FirstPaymentDate</td><td>FirstPaymentDate</td><td>Used if NoteDate unavailable for loan age computation</td></tr>
+    <tr><td><code>noteTerm</code></td><td>number</td><td><span class="req">REQ</span></td><td>LOAN.LoanTerm</td><td>OriginalTerm</td><td>Original loan term in months (typically 360)</td></tr>
+    <tr><td><code>originalMaturityDate</code></td><td>date</td><td><span class="cond">COND</span></td><td>LOAN.MaturityDate</td><td>MaturityDate</td><td>Used for remaining term and max term calculations</td></tr>
+  </table>
+
+  <!-- PAYMENT FIELDS -->
+  <h2>Payment &amp; Income Fields</h2>
+  <table>
+    <tr><th>ResolutionIQ Field</th><th>Data Type</th><th>Priority</th><th>Encompass Field ID</th><th>BytePro Field</th><th>Description</th></tr>
+    <tr><td><code>currentPI</code></td><td>number</td><td><span class="req">REQ</span></td><td>LOAN.PI</td><td>PIPayment</td><td>Current monthly principal &amp; interest payment</td></tr>
+    <tr><td><code>currentPITI</code></td><td>number</td><td><span class="req">REQ</span></td><td>LOAN.PITI</td><td>PITIPayment</td><td>Total monthly payment including escrow (P+I+T+I)</td></tr>
+    <tr><td><code>currentEscrow</code></td><td>number</td><td><span class="cond">COND</span></td><td>LOAN.EscrowBalance</td><td>EscrowBalance</td><td>Current escrow account balance (negative = shortage)</td></tr>
+    <tr><td><code>escrowShortage</code></td><td>number</td><td><span class="cond">COND</span></td><td>LOAN.EscrowDeficiency</td><td>EscrowDeficiency</td><td>Escrow deficiency/shortage amount to capitalize</td></tr>
+    <tr><td><code>escrowAdvanceBalance</code></td><td>number</td><td><span class="cond">COND</span></td><td>LOSS.EscrowAdv</td><td>EscrowAdvances</td><td>Total escrow advances made by servicer</td></tr>
+    <tr><td><code>grossMonthlyIncome</code></td><td>number</td><td><span class="req">REQ</span></td><td>BORR.GrossMonthlyIncome</td><td>GrossIncome</td><td>Total household gross monthly income</td></tr>
+    <tr><td><code>monthlyExpenses</code></td><td>number</td><td><span class="cond">COND</span></td><td>BORR.TotalMonthlyExpenses</td><td>MonthlyExpenses</td><td>Total non-housing monthly debt obligations. Used for DTI (VA 41% cap).</td></tr>
+  </table>
+
+  <!-- DELINQUENCY FIELDS -->
+  <h2>Delinquency &amp; Hardship Fields</h2>
+  <table>
+    <tr><th>ResolutionIQ Field</th><th>Data Type</th><th>Priority</th><th>Encompass Field ID</th><th>BytePro Field</th><th>Description</th></tr>
+    <tr><td><code>delinquencyMonths</code></td><td>number</td><td><span class="req">REQ</span></td><td>LOAN.MonthsDelinquent</td><td>MthsDelinquent</td><td>Number of monthly payments past due</td></tr>
+    <tr><td><code>hardshipType</code></td><td>enum</td><td><span class="req">REQ</span></td><td>LOSS.HardshipType</td><td>HardshipType</td><td>See hardship type enum values below</td></tr>
+    <tr><td><code>hardshipDuration</code></td><td>enum</td><td><span class="req">REQ</span></td><td>LOSS.HardshipDuration</td><td>HardshipDuration</td><td>short-term, long-term, resolved</td></tr>
+    <tr><td><code>occupancyStatus</code></td><td>enum</td><td><span class="req">REQ</span></td><td>LOAN.OccupancyType</td><td>OccupancyType</td><td>primary, secondary, investment</td></tr>
+    <tr><td><code>foreclosureActive</code></td><td>boolean</td><td><span class="cond">COND</span></td><td>LOSS.ForeclosureStatus</td><td>FCStatus</td><td>true if active foreclosure proceedings underway</td></tr>
+    <tr><td><code>imminentDefault</code></td><td>boolean</td><td><span class="cond">COND</span></td><td>LOSS.ImminentDefault</td><td>ImminentDefault</td><td>FNMA/FHLMC only — engine auto-computes if left blank</td></tr>
+  </table>
+
+  <!-- ARREARS FIELDS -->
+  <h2>Arrears &amp; Capitalization Fields</h2>
+  <table>
+    <tr><th>ResolutionIQ Field</th><th>Data Type</th><th>Priority</th><th>Encompass Field ID</th><th>BytePro Field</th><th>Description</th></tr>
+    <tr><td><code>arrearagesToCapitalize</code></td><td>number</td><td><span class="cond">COND</span></td><td>LOSS.TotalArrears</td><td>TotalArrears</td><td>Total P&amp;I arrears to be capitalized in modification</td></tr>
+    <tr><td><code>legalFees</code></td><td>number</td><td><span class="opt">OPT</span></td><td>LOSS.LegalFees</td><td>LegalFees</td><td>Attorney/foreclosure fees eligible for capitalization</td></tr>
+    <tr><td><code>lateFees</code></td><td>number</td><td><span class="opt">OPT</span></td><td>LOSS.LateFees</td><td>LateFees</td><td>Late charges eligible for capitalization</td></tr>
+    <tr><td><code>accruedDelinquentInterest</code></td><td>number</td><td><span class="cond">COND</span></td><td>LOSS.AccruedInterest</td><td>AccruedInterest</td><td>Delinquent interest to capitalize</td></tr>
+    <tr><td><code>suspenseBalance</code></td><td>number</td><td><span class="opt">OPT</span></td><td>LOAN.SuspenseBalance</td><td>SuspenseBalance</td><td>Suspense funds to offset capitalization amount</td></tr>
+    <tr><td><code>priorPartialClaimBalance</code></td><td>number</td><td><span class="cond">COND</span></td><td>LOSS.PriorPCBalance</td><td>PriorPCBalance</td><td>FHA only — outstanding prior partial claim UPB</td></tr>
+  </table>
+
+  <!-- INVESTOR-SPECIFIC -->
+  <h2>Investor-Specific Fields</h2>
+  <table>
+    <tr><th>ResolutionIQ Field</th><th>Investor</th><th>Priority</th><th>Description</th></tr>
+    <tr><td><code>fhaCase</code></td><td>FHA</td><td><span class="opt">OPT</span></td><td>FHA case number</td></tr>
+    <tr><td><code>fhaMipMonthly</code></td><td>FHA</td><td><span class="cond">COND</span></td><td>Monthly MIP amount (used in PITI calculations)</td></tr>
+    <tr><td><code>priorFHAMod</code></td><td>FHA</td><td><span class="cond">COND</span></td><td>Date of prior FHA modification (for 24-mo cooldown check)</td></tr>
+    <tr><td><code>vaLoanNumber</code></td><td>VA</td><td><span class="opt">OPT</span></td><td>VA loan guaranty number</td></tr>
+    <tr><td><code>vaFundingFee</code></td><td>VA</td><td><span class="opt">OPT</span></td><td>VA funding fee (if applicable)</td></tr>
+    <tr><td><code>fnmaLoanId</code></td><td>FNMA</td><td><span class="opt">OPT</span></td><td>Fannie Mae loan identifier</td></tr>
+    <tr><td><code>mtmltv</code></td><td>FNMA/FHLMC</td><td><span class="cond">COND</span></td><td>Mark-to-market LTV. If not provided, engine computes from UPB and property value if available.</td></tr>
+    <tr><td><code>propertyValue</code></td><td>FNMA/FHLMC</td><td><span class="cond">COND</span></td><td>Current estimated property value for MTMLTV computation</td></tr>
+    <tr><td><code>priorModCount</code></td><td>FNMA/FHLMC</td><td><span class="cond">COND</span></td><td>Number of prior permanent modifications (max 3 for FNMA)</td></tr>
+    <tr><td><code>priorDeferralMonths</code></td><td>FNMA/FHLMC</td><td><span class="cond">COND</span></td><td>Total prior deferral months (cumulative cap: 12 mo FNMA, 18 mo FHLMC)</td></tr>
+    <tr><td><code>usdaRdLoanNumber</code></td><td>USDA</td><td><span class="opt">OPT</span></td><td>USDA Rural Development loan number</td></tr>
+  </table>
+
+  <!-- HARDSHIP TYPES -->
+  <h2>Hardship Type Enum Values</h2>
+  <p>Use these exact values in the <code>hardshipType</code> field when building LOS exports:</p>
+  <table>
+    <tr><th>ResolutionIQ Value</th><th>Description</th><th>LOS Common Label</th></tr>
+    <tr><td><code>income_reduction</code></td><td>Reduction in income (pay cut, reduced hours)</td><td>Income Reduction / Curtailment</td></tr>
+    <tr><td><code>job_loss</code></td><td>Unemployment / job loss</td><td>Unemployment</td></tr>
+    <tr><td><code>medical</code></td><td>Medical emergency or disability</td><td>Medical / Health</td></tr>
+    <tr><td><code>divorce</code></td><td>Divorce or legal separation</td><td>Divorce / Separation</td></tr>
+    <tr><td><code>death_of_borrower</code></td><td>Death of primary borrower or coborrower</td><td>Death of Borrower</td></tr>
+    <tr><td><code>disaster</code></td><td>Declared natural disaster</td><td>Natural Disaster / FEMA</td></tr>
+    <tr><td><code>business_failure</code></td><td>Failure of self-employment/business</td><td>Business Failure</td></tr>
+    <tr><td><code>military_service</code></td><td>Active military service / deployment</td><td>Military Service</td></tr>
+    <tr><td><code>incarceration</code></td><td>Incarceration of borrower</td><td>Incarceration</td></tr>
+    <tr><td><code>other</code></td><td>Other documented hardship</td><td>Other</td></tr>
+  </table>
+
+  <!-- NOTES -->
+  <h2>Integration Notes</h2>
+  <ul>
+    <li><strong>PMMS Rate:</strong> Not available in any LOS — must be manually updated weekly or configured as a servicer-wide default in ResolutionIQ Settings. Freddie Mac publishes the PMMS every Thursday at freddiemac.com/pmms.</li>
+    <li><strong>JSON import:</strong> ResolutionIQ accepts camelCase, snake_case, and common business name variants for all fields. The engine performs auto-mapping on import — you do not need exact field name matches.</li>
+    <li><strong>Null handling:</strong> Missing optional fields default to 0 or false. Missing required fields will lower the data completeness score and may cause some options to not be evaluated.</li>
+    <li><strong>Date format:</strong> ISO 8601 preferred (YYYY-MM-DD). Most US date formats (MM/DD/YYYY) are also accepted.</li>
+    <li><strong>Rate format:</strong> Interest rates should be entered as decimal percentages (6.75 not 0.0675).</li>
+  </ul>
+
+</div>
+</body>
+</html>
