@@ -3480,6 +3480,35 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
     excludedOptions: [] as string[],
     customNote: "",
   });
+  // Global PMMS state (cached from Freddie Mac / FRED)
+  const [globalPmms, setGlobalPmms] = useState<{rate:string,date:string}|null>(() => {
+    try { const s=localStorage.getItem("riq_pmms"); return s?JSON.parse(s):null; } catch { return null; }
+  });
+  const [pmmsLoading, setPmmsLoading] = useState(false);
+  const [pmmsError, setPmmsError] = useState("");
+  const fetchPmms = async () => {
+    setPmmsLoading(true); setPmmsError("");
+    try {
+      // FRED public CSV — no API key required; MORTGAGE30US = Freddie Mac 30-yr PMMS
+      const res = await fetch("https://fred.stlouisfed.org/graph/fredgraph.csv?id=MORTGAGE30US");
+      if (!res.ok) throw new Error("HTTP "+res.status);
+      const text = await res.text();
+      const lines = text.trim().split("\n").filter(l=>l&&!l.startsWith("DATE"));
+      // Find most recent non-missing entry (FRED uses "." for missing)
+      for (let i=lines.length-1;i>=0;i--) {
+        const [date,val]=lines[i].split(",");
+        const r=parseFloat(val);
+        if (!isNaN(r)&&r>0) {
+          const pmmsData={rate:r.toFixed(2),date};
+          setGlobalPmms(pmmsData);
+          localStorage.setItem("riq_pmms",JSON.stringify(pmmsData));
+          set("pmmsRate",r.toFixed(2));
+          break;
+        }
+      }
+    } catch(e) { setPmmsError("Fetch failed — check connection"); }
+    setPmmsLoading(false);
+  };
   // Notifications state
   const [notifications, setNotifications] = useState<{id:string, message:string, type:"info"|"success"|"warning", read:boolean, createdAt:string}[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -4613,7 +4642,18 @@ ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS foreclosure_sale_date date;`}</
                 <F label="Monthly Non-Housing Expenses"><Num value={loan.monthlyExpenses} onChange={v=>set("monthlyExpenses",v)} placeholder="e.g. 500 (car, CC min, student loans)" prefix="$"/></F>
                 <div className="flex flex-col gap-1"><label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Cash Reserves (Liquid Assets)<HelpTip text="Total liquid assets (checking, savings, money market). Do not include retirement accounts unless accessible without penalty."/></label><Num value={loan.cashReservesAmount} onChange={v=>set("cashReservesAmount",v)} placeholder="e.g. 8000" prefix="$"/></div>
                 <F label="Current Interest Rate (%)"><Num value={loan.currentInterestRate} onChange={v=>set("currentInterestRate",v)} placeholder="e.g. 6.5"/></F>
-                {loan.loanType !== "FHLMC" && <div className="flex flex-col gap-1"><label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">PMMS Rate (%)<HelpTip text="Freddie Mac Primary Mortgage Market Survey rate. Check freddiemac.com/pmms for current week's rate."/></label><Num value={loan.pmmsRate} onChange={v=>set("pmmsRate",v)} placeholder="e.g. 7.1"/></div>}
+                {loan.loanType !== "FHLMC" && <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">PMMS Rate (%)<HelpTip text="Freddie Mac Primary Mortgage Market Survey 30-yr fixed rate. Published every Thursday. Click Fetch to auto-fill from FRED (Federal Reserve Economic Data)."/></label>
+                  <div className="flex gap-1.5 items-center">
+                    <div className="flex-1"><Num value={loan.pmmsRate} onChange={v=>set("pmmsRate",v)} placeholder="e.g. 7.1"/></div>
+                    <button onClick={fetchPmms} disabled={pmmsLoading} className="px-2.5 py-1.5 rounded text-[10px] font-semibold bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 whitespace-nowrap" title="Fetch current PMMS from FRED (Federal Reserve Economic Data — no API key required)">{pmmsLoading?"…":"↻ Fetch"}</button>
+                  </div>
+                  {pmmsError&&<div className="text-[9px] text-red-500">{pmmsError}</div>}
+                  {globalPmms&&!pmmsError&&<div className="flex items-center justify-between text-[9px] text-slate-400 mt-0.5">
+                    <span>Cached: <strong className="text-slate-600">{globalPmms.rate}%</strong> as of {globalPmms.date}</span>
+                    {loan.pmmsRate!==globalPmms.rate&&<button onClick={()=>set("pmmsRate",globalPmms.rate)} className="text-blue-500 hover:text-blue-700 underline ml-2">Apply</button>}
+                  </div>}
+                </div>}
                 {gmi>0&&(loan.loanType === "FHA" || loan.loanType === "USDA")&&<div className="bg-emerald-50 rounded p-2 text-xs text-emerald-800 space-y-0.5 mt-1">
                   {loan.loanType==="FHA"&&n(loan.currentPI)>0&&<div>FHA 25% P&I Target: <strong>{fmt$(n(loan.currentPI)*0.75)} P&I + {fmt$(n(loan.currentEscrow))} escrow</strong></div>}
                   {loan.loanType==="USDA"&&<div>31% GMI Target: <strong>${target31}/mo</strong></div>}
