@@ -1628,7 +1628,7 @@ function calcApprovalTerms(optionName, l) {
     return {
       "Plan Type": "Freddie Mac Forbearance Plan — Unemployment Hardship",
       "Hardship Requirement": "Unemployment (temporary hardship) — unemployed borrowers must be offered forbearance, not Flex Modification",
-      "Authorized Initial Term": "1–3 months per increment (Bulletin 2026-2, eff. May 1, 2026 — reduced from 1–6 months)",
+      "Authorized Initial Term": "1–3 months per increment (Bulletin 2026-2, eff. Feb 11, 2026 — reduced from 1–6 months)",
       "Extension": "Additional 1–3 month increments with FHLMC approval (total up to 12 months cumulative)",
       "Payment During Plan": "Reduced or suspended per plan terms",
       "Late Charges": "Must NOT accrue or be collected during active forbearance",

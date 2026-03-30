@@ -185,8 +185,9 @@ function evaluateUSDA(l) {
   results.push({option:"USDA Disaster Forbearance",eligible:isD&&br&&l.occupancyStatus==="Owner Occupied"&&l.usdaDLQAt30AtDisaster,nodes:[node("Hardship=Disaster",isD,isD),node("Base eligibility",br,br),node("Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied"),node("Current or <30d DLQ at disaster",l.usdaDLQAt30AtDisaster,l.usdaDLQAt30AtDisaster)]});
   results.push({option:"USDA Special Forbearance",eligible:!isD&&br&&l.occupancyStatus==="Owner Occupied"&&dlqM<=12,nodes:[node("Not Disaster",!isD,!isD),node("Base eligibility",br,br),node("Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied"),node("DLQ<=12mo",dlqM,dlqM<=12)]});
   const notListedForSale=!l.propertyListedForSale;
-  const sb=!isD&&br&&l.borrowerIntentRetention&&l.occupancyStatus==="Owner Occupied"&&nm<2&&!l.usdaPriorFailedStreamlineTPP&&dlqD>=90&&l.usdaUpbGe5000&&l.usdaPaymentsMade12&&l.usdaBankruptcyNotActive&&l.usdaLitigationNotActive&&l.usdaForeclosureSaleGe60Away&&notListedForSale;
-  results.push({option:"USDA Streamline Loan Modification",eligible:sb,nodes:[node("Non-disaster hardship",l.hardshipType,!isD),node(">=90d DLQ",dlqD,dlqD>=90),node("UPB>=$5k",l.usdaUpbGe5000,l.usdaUpbGe5000),node("12+ payments",l.usdaPaymentsMade12,l.usdaPaymentsMade12),node("Bankruptcy!=Active",l.usdaBankruptcyNotActive,l.usdaBankruptcyNotActive),node("Litigation!=Active",l.usdaLitigationNotActive,l.usdaLitigationNotActive),node("No failed Streamline TPP",!l.usdaPriorFailedStreamlineTPP,!l.usdaPriorFailedStreamlineTPP),node("Not Abandoned/Condemned",br,br),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied"),node("Lien=First",l.lienPosition,l.lienPosition==="First"),node("Prior mods < 2",nm,nm<2),node("Foreclosure sale>=60d",l.usdaForeclosureSaleGe60Away,l.usdaForeclosureSaleGe60Away),node("Property not listed for sale",notListedForSale?"No":"Listed",notListedForSale)]});
+  // usdaPaymentsMade12 requirement removed per 7 CFR §3555.304 (USDA Final Rule Apr 14, 2025)
+  const sb=!isD&&br&&l.borrowerIntentRetention&&l.occupancyStatus==="Owner Occupied"&&nm<2&&!l.usdaPriorFailedStreamlineTPP&&dlqD>=90&&l.usdaUpbGe5000&&l.usdaBankruptcyNotActive&&l.usdaLitigationNotActive&&l.usdaForeclosureSaleGe60Away&&notListedForSale;
+  results.push({option:"USDA Streamline Loan Modification",eligible:sb,nodes:[node("Non-disaster hardship",l.hardshipType,!isD),node(">=90d DLQ",dlqD,dlqD>=90),node("UPB>=$5k",l.usdaUpbGe5000,l.usdaUpbGe5000),node("Bankruptcy!=Active",l.usdaBankruptcyNotActive,l.usdaBankruptcyNotActive),node("Litigation!=Active",l.usdaLitigationNotActive,l.usdaLitigationNotActive),node("No failed Streamline TPP",!l.usdaPriorFailedStreamlineTPP,!l.usdaPriorFailedStreamlineTPP),node("Not Abandoned/Condemned",br,br),node("Intent=Retain",l.borrowerIntentRetention,l.borrowerIntentRetention),node("Owner Occupied",l.occupancyStatus,l.occupancyStatus==="Owner Occupied"),node("Lien=First",l.lienPosition,l.lienPosition==="First"),node("Prior mods < 2 (max 1 Streamline mod lifetime — 7 CFR §3555.304)",nm,nm<2),node("Foreclosure sale>=60d",l.usdaForeclosureSaleGe60Away,l.usdaForeclosureSaleGe60Away),node("Property not listed for sale",notListedForSale?"No":"Listed",notListedForSale)]});
   results.push({option:"USDA Modification + MRA Servicing Plan",eligible:sb&&l.usdaStep3DeferralRequired,nodes:[node(">=90d DLQ",dlqD,dlqD>=90),node("Streamline Mod base eligible",sb,sb),node("480mo re-amortization cannot achieve target",l.usdaStep3DeferralRequired?"Yes":"No",l.usdaStep3DeferralRequired)]});
   results.push({option:"USDA Standalone Mortgage Recovery Advance (MRA)",eligible:!isD&&l.usdaBorrowerCanResumeCurrent&&(l.usdaHardshipDurationResolved||l.usdaLoanModIneligible)&&l.usdaBorrowerCannotCureDLQWithin12&&l.lienPosition==="First"&&l.propertyCondition!=="Condemned"&&!l.occupancyAbandoned&&dlqD>=30,nodes:[node("Non-disaster hardship",l.hardshipType,!isD),node("Can resume payment",l.usdaBorrowerCanResumeCurrent,l.usdaBorrowerCanResumeCurrent),node("Resolved OR Mod Ineligible",l.usdaHardshipDurationResolved||l.usdaLoanModIneligible,l.usdaHardshipDurationResolved||l.usdaLoanModIneligible),node("Cannot cure DLQ 12mo",l.usdaBorrowerCannotCureDLQWithin12,l.usdaBorrowerCannotCureDLQWithin12),node("Lien=First",l.lienPosition,l.lienPosition==="First"),node("Not Condemned",l.propertyCondition,l.propertyCondition!=="Condemned"),node("Not Abandoned",!l.occupancyAbandoned,!l.occupancyAbandoned),node("DLQ>=30d",dlqD,dlqD>=30)]});
   results.push({option:"USDA Disaster Term Extension Modification",eligible:l.usdaPriorWorkoutDisasterForbearance&&isD&&l.usdaHardshipNotResolved&&l.lienPosition==="First"&&l.propertyCondition!=="Condemned"&&!l.occupancyAbandoned&&l.usdaDLQGe12Contractual&&l.usdaDLQAt30AtDisaster&&l.usdaLoanGe60DLQ&&l.usdaPrevWorkoutForbearance&&l.usdaWorkoutStateActivePassed,nodes:[node("Prior=Disaster Forbearance",l.usdaPriorWorkoutDisasterForbearance,l.usdaPriorWorkoutDisasterForbearance),node("Hardship=Disaster",isD,isD),node("Hardship!=Resolved",l.usdaHardshipNotResolved,l.usdaHardshipNotResolved),node("Lien=First",l.lienPosition,l.lienPosition==="First"),node("Not Condemned",l.propertyCondition,l.propertyCondition!=="Condemned"),node("Not Abandoned",!l.occupancyAbandoned,!l.occupancyAbandoned),node("DLQ>=12 Contractual",l.usdaDLQGe12Contractual,l.usdaDLQGe12Contractual),node("<30d DLQ at Declaration",l.usdaDLQAt30AtDisaster,l.usdaDLQAt30AtDisaster),node("Loan>=60d DLQ",l.usdaLoanGe60DLQ,l.usdaLoanGe60DLQ),node("Prev=Forbearance",l.usdaPrevWorkoutForbearance,l.usdaPrevWorkoutForbearance),node("Workout Active/Passed",l.usdaWorkoutStateActivePassed,l.usdaWorkoutStateActivePassed)]});
@@ -249,8 +250,8 @@ function evaluateFHLMC(l) {
   {
     const eligDlqRange=dlq>=2&&dlq<=6, eligLoanAge=loanAge>=12;
     const fhlmcCumDeferred=n(l.fhlmcCumulativeDeferredMonths), fhlmcPriorDeferral=n(l.fhlmcPriorDeferralMonths);
-    const eligCumCap=fhlmcCumDeferred<12, eligPriorDeferral=fhlmcPriorDeferral===0||fhlmcPriorDeferral>=12;
-    const nodes=[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("Conventional 1st lien",l.lienPosition,isConventional&&isFirstLien),node("Loan age >= 12 months",loanAge+"mo",eligLoanAge),node("DLQ 2-6 months",dlq+"mo",eligDlqRange),node("Hardship resolved",l.fhlmcHardshipResolved?"Yes":"No",l.fhlmcHardshipResolved),node("Can resume full contractual payment",l.fhlmcCanResumeFull?"Yes":"No",l.fhlmcCanResumeFull),node("Cumulative deferred months < 12",fhlmcCumDeferred+"mo",eligCumCap),node("Prior non-disaster deferral >= 12 months ago or never",fhlmcPriorDeferral===0?"None":fhlmcPriorDeferral+"mo ago",eligPriorDeferral),node("No approved liquidation option active",l.fhlmcApprovedLiquidationOption?"Active":"None",noActiveLiquidation),node("No active/performing TPP",l.fhlmcActiveTPP?"Active":"None",noActiveTPP),node("No unexpired offer for another workout option",l.fhlmcUnexpiredOffer?"Yes":"No",noUnexpiredOffer)];
+    const eligCumCap=fhlmcCumDeferred<18, eligPriorDeferral=fhlmcPriorDeferral===0||fhlmcPriorDeferral>=12; // Bulletin 2026-2: cap raised from 12 to 18 months
+    const nodes=[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("Conventional 1st lien",l.lienPosition,isConventional&&isFirstLien),node("Loan age >= 12 months",loanAge+"mo",eligLoanAge),node("DLQ 2-6 months",dlq+"mo",eligDlqRange),node("Hardship resolved",l.fhlmcHardshipResolved?"Yes":"No",l.fhlmcHardshipResolved),node("Can resume full contractual payment",l.fhlmcCanResumeFull?"Yes":"No",l.fhlmcCanResumeFull),node("Cumulative deferred months < 18 (Bulletin 2026-2)",fhlmcCumDeferred+"mo",eligCumCap),node("Prior non-disaster deferral >= 12 months ago or never",fhlmcPriorDeferral===0?"None":fhlmcPriorDeferral+"mo ago",eligPriorDeferral),node("QRPC (Qualified Right Party Contact) achieved (§9203.23)",l.fhlmcQRPCAchieved?"Yes":"No",l.fhlmcQRPCAchieved),node("No approved liquidation option active",l.fhlmcApprovedLiquidationOption?"Active":"None",noActiveLiquidation),node("No active/performing TPP",l.fhlmcActiveTPP?"Active":"None",noActiveTPP),node("No unexpired offer for another workout option",l.fhlmcUnexpiredOffer?"Yes":"No",noUnexpiredOffer)];
     results.push({option:"FHLMC Payment Deferral",eligible:nodes.every(nd=>nd.pass),nodes});
   }
   {
@@ -279,7 +280,8 @@ function evaluateFHLMC(l) {
   }
   {
     const eligDlqAtDisaster=dlqAtDisaster<2;
-    const nodes=[node("Disaster-related hardship",l.fhlmcDisasterHardship?"Yes":"No",l.fhlmcDisasterHardship),node("Eligible Disaster (FEMA-declared)",l.fhlmcFEMADesignation?"Yes":"No",l.fhlmcFEMADesignation),node("Conventional mortgage",l.fhlmcMortgageType,isConventional),node("First lien",l.lienPosition,isFirstLien),node("No recourse arrangement",l.fhlmcRecourse?"Yes":"No",noRecourse),node("Current or <60 days DLQ at time of disaster",dlqAtDisaster+"mo",eligDlqAtDisaster),node("Not under active approved liquidation option",l.fhlmcApprovedLiquidationOption?"Active":"None",noActiveLiquidation),node("Not under active non-disaster TPP/repayment plan",(l.fhlmcActiveTPP||l.fhlmcActiveRepayPlan)?"Active":"None",noActiveTPP&&noActiveRepay),node("No unexpired non-disaster workout offer",l.fhlmcUnexpiredOffer?"Yes":"No",noUnexpiredOffer)];
+    const eligDlqAtEval=dlq>=3; // Bulletin 2026-2 (eff. Feb 11, 2026): ≥90 DLQ at evaluation date required
+    const nodes=[node("Disaster-related hardship",l.fhlmcDisasterHardship?"Yes":"No",l.fhlmcDisasterHardship),node("Eligible Disaster (FEMA-declared)",l.fhlmcFEMADesignation?"Yes":"No",l.fhlmcFEMADesignation),node("Conventional mortgage",l.fhlmcMortgageType,isConventional),node("First lien",l.lienPosition,isFirstLien),node("No recourse arrangement",l.fhlmcRecourse?"Yes":"No",noRecourse),node("Current or <60 days DLQ at time of disaster",dlqAtDisaster+"mo",eligDlqAtDisaster),node(">= 90 days DLQ at evaluation date (Bulletin 2026-2, eff. Feb 11, 2026)",dlq+"mo",eligDlqAtEval),node("Not under active approved liquidation option",l.fhlmcApprovedLiquidationOption?"Active":"None",noActiveLiquidation),node("Not under active non-disaster TPP/repayment plan",(l.fhlmcActiveTPP||l.fhlmcActiveRepayPlan)?"Active":"None",noActiveTPP&&noActiveRepay),node("No unexpired non-disaster workout offer",l.fhlmcUnexpiredOffer?"Yes":"No",noUnexpiredOffer)];
     results.push({option:"Freddie Mac Flex Modification (Disaster)",eligible:nodes.every(nd=>nd.pass),nodes});
   }
   { const eligIntent=!l.borrowerIntentRetention; const nodes=[node("Borrower intent = Disposition",l.borrowerIntentRetention?"Retain":"Dispose",eligIntent),node("Eligible hardship",l.hardshipType,l.hardshipType!=="None"),node("Conventional mortgage",l.fhlmcMortgageType,isConventional)]; results.push({option:"Freddie Mac Short Sale",eligible:nodes.every(nd=>nd.pass),nodes}); }
@@ -299,9 +301,9 @@ function evaluateFNMA(l) {
   { const nodes=[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("Hardship appears resolved",l.fnmaHardshipResolved?"Yes":"No",l.fnmaHardshipResolved),node("Property not condemned/abandoned",l.propertyCondition,propertyOK)]; results.push({option:"FNMA Repayment Plan",eligible:nodes.every(nd=>nd.pass),nodes}); }
   {
     const eligLienPos=l.lienPosition==="First", eligLoanAge=loanAge>=12, eligDlqRange=dlq>=2&&dlq<=6;
-    const eligCumCap=cumulativeDeferred<12, eligPriorDeferral=priorDeferralMonths===0||priorDeferralMonths>=12;
+    const eligCumCap=(cumulativeDeferred+dlq)<=12, eligPriorDeferral=priorDeferralMonths===0||priorDeferralMonths>=12; // D2-3.2-04: prior + current DLQ ≤ 12mo lifetime
     const eligHardship=l.fnmaHardshipResolved||l.fnmaImminentDefault;
-    const nodes=[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("Conventional 1st lien",l.lienPosition,eligLienPos),node("Loan age >= 12 months",loanAge+"mo",eligLoanAge),node("DLQ 2-6 months at evaluation",dlq+"mo",eligDlqRange),node("Hardship resolved OR servicer imminent default determination",l.fnmaHardshipResolved?"Resolved":l.fnmaImminentDefault?"Imminent Default":"Neither",eligHardship),node("Can resume full contractual payment",l.fnmaCanResumeFull?"Yes":"No",l.fnmaCanResumeFull),node("Cannot reinstate or afford repayment plan",l.fnmaCannotReinstate?"Yes":"No",l.fnmaCannotReinstate),node("Cumulative deferred months < 12 (lifetime)",cumulativeDeferred+"mo",eligCumCap),node("Prior non-disaster deferral >= 12 months ago (or never)",priorDeferralMonths===0?"None":priorDeferralMonths+"mo ago",eligPriorDeferral),node("Not within 36 months of maturity",l.fnmaWithin36MonthsMaturity?"Within 36mo":"OK",!l.fnmaWithin36MonthsMaturity),node("No failed Flex Mod TPP within 12 months",l.fnmaFailedTPP12Months?"Yes":"No",!l.fnmaFailedTPP12Months),...commonBlockers];
+    const nodes=[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("Conventional 1st lien",l.lienPosition,eligLienPos),node("Loan age >= 12 months",loanAge+"mo",eligLoanAge),node("DLQ 2-6 months at evaluation",dlq+"mo",eligDlqRange),node("Hardship resolved OR servicer imminent default determination",l.fnmaHardshipResolved?"Resolved":l.fnmaImminentDefault?"Imminent Default":"Neither",eligHardship),node("Can resume full contractual payment",l.fnmaCanResumeFull?"Yes":"No",l.fnmaCanResumeFull),node("Cannot reinstate or afford repayment plan",l.fnmaCannotReinstate?"Yes":"No",l.fnmaCannotReinstate),node("Prior deferred + current DLQ <= 12 months (lifetime cap — D2-3.2-04)",`${cumulativeDeferred}mo prior + ${dlq}mo = ${cumulativeDeferred+dlq}mo`,eligCumCap),node("Prior non-disaster deferral >= 12 months ago (or never)",priorDeferralMonths===0?"None":priorDeferralMonths+"mo ago",eligPriorDeferral),node("Not within 36 months of maturity",l.fnmaWithin36MonthsMaturity?"Within 36mo":"OK",!l.fnmaWithin36MonthsMaturity),node("No failed Flex Mod TPP within 12 months",l.fnmaFailedTPP12Months?"Yes":"No",!l.fnmaFailedTPP12Months),...commonBlockers];
     results.push({option:"FNMA Payment Deferral",eligible:nodes.every(nd=>nd.pass),nodes});
   }
   {
@@ -635,6 +637,101 @@ check("VA","SEV-VA-04 Compromise Sale eligible - 24mo severe DLQ, disposition",
 check("VA","SEV-VA-05 Repayment Plan eligible - 30d DLQ (boundary)",
   L({delinquencyDays:"30",hardshipDuration:"Resolved",borrowerCanAffordReinstateOrRepay:true}),
   {"VA Repayment Plan":true});
+
+// ─── BOUNDARY / THRESHOLD TESTS (14) ─────────────────────────────────────────
+// Tests covering exact threshold boundaries for compliance-critical conditions.
+
+// ── FHLMC ID Housing Ratio Boundary (Rule 2: housingRatio > 40) ──────────────
+
+// Exactly 40%: NOT strictly greater than 40, Rule 2 NOT met → ID fails → ineligible
+check("FHLMC","BOUND-FHLMC-01 ID housing ratio exactly 40% — Rule 2 NOT met (>40 is strict)",
+  L({delinquencyMonths:"1",fhlmcImminentDefault:true,fhlmcHousingExpenseRatio:"40"}),
+  {"Freddie Mac Flex Modification":false});
+
+// 41%: strictly greater than 40, Rule 2 met → ID valid → eligible
+check("FHLMC","BOUND-FHLMC-02 ID housing ratio 41% — Rule 2 met (just above boundary)",
+  L({delinquencyMonths:"1",fhlmcImminentDefault:true,fhlmcHousingExpenseRatio:"41"}),
+  {"Freddie Mac Flex Modification":true});
+
+// ── FNMA ID Housing Ratio Boundary (Rule 2: fnmaHousingRatio > 55) ────────────
+
+// Exactly 55%: NOT strictly greater than 55, Rule 2 NOT met → ID fails → ineligible
+check("FNMA","BOUND-FNMA-01 ID housing ratio exactly 55% — Rule 2 NOT met (>55 is strict)",
+  L({delinquencyMonths:"1",fnmaImminentDefault:true,fnmaLongTermHardship:true,
+     fnmaCashReservesLt3Mo:true,fnmaFICO:"700",fnmaHousingRatio:"55"}),
+  {"Fannie Mae Flex Modification":false});
+
+// 56%: strictly greater than 55, Rule 2 met → ID valid → eligible
+check("FNMA","BOUND-FNMA-02 ID housing ratio 56% — Rule 2 met (just above boundary)",
+  L({delinquencyMonths:"1",fnmaImminentDefault:true,fnmaLongTermHardship:true,
+     fnmaCashReservesLt3Mo:true,fnmaFICO:"700",fnmaHousingRatio:"56"}),
+  {"Fannie Mae Flex Modification":true});
+
+// ── FHLMC Payment Deferral Cumulative Cap Boundary (cap: < 18 months) ─────────
+
+// 17 months: strictly less than 18 → eligible
+check("FHLMC","BOUND-FHLMC-03 Deferral cumCap 17mo — eligible (17 < 18)",
+  L({delinquencyMonths:"2",fhlmcHardshipResolved:true,fhlmcCanResumeFull:true,
+     fhlmcQRPCAchieved:true,fhlmcCumulativeDeferredMonths:"17",fhlmcPriorDeferralMonths:"0"}),
+  {"FHLMC Payment Deferral":true});
+
+// 18 months: NOT less than 18, cap exceeded → NOT eligible
+check("FHLMC","BOUND-FHLMC-04 Deferral cumCap 18mo — NOT eligible (18 < 18 is false)",
+  L({delinquencyMonths:"2",fhlmcHardshipResolved:true,fhlmcCanResumeFull:true,
+     fhlmcQRPCAchieved:true,fhlmcCumulativeDeferredMonths:"18",fhlmcPriorDeferralMonths:"0"}),
+  {"FHLMC Payment Deferral":false});
+
+// ── FNMA Payment Deferral Cumulative Cap Boundary (cap: prior + current DLQ ≤ 12) ─
+
+// prior=10, dlq=2: sum=12 exactly at cap → eligible (12 ≤ 12)
+check("FNMA","BOUND-FNMA-03 Deferral prior+dlq exactly 12 — eligible (12 <= 12, D2-3.2-04)",
+  L({delinquencyMonths:"2",fnmaHardshipResolved:true,fnmaCanResumeFull:true,
+     fnmaCumulativeDeferredMonths:"10",fnmaPriorDeferralMonths:"0"}),
+  {"FNMA Payment Deferral":true});
+
+// prior=11, dlq=2: sum=13 exceeds cap → NOT eligible (13 <= 12 is false)
+check("FNMA","BOUND-FNMA-04 Deferral prior+dlq exceeds 12 — NOT eligible (13 <= 12 false)",
+  L({delinquencyMonths:"2",fnmaHardshipResolved:true,fnmaCanResumeFull:true,
+     fnmaCumulativeDeferredMonths:"11",fnmaPriorDeferralMonths:"0"}),
+  {"FNMA Payment Deferral":false});
+
+// ── FHA Payment Deferral DLQ Minimum Boundary (requires DLQ >= 3 months) ──────
+
+// DLQ = 3: minimum eligible threshold (3 >= 3)
+check("FHA","BOUND-FHA-01 FHA Deferral DLQ exactly 3mo — eligible (boundary minimum)",
+  L({delinquencyMonths:"3",fhaHardshipResolved:true}),
+  {"FHA Payment Deferral":true});
+
+// DLQ = 2: one below minimum threshold (2 >= 3 is false)
+check("FHA","BOUND-FHA-02 FHA Deferral DLQ 2mo — NOT eligible (below 3mo minimum)",
+  L({delinquencyMonths:"2",fhaHardshipResolved:true}),
+  {"FHA Payment Deferral":false});
+
+// ── USDA Streamline Mod Prior Mods Boundary (max 1 prior mod; nm < 2) ──────────
+
+// 1 prior mod: nm = 1 < 2 → eligible
+check("USDA","BOUND-USDA-01 Streamline Mod 1 prior mod — eligible (1 < 2)",
+  L({delinquencyMonths:"3",usdaNumPrevMods:"1"}),
+  {"USDA Streamline Loan Modification":true});
+
+// 2 prior mods: nm = 2, 2 < 2 is false → NOT eligible
+check("USDA","BOUND-USDA-02 Streamline Mod 2 prior mods — NOT eligible (2 < 2 is false)",
+  L({delinquencyMonths:"3",usdaNumPrevMods:"2"}),
+  {"USDA Streamline Loan Modification":false});
+
+// ── FHLMC Disaster Flex Mod DLQ-at-Disaster Boundary (requires < 2 months) ────
+
+// DLQ at disaster = 1: 1 < 2 → eligible
+check("FHLMC","BOUND-FHLMC-05 Disaster Flex Mod DLQ@disaster 1mo — eligible (1 < 2)",
+  L({delinquencyMonths:"3",fhlmcDisasterHardship:true,fhlmcFEMADesignation:true,
+     fhlmcDLQAtDisaster:"1"}),
+  {"Freddie Mac Flex Modification (Disaster)":true});
+
+// DLQ at disaster = 2: 2 < 2 is false → NOT eligible
+check("FHLMC","BOUND-FHLMC-06 Disaster Flex Mod DLQ@disaster 2mo — NOT eligible (2 < 2 false)",
+  L({delinquencyMonths:"3",fhlmcDisasterHardship:true,fhlmcFEMADesignation:true,
+     fhlmcDLQAtDisaster:"2"}),
+  {"Freddie Mac Flex Modification (Disaster)":false});
 
 // ─── RESULTS ──────────────────────────────────────────────────────────────────
 console.log("\n=== IMMINENT DEFAULT & SEVERELY DELINQUENT TEST RESULTS ===");
