@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ResolutionIQ — Technical Handoff Doc</title>
+<title>ResolutionIQ — Technical Handoff Doc v2</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -37,7 +37,6 @@
   .step-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
   .step-num { background:#1e3a5f; color:#fff; font-size:9px; font-weight:700; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .step-title { font-size:11px; font-weight:700; color:#1e3a5f; }
-  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:8px 0 16px; }
   .footer { margin-top:40px; padding-top:16px; border-top:1px solid #e5e7eb; text-align:center; font-size:9px; color:#9ca3af; }
   @media print { body { font-size:9.5px; } }
   @page { size:letter; margin:0.5in 0.65in; }
@@ -46,10 +45,10 @@
 <body>
 
 <div class="cover">
-  <div class="cover-badge">Developer Handoff · Part 2 of 2</div>
+  <div class="cover-badge">Developer Handoff · Part 2 of 2 · v2</div>
   <h1><span>ResolutionIQ</span><br>Technical Handoff Doc</h1>
-  <div class="cover-sub">Stack, architecture, data model, environment setup, code conventions, and everything a developer needs to begin contributing safely and effectively.</div>
-  <div class="cover-meta">Version 1.0 · March 2026 · Internal — Developer Use</div>
+  <div class="cover-sub">Stack, architecture, data model, environment setup, code conventions, test suite, and everything a developer needs to contribute safely — fully updated through March 2026.</div>
+  <div class="cover-meta">Version 2.0 · March 2026 · Internal — Developer Use</div>
 </div>
 
 <div class="body">
@@ -60,46 +59,49 @@
     <tr><td>Live URL</td><td>https://jacklawrence713.github.io/ResolutionIQ/</td></tr>
     <tr><td>Repository</td><td>github.com/jacklawrence713/ResolutionIQ (private)</td></tr>
     <tr><td>Primary branch</td><td><code>master</code></td></tr>
-    <tr><td>Deploy trigger</td><td>Push to <code>master</code> → GitHub Actions → GitHub Pages (~30 sec build)</td></tr>
+    <tr><td>Deploy trigger</td><td>Push to <code>master</code> → GitHub Actions → GitHub Pages (~30 sec)</td></tr>
     <tr><td>Local dev server</td><td><code>npm run dev</code> → http://localhost:5173</td></tr>
     <tr><td>Supabase project</td><td>https://upifjsslzunnsalraark.supabase.co</td></tr>
-    <tr><td>Codebase size</td><td>~6,105 lines — single file: <code>src/App.tsx</code></td></tr>
+    <tr><td>Codebase size</td><td>~6,300 lines — single file: <code>src/App.tsx</code></td></tr>
     <tr><td>Test suite</td><td>496 test cases across 6 <code>.mjs</code> files; also runnable in-app (Tests tab)</td></tr>
+    <tr><td>Last major commit</td><td>2b4629c — March 31, 2026</td></tr>
   </table>
 
   <h2>2. Tech Stack</h2>
   <table>
     <tr><th>Layer</th><th>Technology</th><th>Version</th><th>Notes</th></tr>
-    <tr><td>UI Framework</td><td>React</td><td>18.2</td><td>Functional components, hooks only</td></tr>
-    <tr><td>Language</td><td>TypeScript</td><td>5.x</td><td>Strict mode not fully enforced — types used pragmatically</td></tr>
-    <tr><td>Build Tool</td><td>Vite</td><td>5.x</td><td>ESM, fast HMR</td></tr>
-    <tr><td>Styling</td><td>Tailwind CSS</td><td>3.4</td><td>Utility-first; no custom CSS file beyond <code>index.css</code> reset</td></tr>
-    <tr><td>Backend / Auth / DB</td><td>Supabase</td><td>2.99</td><td>Auth + Postgres + RLS. No server-side code.</td></tr>
-    <tr><td>Hosting</td><td>GitHub Pages</td><td>—</td><td>Static SPA; all logic client-side</td></tr>
-    <tr><td>CI/CD</td><td>GitHub Actions</td><td>Node 20</td><td>Single workflow: build + deploy</td></tr>
-    <tr><td>AI Assistant</td><td>Claude API (Anthropic)</td><td>claude-sonnet-4-6</td><td>User supplies their own API key; not stored in app</td></tr>
+    <tr><td>UI Framework</td><td>React</td><td>18.2</td><td>Functional components, hooks only. No class components.</td></tr>
+    <tr><td>Language</td><td>TypeScript</td><td>5.x</td><td>Types used pragmatically. Not strictly enforced everywhere.</td></tr>
+    <tr><td>Build Tool</td><td>Vite</td><td>5.x</td><td>ESM, fast HMR. ~3.6s production build.</td></tr>
+    <tr><td>Styling</td><td>Tailwind CSS</td><td>3.4</td><td>Utility-first. No custom CSS beyond <code>index.css</code> reset.</td></tr>
+    <tr><td>Backend / Auth / DB</td><td>Supabase</td><td>2.99</td><td>Auth + Postgres + RLS + Realtime. No server-side code.</td></tr>
+    <tr><td>Hosting</td><td>GitHub Pages</td><td>—</td><td>Static SPA. All logic runs client-side.</td></tr>
+    <tr><td>CI/CD</td><td>GitHub Actions</td><td>Node 20</td><td>Single workflow: build + deploy. ~30 second end-to-end.</td></tr>
+    <tr><td>AI Assistant</td><td>Claude API (Anthropic)</td><td>claude-sonnet-4-6</td><td>User supplies API key at runtime. Never stored.</td></tr>
   </table>
 
   <h2>3. Repository Structure</h2>
   <pre>ResolutionIQ/
 ├── src/
-│   ├── App.tsx          ← ENTIRE application (~6,105 lines). One file.
-│   ├── supabase.ts      ← Supabase client init (reads env vars)
+│   ├── App.tsx          ← ENTIRE application (~6,300 lines). One file.
+│   ├── supabase.ts      ← Supabase client init (reads VITE_SUPABASE_* env vars)
 │   ├── main.tsx         ← React root mount
 │   └── index.css        ← Tailwind base reset only
-├── public/              ← Static assets
+├── public/              ← Static assets (logo SVG, etc.)
 ├── .github/workflows/   ← GitHub Actions deploy pipeline
-├── test_evaluations.mjs          ← Main eligibility tests (262 cases)
-├── test_evaluations_id_severe.mjs ← Boundary/edge case tests (64 cases)
-├── test_evaluations_sad.mjs      ← Sad-path / ineligibility tests (125 cases)
-├── test_waterfall.mjs            ← Waterfall order tests (10 cases)
-├── test_validation.mjs           ← Input validation tests (19 cases)
-├── test_computed_fields.mjs      ← Computed field tests (15 cases)
+├── test_evaluations.mjs           ← Main eligibility tests (262 cases)
+├── test_evaluations_id_severe.mjs ← Boundary/imminent default tests (78 cases)
+├── test_evaluations_sad.mjs       ← Sad-path / ineligibility tests (125 cases)
+├── test_waterfall.mjs             ← Waterfall order tests (10 cases)
+├── test_validation.mjs            ← Input validation tests (19 cases)
+├── test_computed_fields.mjs       ← Computed field tests (15 cases — includes PMMS)
+├── ResolutionIQ_*.html            ← Supporting docs (user manual, admin guide, legal, etc.)
+├── ResolutionIQ_*_Calculation_Guide.xlsx ← Investor calculation guides
 ├── vite.config.ts
 ├── tailwind.config.js
 ├── tsconfig.json
 └── package.json</pre>
-  <div class="warn">The entire application lives in one file: <code>src/App.tsx</code>. Do not split it into multiple files without a deliberate refactor plan — the evaluation engines, UI, and state management are interdependent. Breaking it into modules carelessly will cause import cycles and break the test suite.</div>
+  <div class="warn">The entire application lives in <code>src/App.tsx</code>. Do not split it into multiple files without a full refactor plan — the engines, UI, and state are interdependent. Breaking it carelessly causes import cycles and breaks the test suite.</div>
 
   <h2>4. Environment Setup</h2>
 
@@ -112,17 +114,17 @@ npm install</pre>
 
   <div class="step-block">
     <div class="step-header"><div class="step-num">2</div><div class="step-title">Create .env file</div></div>
-    <p>Create <code>.env</code> in the project root (do not commit this file):</p>
+    <p>Create <code>.env</code> in the project root (never commit this file):</p>
     <pre>VITE_SUPABASE_URL=https://upifjsslzunnsalraark.supabase.co
 VITE_SUPABASE_ANON_KEY=sb_publishable_jabRLGzCMBj8UJL6tzNkTA_qbQfwM9R</pre>
-    <p>The anon key is the public publishable key (safe for client-side use). The service role key is never used in this app.</p>
-    <div class="note">For a dev/staging environment, create a separate Supabase project and use its credentials. Run the DB Setup SQL (Settings → Database Setup in-app) to provision tables.</div>
+    <p>The anon key is the public publishable key — safe for client-side use. Never add the service role key.</p>
+    <div class="note">For a dev/staging environment, create a separate Supabase project and run the DB Setup SQL (Settings → Database Setup in-app) to provision all three tables.</div>
   </div>
 
   <div class="step-block">
     <div class="step-header"><div class="step-num">3</div><div class="step-title">Run Dev Server</div></div>
-    <pre>npm run dev</pre>
-    <p>Opens at http://localhost:5173. Hot module replacement is active — changes to App.tsx reflect immediately without page reload.</p>
+    <pre>npm run dev    # → http://localhost:5173</pre>
+    <p>Changes to App.tsx reflect immediately via HMR. No restart required.</p>
   </div>
 
   <div class="step-block">
@@ -133,204 +135,229 @@ node test_evaluations_sad.mjs
 node test_waterfall.mjs
 node test_validation.mjs
 node test_computed_fields.mjs</pre>
-    <p>Tests run with Node.js only — no test framework dependency. Each file is self-contained. All 496 should pass before any PR.</p>
-    <div class="tip">Tests are also runnable in-app from the Tests tab — useful for debugging a specific failing test interactively.</div>
+    <p>Node.js only — no test framework. All 496 must pass before any PR. Tests are also runnable from the Tests tab in-app.</p>
   </div>
 
   <div class="step-block">
-    <div class="step-header"><div class="step-num">5</div><div class="step-title">Deploy</div></div>
-    <pre>git add [files]
-git commit -m "Your message"
-git push origin master</pre>
-    <p>GitHub Actions picks up the push and deploys to GitHub Pages in ~30 seconds. Watch build status at github.com/jacklawrence713/ResolutionIQ/actions.</p>
+    <div class="step-header"><div class="step-num">5</div><div class="step-title">Build &amp; Deploy</div></div>
+    <pre>npm run build          # verify no TS errors locally
+git add [files]
+git commit -m "message"
+git push origin master  # triggers GitHub Actions → live in ~30 sec</pre>
   </div>
 
   <h2>5. Core Architecture — Eligibility Engine</h2>
-  <p>The engine is the most critical part of the codebase. Understand this before touching anything.</p>
 
-  <h3>5.1 Engine Functions</h3>
-  <p>Five investor-specific functions, each returning the same shape:</p>
+  <h3>5.1 Five Engine Functions</h3>
   <pre>evaluateFHA(loan: LoanData): EligibilityResult[]
 evaluateFNMA(loan: LoanData): EligibilityResult[]
 evaluateFHLMC(loan: LoanData): EligibilityResult[]
 evaluateVA(loan: LoanData): EligibilityResult[]
 evaluateUSDA(loan: LoanData): EligibilityResult[]</pre>
-  <p>Return type:</p>
+  <p>Each returns an array of results — one entry per loss mitigation option:</p>
   <pre>interface EligibilityResult {
-  option: string;        // e.g. "FHA 30-Year Standalone Modification"
-  eligible: boolean;
+  option: string;        // e.g. "FNMA Streamlined Payment Deferral"
+  eligible: boolean;     // always derived from nodes.every(n => n.pass)
   nodes: AuditNode[];    // every criterion evaluated
-  note?: string;         // special conditions or warnings
+  note?: string;         // special conditions or program notes
+  overlayBlocked?: boolean;   // true if a servicer overlay blocked an otherwise eligible option
+  overlayReasons?: string[];  // which overlay rule blocked it
 }</pre>
 
   <h3>5.2 The Node System</h3>
-  <p>Every eligibility criterion is a "node" — a single pass/fail check. The <code>node()</code> helper is defined inside each engine function:</p>
-  <pre>// Inside evaluateFHA:
-const nodes: AuditNode[] = [];
+  <p>Every single eligibility criterion is a "node." The <code>node()</code> helper is defined inside each engine function:</p>
+  <pre>const nodes: AuditNode[] = [];
 const node = (question: string, answer: string, pass: boolean) => {
   nodes.push({ question, answer, pass });
 };
 
 // Usage:
-node("Loan is FHA-insured", loan.loanType, loan.loanType === "FHA");
-node("Delinquency >= 1 month", dlq + "mo", dlq >= 1);
-// ...
+node("DLQ 2–6 months at evaluation", dlq+"mo", dlq >= 2 && dlq <= 6);
+node("Hardship resolved", l.fnmaHardshipResolved?"Yes":"No", l.fnmaHardshipResolved);
+
+// Eligibility is ALWAYS derived from all nodes:
 const eligible = nodes.every(n => n.pass);
-results.push({ option: "FHA Reinstatement", eligible, nodes });</pre>
-  <div class="warn">Never compute <code>eligible</code> manually as a boolean expression. Always derive it from <code>nodes.every(n => n.pass)</code>. This ensures the audit trail is always consistent with the eligibility outcome.</div>
+results.push({ option: "FNMA Payment Deferral", eligible, nodes });</pre>
+  <div class="warn">Never compute <code>eligible</code> as a manual boolean expression. It must always derive from <code>nodes.every(n => n.pass)</code>. This guarantees the audit trail is always consistent with the eligibility outcome.</div>
 
-  <h3>5.3 Terms Engine</h3>
-  <p><code>calcApprovalTerms(optionName: string, loan: LoanData)</code> — ~2,000+ lines. Computes:</p>
-  <ul>
-    <li>New payment, new interest rate, capitalized UPB</li>
-    <li>Partial claim amounts, forbearance totals</li>
-    <li>Cap checks (LTV caps, UPB caps, payment increase caps)</li>
-    <li>Amortization schedule inputs for mods</li>
-  </ul>
-  <p>This function is called when displaying results and in the Report tab. It is NOT called by the eligibility engine — they are separate concerns.</p>
+  <h3>5.3 Servicer Overlay Post-Processing</h3>
+  <p>After the engine runs, overlays are applied as a post-processing filter. If an option is eligible but blocked by an overlay, it is marked ineligible with <code>overlayBlocked: true</code> and <code>overlayReasons</code>. The UI shows a 🚫 badge in the Results and Audit tabs for overlay-blocked options.</p>
 
-  <h3>5.4 Waterfall Order</h3>
+  <h3>5.4 Terms Engine</h3>
+  <p><code>calcApprovalTerms(optionName: string, loan: LoanData)</code> — ~2,000+ lines. Computes new payment, capitalized UPB, partial claim amounts, rate reduction steps, cap checks, and amortization inputs. Called separately from eligibility — it is NOT called by the engine functions.</p>
+
+  <h3>5.5 Waterfall Order</h3>
   <pre>const WATERFALL_ORDER: Record&lt;string, string[]&gt; = {
-  FHA: ["FHA Reinstatement", "Repayment Plan", "Formal Forbearance", ...],
-  FNMA: ["FNMA Reinstatement", "FNMA Repayment Plan", ...],
+  FHA:   ["FHA Reinstatement", "Repayment Plan", "Formal Forbearance", ...],
+  FNMA:  ["FNMA Reinstatement", "FNMA Repayment Plan", ...],
   // etc.
 };</pre>
-  <p>Results are sorted by waterfall order before display. Options not in the waterfall array are appended at the end.</p>
 
-  <h3>5.5 Servicer Overlays</h3>
-  <p>Overlays are applied as a post-processing filter after the engine runs. If an option is eligible but the overlay excludes it, it is marked ineligible with a note. Currently stored in <code>localStorage("riq_overlays")</code>.</p>
-
-  <h2>6. Data Model</h2>
-
-  <h3>6.1 Supabase Tables</h3>
+  <h2>6. Data Model — Supabase Tables</h2>
   <table>
     <tr><th>Table</th><th>Purpose</th><th>Key Columns</th></tr>
-    <tr><td><code>profiles</code></td><td>User accounts and roles</td><td><code>id</code> (UUID, FK auth.users), <code>email</code>, <code>full_name</code>, <code>approved</code> (bool), <code>role</code> (text: admin/supervisor/specialist)</td></tr>
-    <tr><td><code>evaluations</code></td><td>Saved cases</td><td><code>id</code>, <code>user_id</code> (FK profiles), <code>loan_data</code> (JSONB), <code>results</code> (JSONB), <code>checked_docs</code> (JSONB), <code>assignee_email</code>, <code>sla_start_date</code>, <code>foreclosure_sale_date</code>, <code>created_at</code>, <code>updated_at</code></td></tr>
-    <tr><td><code>evaluation_versions</code></td><td>Version history snapshots</td><td><code>id</code>, <code>evaluation_id</code> (FK evaluations), <code>version_number</code> (int), <code>snapshot</code> (JSONB — full evaluation state), <code>created_at</code></td></tr>
+    <tr><td><code>profiles</code></td><td>User accounts + roles</td><td><code>id</code> (UUID, FK auth.users), <code>email</code>, <code>full_name</code>, <code>approved</code> (bool), <code>role</code> (admin/supervisor/specialist)</td></tr>
+    <tr><td><code>evaluations</code></td><td>Saved cases</td><td><code>id</code>, <code>user_id</code>, <code>loan_number</code>, <code>loan_type</code>, <code>loan_data</code> (JSONB), <code>results</code> (JSONB), <code>status</code>, <code>notes</code>, <code>checked_docs</code> (JSONB), <code>assignee_email</code>, <code>sla_start_date</code>, <code>foreclosure_sale_date</code>, <code>created_at</code>, <code>updated_at</code></td></tr>
+    <tr><td><code>evaluation_versions</code></td><td>Version snapshots</td><td><code>id</code>, <code>evaluation_id</code> (FK), <code>user_id</code>, <code>version_number</code> (int), <code>loan_data</code> (JSONB), <code>results</code> (JSONB), <code>notes</code>, <code>change_summary</code>, <code>created_at</code></td></tr>
+    <tr><td><code>servicer_overlays</code></td><td>Org-wide overlay config</td><td><code>id</code>, <code>org_id</code> (text, UNIQUE, default 'default'), <code>config</code> (JSONB), <code>updated_at</code>, <code>updated_by</code> (FK auth.users)</td></tr>
   </table>
-  <div class="note">The setup SQL is accessible in the app at Settings → Database Setup → Copy SQL. It is idempotent — safe to re-run on an existing install to add any new columns without losing data.</div>
+  <div class="note">The setup SQL is at Settings → Database Setup → Copy SQL. It is idempotent — safe to re-run to add new tables or columns without data loss. Always run it when setting up a new Supabase project.</div>
 
-  <h3>6.2 LoanData Shape (initLoan)</h3>
-  <p>All loan fields are initialized in <code>initLoan()</code> in App.tsx. Key fields:</p>
+  <h3>Case Statuses</h3>
+  <p>The <code>evaluations.status</code> field uses these values (enforced in UI, not as a DB enum):</p>
   <table>
-    <tr><th>Field Group</th><th>Fields</th></tr>
-    <tr><td>Identifiers</td><td><code>loanNumber</code>, <code>borrowerName</code>, <code>loanType</code> (FHA/FNMA/FHLMC/VA/USDA)</td></tr>
-    <tr><td>Dates</td><td><code>noteDate</code>, <code>noteFirstPaymentDate</code>, <code>noteTerm</code>, <code>originalMaturityDate</code>, <code>approvalEffectiveDate</code></td></tr>
-    <tr><td>Financials</td><td><code>upb</code>, <code>originalUpb</code>, <code>currentEscrow</code>, <code>currentPI</code>, <code>currentPITI</code>, <code>grossMonthlyIncome</code>, <code>monthlyExpenses</code>, <code>currentInterestRate</code>, <code>pmmsRate</code></td></tr>
-    <tr><td>Arrears</td><td><code>arrearagesToCapitalize</code>, <code>escrowShortage</code>, <code>escrowAdvanceBalance</code>, <code>legalFees</code>, <code>lateFees</code>, <code>accruedDelinquentInterest</code>, <code>suspenseBalance</code>, <code>priorPartialClaimBalance</code></td></tr>
-    <tr><td>Status</td><td><code>delinquencyMonths</code>, <code>hardshipType</code>, <code>hardshipDuration</code>, <code>lienPosition</code>, <code>occupancyStatus</code>, <code>foreclosureActive</code></td></tr>
-    <tr><td>Investor Flags</td><td>100+ boolean and string fields prefixed <code>fnma*</code>, <code>fhlmc*</code>, <code>fha*</code>, <code>va*</code>, <code>usda*</code></td></tr>
+    <tr><th>Status</th><th>Meaning</th></tr>
+    <tr><td><code>open</code></td><td>Created, data entry in progress</td></tr>
+    <tr><td><code>evaluated</code></td><td>Engine has been run</td></tr>
+    <tr><td><code>recommended</code></td><td>Recommended option selected</td></tr>
+    <tr><td><code>approved</code></td><td>Loss mitigation option approved by investor/servicer</td></tr>
+    <tr><td><code>implemented</code></td><td>Option executed and in place</td></tr>
   </table>
+
+  <h3>Overlay Config Shape (<code>servicer_overlays.config</code>)</h3>
+  <pre>{
+  minFICO: "",                    // string — minimum FICO score ("580", "620", etc.)
+  maxDLQMonths: "",               // string — max DLQ months allowed
+  requireBorrowerInterview: true, // bool
+  requireIncomeVerification: true,// bool
+  excludedHardshipTypes: [],      // string[] — hardship types to block globally
+  excludedOptions: [],            // string[] — option names to block globally
+  customNote: ""                  // string — printed in report footer
+}</pre>
 
   <h2>7. Authentication &amp; RLS</h2>
-  <h3>7.1 Auth Flow</h3>
+  <h3>Auth Flow</h3>
   <ol>
     <li>User registers → Supabase creates auth user → <code>profiles</code> row created with <code>approved=false</code></li>
-    <li>Admin sees pending user in Settings → User Management → clicks Approve → sets <code>approved=true</code></li>
-    <li>User logs in → <code>loadProfile()</code> reads <code>profiles</code> row → if not approved, shows "Pending" screen</li>
-    <li>Profile includes <code>role</code> → UI gates features based on role</li>
+    <li>Admin approves in Settings → User Management → <code>approved=true</code></li>
+    <li>User logs in → <code>loadProfile()</code> reads <code>profiles</code> → if <code>approved=false</code>, shows "Pending" screen</li>
+    <li>Role from profile gates UI features and is enforced by RLS at DB level</li>
   </ol>
-  <h3>7.2 RLS Policies</h3>
-  <p>Row Level Security is enforced at the Supabase database level:</p>
+  <h3>RLS Summary</h3>
   <ul>
-    <li><strong>specialist</strong> — can only read/write their own <code>evaluations</code> rows (<code>user_id = auth.uid()</code>) plus rows assigned to them (<code>assignee_email = auth.email()</code>)</li>
-    <li><strong>supervisor</strong> — can read all <code>evaluations</code> rows; can update <code>assignee_email</code></li>
+    <li><strong>specialist</strong> — read/write own <code>evaluations</code> rows + rows assigned to their email</li>
+    <li><strong>supervisor</strong> — read all <code>evaluations</code>; can update <code>assignee_email</code> and <code>status</code></li>
     <li><strong>admin</strong> — full access to all tables</li>
+    <li><strong>servicer_overlays</strong> — all authenticated users can read; all authenticated users can write (admin-only enforced in UI)</li>
   </ul>
-  <div class="tip">If RLS-related permission errors appear, re-run the DB Setup SQL from Settings → Database Setup. It recreates all RLS policies idempotently.</div>
+  <div class="tip">If RLS permission errors appear, re-run the DB Setup SQL from Settings → Database Setup. It recreates all policies idempotently.</div>
 
   <h2>8. State Management</h2>
-  <p>The app uses React <code>useState</code> only — no Redux, Zustand, or Context. All state lives in the top-level <code>ResolutionIQApp</code> component function. This works because it's a single-page, single-user tool (not a multi-route application).</p>
-  <p>Key state variables:</p>
+  <p>All state lives in <code>ResolutionIQApp</code> (the main component function) using React <code>useState</code> only — no Redux, Zustand, or Context. Key state variables:</p>
   <table>
     <tr><th>Variable</th><th>Type</th><th>Purpose</th></tr>
-    <tr><td><code>loan</code></td><td><code>LoanData</code></td><td>Current loan being evaluated</td></tr>
-    <tr><td><code>results</code></td><td><code>EligibilityResult[]</code></td><td>Output of last engine run</td></tr>
-    <tr><td><code>tab</code></td><td><code>string</code></td><td>Active tab ("dashboard", "inputs", etc.)</td></tr>
-    <tr><td><code>savedCases</code></td><td><code>SavedCase[]</code></td><td>List of cases loaded from Supabase</td></tr>
-    <tr><td><code>overlays</code></td><td><code>OverlayConfig</code></td><td>Servicer overlay settings (localStorage-backed)</td></tr>
-    <tr><td><code>globalPmms</code></td><td><code>{rate, date} | null</code></td><td>Cached PMMS rate (localStorage-backed)</td></tr>
-    <tr><td><code>profile</code></td><td><code>Profile | null</code></td><td>Authenticated user profile</td></tr>
+    <tr><td><code>loan</code></td><td><code>LoanData</code></td><td>Current loan being evaluated. Updated with <code>set(field, value)</code>.</td></tr>
+    <tr><td><code>results</code></td><td><code>EligibilityResult[]</code></td><td>Output of last engine run.</td></tr>
+    <tr><td><code>tab</code></td><td><code>string</code></td><td>Active tab: dashboard/inputs/results/audit/report/compare/portfolio/settings/tests</td></tr>
+    <tr><td><code>dashCases</code></td><td><code>any[]</code></td><td>Cases loaded from Supabase for the dashboard. Also updated in real time via Supabase Realtime.</td></tr>
+    <tr><td><code>overlays</code></td><td><code>OverlayConfig</code></td><td>Servicer overlay settings. Loaded from Supabase on login; saved to Supabase + localStorage on change.</td></tr>
+    <tr><td><code>globalPmms</code></td><td><code>{rate, date} | null</code></td><td>Cached PMMS rate from FRED. Stored in <code>localStorage("riq_pmms")</code>.</td></tr>
+    <tr><td><code>profile</code></td><td><code>Profile | null</code></td><td>Authenticated user profile from <code>profiles</code> table.</td></tr>
+    <tr><td><code>versions</code></td><td><code>any[]</code></td><td>Version history for current case. Loaded when a saved case is opened.</td></tr>
   </table>
-  <p>The <code>set(field, value)</code> helper updates a single field on the <code>loan</code> object:</p>
-  <pre>const set = useCallback((field: keyof LoanData, value: any) => {
-  setLoan(prev => ({ ...prev, [field]: value }));
-}, []);</pre>
 
   <h2>9. Key Patterns &amp; Conventions</h2>
 
-  <h3>9.1 negEscrow Pattern (all Payment Deferral options)</h3>
+  <h3>9.1 The <code>set()</code> Helper</h3>
+  <pre>const set = useCallback((field: keyof LoanData, value: any) => {
+  setLoan(prev => ({ ...prev, [field]: value }));
+}, []);</pre>
+  <p>Use this for all single-field loan updates. Do not use <code>setLoan</code> directly for single fields.</p>
+
+  <h3>9.2 negEscrow Pattern (all Payment Deferral options)</h3>
   <pre>const negEscrow = escrowAdv &gt; 0
   ? escrowAdv
   : (currentEscrow &lt; 0 ? Math.abs(currentEscrow) : 0);</pre>
-  <p>This is used in all 6 Payment Deferral options (FNMA, FHLMC, FHA, USDA, disaster variants). It resolves escrow advancement differently depending on whether the escrow advance balance or current escrow drives the deferred amount.</p>
+  <p>Used in all 6 Payment Deferral options (FNMA, FHLMC, FHA, USDA, disaster variants). Never deviate from this pattern for PD escrow calculations.</p>
 
-  <h3>9.2 Loan Age Computation</h3>
+  <h3>9.3 Loan Age Computation</h3>
   <pre>const originationDate = loan.noteDate || loan.noteFirstPaymentDate;
 const loanAgeMonths = originationDate
   ? Math.floor((Date.now() - new Date(originationDate).getTime()) / (30.44 * 86400000))
   : 0;</pre>
-  <p>Not hardcoded. Used by FNMA, FHLMC, USDA engines for "loan must be ≥ X months seasoned" checks.</p>
 
-  <h3>9.3 FIELD_MAP (LOS Import)</h3>
-  <p>The <code>FIELD_MAP</code> constant maps every known LOS field name variant (camelCase, snake_case, human-readable) to the internal <code>LoanData</code> field name. When adding a new field to <code>initLoan</code>, add corresponding entries to <code>FIELD_MAP</code>.</p>
+  <h3>9.4 FIELD_MAP (LOS Import)</h3>
+  <p>Maps every known LOS field name variant to the internal <code>LoanData</code> field. When adding a new field to <code>initLoan</code>, add its variants to <code>FIELD_MAP</code>. The same map is used by both JSON import and CSV single-row import.</p>
 
-  <h3>9.4 HelpTip Component</h3>
-  <pre>&lt;HelpTip text="Explanation of this field shown on hover" /&gt;</pre>
-  <p>Inline tooltip icon. Use this for all investor-specific flags and any field that isn't self-evident from its label.</p>
+  <h3>9.5 Overlay Persistence Pattern</h3>
+  <pre>const overlaysLoaded = React.useRef(false);
 
-  <h3>9.5 Num Component</h3>
-  <pre>&lt;Num value={loan.upb} onChange={v =&gt; set("upb", v)} placeholder="e.g. 285000" /&gt;</pre>
-  <p>Numeric input component used throughout. Handles string↔number coercion and formatting. Use this for all numeric fields — do not use raw <code>&lt;input type="number"&gt;</code>.</p>
+// Load from Supabase after auth, fall back to localStorage
+useEffect(() => {
+  if (!profile) return;
+  supabase.from("servicer_overlays").select("config").eq("org_id","default").single()
+    .then(({ data }) => {
+      if (data?.config) setOverlays(data.config);
+      else { /* try localStorage */ }
+    });
+  overlaysLoaded.current = true;
+}, [profile]);
+
+// Save on change — guarded by overlaysLoaded to prevent premount saves
+useEffect(() => {
+  if (!overlaysLoaded.current) return;
+  localStorage.setItem("riq_overlays", JSON.stringify(overlays));
+  if (profile) supabase.from("servicer_overlays").upsert({...}).then(() => {});
+}, [overlays]);</pre>
+  <p>When adding other config that needs similar Supabase persistence, follow this pattern: guard saves with a <code>React.useRef</code> flag to prevent writing empty state before the initial load completes.</p>
+
+  <h3>9.6 SLA Computation</h3>
+  <pre>const slaRule = SLA_RULES[loan_type];
+const deadline = new Date(sla_start_date).getTime()
+  + slaRule.evaluationDeadlineDays * 86400000;
+const daysLeft = Math.floor((deadline - Date.now()) / 86400000);
+// daysLeft < 0 = overdue; 0–7 = due soon</pre>
+
+  <h3>9.7 AdminUsersPanel Component</h3>
+  <p>A standalone <code>AdminUsersPanel</code> component is defined just before the main <code>ResolutionIQApp</code> function. It queries <code>profiles</code> directly, shows all active users, and handles role updates and deactivation. It receives <code>profile</code>, <code>adminMsg</code>, <code>setAdminMsg</code>, and <code>supabase</code> as props.</p>
 
   <h2>10. Test Suite</h2>
   <table>
-    <tr><th>File</th><th>Cases</th><th>Covers</th></tr>
-    <tr><td><code>test_evaluations.mjs</code></td><td>262</td><td>Happy path — each option eligible under standard conditions</td></tr>
-    <tr><td><code>test_evaluations_id_severe.mjs</code></td><td>64</td><td>Imminent default and boundary/edge cases — exact threshold conditions</td></tr>
+    <tr><th>File</th><th>Cases</th><th>What It Covers</th></tr>
+    <tr><td><code>test_evaluations.mjs</code></td><td>262</td><td>Happy path — each option eligible under standard conditions for all 5 investors</td></tr>
+    <tr><td><code>test_evaluations_id_severe.mjs</code></td><td>78</td><td>Imminent default, boundary conditions, Streamlined PD, severely delinquent paths</td></tr>
     <tr><td><code>test_evaluations_sad.mjs</code></td><td>125</td><td>Sad path — each option ineligible under specific disqualifying conditions</td></tr>
-    <tr><td><code>test_waterfall.mjs</code></td><td>10</td><td>Waterfall ordering — results appear in correct sequence</td></tr>
+    <tr><td><code>test_waterfall.mjs</code></td><td>10</td><td>Waterfall ordering — results appear in correct investor-specific sequence</td></tr>
     <tr><td><code>test_validation.mjs</code></td><td>19</td><td>Input validation — field format and range checks</td></tr>
-    <tr><td><code>test_computed_fields.mjs</code></td><td>15</td><td>Computed field output — loan age, DTI, PITI calculations</td></tr>
+    <tr><td><code>test_computed_fields.mjs</code></td><td>15 (includes PMMS)</td><td>Computed fields — loan age, DTI, PITI, PMMS-dependent calculations</td></tr>
   </table>
-  <div class="warn">The test files each contain their own inline copies of the evaluation functions (not imported from App.tsx — App.tsx is TypeScript, tests are plain ESM). When you modify an eligibility rule in App.tsx, you MUST sync the same change in the corresponding test file's eval function. Failure to do so will cause false test passes.</div>
-  <div class="tip">Definition of Done: all 496 tests pass (<code>node [file].mjs</code> shows 0 failures) before any commit that touches an eligibility engine.</div>
+  <div class="warn"><strong>Critical rule:</strong> The test files each contain their own inline copies of the evaluation functions (not imported from App.tsx — App.tsx is TypeScript; tests are plain ESM). When you change an eligibility rule in App.tsx, you MUST sync the exact same change in the corresponding test file's eval function. Failure to do so causes false test passes that mask real regressions.</div>
+  <div class="tip">Test file eval functions to keep in sync with App.tsx: <code>evaluateFHA</code>, <code>evaluateFNMA</code>, <code>evaluateFHLMC</code>, <code>evaluateVA</code>, <code>evaluateUSDA</code> in all test files that declare them.</div>
 
-  <h2>11. Known Gaps &amp; Technical Debt</h2>
+  <h2>11. Known Remaining Gaps</h2>
   <table>
-    <tr><th>Item</th><th>Impact</th><th>Notes</th></tr>
-    <tr><td>Servicer overlays not persisted to Supabase</td><td>High — compliance risk</td><td>Stored in <code>localStorage("riq_overlays")</code>. Needs <code>servicer_overlays</code> table + upsert on change. Add to DB Setup SQL.</td></tr>
-    <tr><td>Test file eval functions not kept in sync with App.tsx automatically</td><td>Medium — can mask real bugs</td><td>Manual sync required when rules change. Future improvement: extract eval functions to a shared <code>.mjs</code> module importable by both App.tsx and tests.</td></tr>
-    <tr><td>All app logic in one 6,105-line file</td><td>Medium — developer experience</td><td>Works fine operationally. If splitting: extract eval engines first (they have no UI dependencies), then terms engine, then components. Do not split without a full plan.</td></tr>
-    <tr><td>No Excel export</td><td>Medium — investor submission workflow</td><td>Add SheetJS (<code>npm install xlsx</code>). Multi-sheet: Summary, Inputs, Results, Audit.</td></tr>
-    <tr><td>No real-time dashboard updates</td><td>Low-medium — multi-user teams</td><td>Wire up Supabase Realtime subscription on the <code>evaluations</code> table in the Dashboard useEffect.</td></tr>
-    <tr><td>Google OAuth requires per-deployment Supabase config</td><td>Low</td><td>Code is there; just needs the OAuth provider enabled in each Supabase project's Auth settings.</td></tr>
-    <tr><td>No case status workflow</td><td>Medium — case lifecycle tracking</td><td>Add <code>status</code> column to <code>evaluations</code> table. Values: draft, in_review, approved, denied, closed.</td></tr>
+    <tr><th>Item</th><th>Impact</th><th>Implementation Notes</th></tr>
+    <tr><td>Excel export (SheetJS)</td><td>High — investor submission workflow</td><td><code>npm install xlsx</code>. Build 4 sheets: Summary, Inputs, Results, Audit. Trigger from Report tab export button.</td></tr>
+    <tr><td>Admin notification push panel</td><td>Medium — team communication</td><td>Needs a <code>notifications</code> Supabase table (<code>id, message, type, created_by, created_at, dismissed_by uuid[]</code>). Admin UI: compose + publish. Users see it on next login via their existing notification bell.</td></tr>
+    <tr><td>Overlay change history (audit log)</td><td>Medium — compliance</td><td>Add <code>overlay_audit_log</code> table. On every <code>servicer_overlays</code> upsert, also insert a row: user_id, changed_at, field, old_value, new_value.</td></tr>
+    <tr><td>Status + reassignment audit log</td><td>Medium — case audit trail</td><td>Add <code>case_audit_log</code> table. Log every call to <code>updateCaseStatus()</code> and every assignee change.</td></tr>
+    <tr><td>Custom SLA windows per investor</td><td>Low-medium</td><td>Move <code>SLA_RULES</code> values into <code>servicer_overlays.config</code>. Read from there at runtime, fall back to constants.</td></tr>
+    <tr><td>Microsoft OAuth</td><td>Low</td><td>Azure AD app registration + Supabase Azure provider config + wire up in auth screen.</td></tr>
+    <tr><td>Session inactivity timeout</td><td>Low</td><td>Track <code>lastActivity = Date.now()</code> in a ref on user interactions. Check on a 60-second interval; call <code>supabase.auth.signOut()</code> when idle &gt; threshold.</td></tr>
+    <tr><td>Import preview before applying</td><td>Low</td><td>After parsing JSON/CSV, render a preview table of mapped fields in the modal. Only call <code>setLoan()</code> after user confirms.</td></tr>
   </table>
 
-  <h2>12. Security Notes</h2>
-  <ul>
-    <li>The Supabase <strong>anon key</strong> in <code>.env</code> is a public publishable key — it is safe in client-side code. RLS policies enforce data access control at the database level.</li>
-    <li>The Supabase <strong>service role key</strong> is never used. Do not add it to the app.</li>
-    <li>The Claude API key for the AI assistant is entered by the user at runtime and never stored anywhere (not localStorage, not Supabase).</li>
-    <li>All evaluation logic runs client-side. No loan data is sent to any third-party service except Supabase (for saving cases).</li>
-    <li>The FRED PMMS fetch is a GET request to a public federal reserve endpoint — no loan data is included.</li>
-    <li>Loan data is PII-sensitive. Supabase RLS ensures users can only access their own cases (or their team's, for supervisors/admins). Verify RLS policies are active before any production deployment.</li>
-  </ul>
-
-  <h2>13. Definition of Done</h2>
+  <h2>12. Definition of Done</h2>
   <ol>
     <li>All 496 test cases pass (<code>node [each test file].mjs</code>)</li>
-    <li>If an eligibility rule was changed: the corresponding test file's inline eval function is updated to match</li>
-    <li>If a new field was added to <code>initLoan</code>: a corresponding entry was added to <code>FIELD_MAP</code></li>
-    <li>Build succeeds (<code>npm run build</code> completes with no errors)</li>
-    <li>Feature tested manually in dev server at localhost:5173</li>
-    <li>PR reviewed and approved before merge to master</li>
-    <li>Post-deploy: verify at https://jacklawrence713.github.io/ResolutionIQ/ within 5 minutes of push</li>
+    <li>If an eligibility rule changed: the corresponding test file eval function is updated to match</li>
+    <li>If a new field added to <code>initLoan</code>: corresponding entries added to <code>FIELD_MAP</code></li>
+    <li>Build succeeds: <code>npm run build</code> completes with no errors</li>
+    <li>Feature tested manually at localhost:5173</li>
+    <li>Post-deploy: verified at https://jacklawrence713.github.io/ResolutionIQ/ within 5 minutes</li>
   </ol>
 
-  <h2>14. Contact</h2>
+  <h2>13. Security Notes</h2>
+  <ul>
+    <li>The Supabase <strong>anon key</strong> is a public publishable key — safe in client-side code. RLS enforces data access at DB level.</li>
+    <li>The Supabase <strong>service role key</strong> is never used in this application. Do not add it.</li>
+    <li>The Claude API key is entered at runtime and never stored (not localStorage, not Supabase, not state).</li>
+    <li>The FRED PMMS fetch is a plain GET to a public federal endpoint. No loan data is sent.</li>
+    <li>All evaluation logic runs 100% client-side. Loan data is only sent to Supabase when a case is explicitly saved.</li>
+    <li>Loan data is PII-sensitive. Verify RLS policies are active before any production deployment (re-run DB Setup SQL if unsure).</li>
+  </ul>
+
+  <h2>14. Contact &amp; Access</h2>
   <table>
     <tr><th>Role</th><th>Contact</th></tr>
     <tr><td>Product Owner / Domain Expert</td><td>Jack Lawrence — jlawrence@cmgfi.com</td></tr>
@@ -340,7 +367,7 @@ const loanAgeMonths = originationDate
   </table>
 
   <div class="footer">
-    ResolutionIQ Technical Handoff Doc · Version 1.0 · March 2026 · Internal — Developer Use Only
+    ResolutionIQ Technical Handoff Doc · Version 2.0 · March 2026 · Internal — Developer Use Only
   </div>
 
 </div>

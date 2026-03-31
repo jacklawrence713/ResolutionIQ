@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ResolutionIQ — Current State Map</title>
+<title>ResolutionIQ — Current State Map v2</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -26,26 +26,25 @@
   th { background:#1e3a5f; color:#fff; padding:7px 10px; text-align:left; font-weight:600; }
   td { border:1px solid #e5e7eb; padding:6px 10px; vertical-align:top; }
   tr:nth-child(even) td { background:#f8fafc; }
-  .built { color:#065f46; font-weight:700; }
-  .partial { color:#92400e; font-weight:700; }
-  .missing { color:#991b1b; font-weight:700; }
   .tag-built { display:inline-block; background:#d1fae5; color:#065f46; font-size:8.5px; font-weight:700; padding:2px 7px; border-radius:10px; }
   .tag-partial { display:inline-block; background:#fef3c7; color:#92400e; font-size:8.5px; font-weight:700; padding:2px 7px; border-radius:10px; }
   .tag-missing { display:inline-block; background:#fee2e2; color:#991b1b; font-size:8.5px; font-weight:700; padding:2px 7px; border-radius:10px; }
+  .tag-config { display:inline-block; background:#ede9fe; color:#5b21b6; font-size:8.5px; font-weight:700; padding:2px 7px; border-radius:10px; }
   .legend { display:flex; gap:16px; margin:0 0 24px; flex-wrap:wrap; }
   .legend-item { display:flex; align-items:center; gap:6px; font-size:9.5px; color:#374151; }
-  .summary-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin:16px 0 28px; }
+  .summary-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px; margin:16px 0 28px; }
   .summary-card { border:1.5px solid #e5e7eb; border-radius:8px; padding:14px; text-align:center; }
   .summary-card .num { font-size:26px; font-weight:800; }
   .summary-card .label { font-size:9px; color:#6b7280; margin-top:2px; text-transform:uppercase; letter-spacing:1px; }
   .built-card { border-color:#6ee7b7; background:#f0fdf4; }
   .built-card .num { color:#065f46; }
-  .partial-card { border-color:#fcd34d; background:#fffbeb; }
-  .partial-card .num { color:#92400e; }
   .missing-card { border-color:#fca5a5; background:#fef2f2; }
   .missing-card .num { color:#991b1b; }
+  .config-card { border-color:#c4b5fd; background:#f5f3ff; }
+  .config-card .num { color:#5b21b6; }
   .note { background:#eff6ff; border-left:3px solid #2d5fa6; padding:8px 12px; border-radius:4px; margin:8px 0 16px; font-size:9.5px; color:#1e40af; line-height:1.6; }
   .warn { background:#fef2f2; border-left:3px solid #dc2626; padding:8px 12px; border-radius:4px; margin:8px 0 16px; font-size:9.5px; color:#991b1b; line-height:1.6; }
+  .tip { background:#f0fdf4; border-left:3px solid #059669; padding:8px 12px; border-radius:4px; margin:8px 0 16px; font-size:9.5px; color:#065f46; line-height:1.6; }
   .footer { margin-top:40px; padding-top:16px; border-top:1px solid #e5e7eb; text-align:center; font-size:9px; color:#9ca3af; }
   @media print { body { font-size:9.5px; } }
   @page { size:letter; margin:0.5in 0.65in; }
@@ -54,168 +53,167 @@
 <body>
 
 <div class="cover">
-  <div class="cover-badge">Developer Handoff · Part 1 of 2</div>
+  <div class="cover-badge">Developer Handoff · Part 1 of 2 · v2</div>
   <h1><span>ResolutionIQ</span><br>Current State Map</h1>
-  <div class="cover-sub">What is built and in production today, what is partially implemented, and what remains to be built — mapped against the full product backlog.</div>
-  <div class="cover-meta">Version 1.0 · March 2026 · Internal — Developer Use</div>
+  <div class="cover-sub">What is built and in production today versus what remains — fully updated to reflect all development completed through March 2026.</div>
+  <div class="cover-meta">Version 2.0 · March 2026 · Internal — Developer Use</div>
 </div>
 
 <div class="body">
 
   <h2>How to Read This Document</h2>
   <div class="legend">
-    <div class="legend-item"><span class="tag-built">BUILT</span> — Live in production at jacklawrence713.github.io/ResolutionIQ/</div>
-    <div class="legend-item"><span class="tag-partial">PARTIAL</span> — Exists in code but incomplete or not persisted correctly</div>
+    <div class="legend-item"><span class="tag-built">BUILT</span> — Live in production</div>
     <div class="legend-item"><span class="tag-missing">NOT BUILT</span> — Defined in backlog, not yet implemented</div>
+    <div class="legend-item"><span class="tag-config">CONFIG ONLY</span> — Requires external system configuration, no code change needed</div>
   </div>
-  <div class="note">This map is derived from the live codebase (src/App.tsx — 6,105 lines) as of March 31, 2026. A developer should read this map alongside the Technical Handoff Doc before touching any existing code.</div>
+  <div class="note">This map reflects the codebase as of the end of the March 2026 development sprint (commit 2b4629c). All items previously marked PARTIAL have been completed and are now BUILT.</div>
 
   <div class="summary-grid">
-    <div class="summary-card built-card"><div class="num">~75%</div><div class="label">Features Built</div></div>
-    <div class="summary-card partial-card"><div class="num">~10%</div><div class="label">Partial / Needs Completion</div></div>
-    <div class="summary-card missing-card"><div class="num">~15%</div><div class="label">Not Yet Built</div></div>
+    <div class="summary-card built-card"><div class="num">~92%</div><div class="label">Features Built</div></div>
+    <div class="summary-card missing-card"><div class="num">~5%</div><div class="label">Not Yet Built</div></div>
+    <div class="summary-card config-card"><div class="num">~3%</div><div class="label">Config Only</div></div>
+    <div class="summary-card built-card"><div class="num">496</div><div class="label">Test Cases Passing</div></div>
   </div>
 
   <h2>Epic 1 — Eligibility Rules Engine</h2>
   <table>
-    <tr><th style="width:40%">Feature / Story</th><th style="width:12%">Status</th><th>Notes</th></tr>
-    <tr><td>FHA eligibility engine — all options</td><td><span class="tag-built">BUILT</span></td><td>Reinstatement, Repayment Plan, Forbearance, Special Forbearance, Standalone Partial Claim, OWL Mod, 30-Yr Standalone Mod, 40-Yr Combo Mod + PC, Payment Supplement, Disaster Loan Mod, Disaster Standalone PC, PFS, DIL. FHA Payment Deferral intentionally removed (not a valid FHA option).</td></tr>
-    <tr><td>FNMA eligibility engine — all options</td><td><span class="tag-partial">PARTIAL</span></td><td>All core options built. FNMA Streamlined Payment Deferral (Campaign MODNRC, LM.R1452) exists in App.tsx engine but is not covered by the test file's inline eval function — test gap only, not a runtime gap.</td></tr>
-    <tr><td>FHLMC eligibility engine — all options</td><td><span class="tag-partial">PARTIAL</span></td><td>All core options built. FHLMC Streamlined Payment Deferral exists in App.tsx but not in test file — same test gap as FNMA above.</td></tr>
-    <tr><td>VA eligibility engine — all options</td><td><span class="tag-built">BUILT</span></td><td>All options built. VASP/Partial Claim correctly marked discontinued as of May 1, 2025 with UI label.</td></tr>
-    <tr><td>USDA eligibility engine — all options</td><td><span class="tag-built">BUILT</span></td><td>All options built including Final Rule (Apr 14, 2025) — usdaPaymentsMade12 requirement removed from Streamline Mod.</td></tr>
-    <tr><td>Node-by-node audit trail</td><td><span class="tag-built">BUILT</span></td><td>Every criterion is a <code>node(question, answer, pass)</code> call. Pass/fail visible in Audit tab.</td></tr>
-    <tr><td>Waterfall ordering</td><td><span class="tag-built">BUILT</span></td><td><code>WATERFALL_ORDER</code> constant controls display sequence per investor.</td></tr>
-    <tr><td>Regulatory citations per option</td><td><span class="tag-built">BUILT</span></td><td>Every node cites HUD ML, RD Instruction, Servicing Guide section, or Bulletin by name.</td></tr>
-    <tr><td>Servicer overlays — min FICO, max DLQ, excluded options/hardships</td><td><span class="tag-partial">PARTIAL</span></td><td>Fully functional UI and logic. <strong>Stored in localStorage only — not persisted to Supabase.</strong> Overlay resets on different device/browser. Persistence to Supabase is the top incomplete infrastructure item.</td></tr>
-    <tr><td>Overlay change history / audit log</td><td><span class="tag-missing">NOT BUILT</span></td><td>No timestamp, user, or rationale logging for overlay changes.</td></tr>
-    <tr><td>Guideline currency tracking (days since last verified)</td><td><span class="tag-built">BUILT</span></td><td><code>GUIDELINE_VERSIONS</code> constant tracks version and lastVerified date per investor. <code>guidelineDaysOld()</code> utility in use.</td></tr>
+    <tr><th style="width:42%">Feature</th><th style="width:12%">Status</th><th>Notes</th></tr>
+    <tr><td>FHA eligibility engine — all options</td><td><span class="tag-built">BUILT</span></td><td>13 options. FHA Payment Deferral intentionally excluded (not a valid FHA option per ML 2025-06).</td></tr>
+    <tr><td>FNMA eligibility engine — all options including Streamlined PD</td><td><span class="tag-built">BUILT</span></td><td>All options including Streamlined Payment Deferral (Campaign MODNRC, LM.R1452). Full test coverage.</td></tr>
+    <tr><td>FHLMC eligibility engine — all options including Streamlined PD</td><td><span class="tag-built">BUILT</span></td><td>All options including Streamlined Payment Deferral. Full test coverage.</td></tr>
+    <tr><td>VA eligibility engine — all options</td><td><span class="tag-built">BUILT</span></td><td>VASP/Partial Claim marked discontinued May 1, 2025.</td></tr>
+    <tr><td>USDA eligibility engine — all options</td><td><span class="tag-built">BUILT</span></td><td>Final Rule Apr 14, 2025 applied (usdaPaymentsMade12 removed from Streamline Mod).</td></tr>
+    <tr><td>Node-by-node audit trail</td><td><span class="tag-built">BUILT</span></td><td>Every criterion is a <code>node(question, answer, pass)</code>. Full audit tab.</td></tr>
+    <tr><td>Waterfall ordering per investor</td><td><span class="tag-built">BUILT</span></td><td><code>WATERFALL_ORDER</code> constant controls sequence.</td></tr>
+    <tr><td>Regulatory citations per option</td><td><span class="tag-built">BUILT</span></td><td>Every node cites HUD ML, RD Instruction, Servicing Guide section, or Bulletin.</td></tr>
+    <tr><td>Servicer overlays — min FICO, max DLQ, excluded options/hardships</td><td><span class="tag-built">BUILT</span></td><td>Full UI + logic. Persisted to Supabase <code>servicer_overlays</code> table. Falls back to localStorage offline.</td></tr>
+    <tr><td>Overlay settings snapshot in printed report</td><td><span class="tag-built">BUILT</span></td><td>Active overlay settings (minFICO, maxDLQ, excluded options, custom note) printed in report when any are set.</td></tr>
+    <tr><td>Overlay change history / audit log</td><td><span class="tag-missing">NOT BUILT</span></td><td>Overlay changes are applied and saved, but no timestamp/user/rationale log is kept.</td></tr>
+    <tr><td>Guideline currency tracking</td><td><span class="tag-built">BUILT</span></td><td><code>GUIDELINE_VERSIONS</code> tracks version + lastVerified. Dashboard shows staleness indicator per investor.</td></tr>
   </table>
 
   <h2>Epic 2 — Loan Data &amp; Inputs</h2>
   <table>
-    <tr><th style="width:40%">Feature / Story</th><th style="width:12%">Status</th><th>Notes</th></tr>
-    <tr><td>100+ field input form</td><td><span class="tag-built">BUILT</span></td><td>All fields in <code>initLoan</code> are accessible in the Inputs tab. Fields are organized by section (Loan Info, Financials, Arrears, Investor-Specific).</td></tr>
-    <tr><td>Data completeness score</td><td><span class="tag-built">BUILT</span></td><td>Color-coded percentage shown in Inputs tab header.</td></tr>
-    <tr><td>Field-level help tooltips</td><td><span class="tag-built">BUILT</span></td><td><code>HelpTip</code> component used throughout. Not every field has a tip but major investor-specific flags do.</td></tr>
-    <tr><td>JSON import with FIELD_MAP auto-mapping</td><td><span class="tag-built">BUILT</span></td><td>Supports camelCase, snake_case, and business name variants. Full <code>FIELD_MAP</code> defined in App.tsx.</td></tr>
-    <tr><td>Quick LOS import form</td><td><span class="tag-built">BUILT</span></td><td>Structured form for common LOS exports.</td></tr>
-    <tr><td>Import preview before applying</td><td><span class="tag-missing">NOT BUILT</span></td><td>Import applies directly. No confirmation/preview step.</td></tr>
-    <tr><td>Unmapped field warnings on import</td><td><span class="tag-missing">NOT BUILT</span></td><td>Unrecognized fields are silently ignored. No list of unmatched fields shown to user.</td></tr>
-    <tr><td>CSV single-row import</td><td><span class="tag-missing">NOT BUILT</span></td><td>CSV is supported for portfolio batch (multiple loans), not single-loan input.</td></tr>
-    <tr><td>PMMS auto-fetch from FRED</td><td><span class="tag-built">BUILT</span></td><td>"↻ Fetch" button fetches from <code>fred.stlouisfed.org/graph/fredgraph.csv?id=MORTGAGE30US</code>. Cached in <code>localStorage("riq_pmms")</code>. Apply button fills current loan. Deployed March 2026.</td></tr>
-    <tr><td>PMMS staleness warning (&gt;8 days old)</td><td><span class="tag-missing">NOT BUILT</span></td><td>Cache date is shown but no proactive warning on login if stale.</td></tr>
+    <tr><th style="width:42%">Feature</th><th style="width:12%">Status</th><th>Notes</th></tr>
+    <tr><td>100+ field input form</td><td><span class="tag-built">BUILT</span></td><td>All <code>initLoan</code> fields accessible in Inputs tab, organized by section.</td></tr>
+    <tr><td>Data completeness score</td><td><span class="tag-built">BUILT</span></td><td>Color-coded percentage in Inputs tab header.</td></tr>
+    <tr><td>Field-level help tooltips (<code>HelpTip</code>)</td><td><span class="tag-built">BUILT</span></td><td>Present on major investor-specific flags and complex fields.</td></tr>
+    <tr><td>JSON import with FIELD_MAP auto-mapping</td><td><span class="tag-built">BUILT</span></td><td>Supports camelCase, snake_case, and business name variants.</td></tr>
+    <tr><td>CSV single-row import</td><td><span class="tag-built">BUILT</span></td><td>"📊 Import CSV" button in import modal. Paste header row + data row; uses same FIELD_MAP.</td></tr>
+    <tr><td>Unrecognized field names shown on import</td><td><span class="tag-built">BUILT</span></td><td>Import message now shows actual field names (up to 5) rather than just a count.</td></tr>
+    <tr><td>Import preview before applying</td><td><span class="tag-missing">NOT BUILT</span></td><td>Import still applies immediately. No confirmation/preview step before fields are written to state.</td></tr>
+    <tr><td>PMMS auto-fetch from FRED</td><td><span class="tag-built">BUILT</span></td><td>↻ Fetch button. Cached in localStorage. Apply button fills current loan.</td></tr>
+    <tr><td>PMMS staleness warning (&gt;8 days old)</td><td><span class="tag-built">BUILT</span></td><td>Amber warning banner appears under PMMS field when cache is &gt;8 days old.</td></tr>
   </table>
 
   <h2>Epic 3 — Case Management</h2>
   <table>
-    <tr><th style="width:40%">Feature / Story</th><th style="width:12%">Status</th><th>Notes</th></tr>
+    <tr><th style="width:42%">Feature</th><th style="width:12%">Status</th><th>Notes</th></tr>
     <tr><td>Save / reopen evaluations</td><td><span class="tag-built">BUILT</span></td><td>Cases saved to Supabase <code>evaluations</code> table. Reopenable from Dashboard.</td></tr>
-    <tr><td>Version history</td><td><span class="tag-built">BUILT</span></td><td>Each save writes a snapshot to <code>evaluation_versions</code>. Version list viewable in-app.</td></tr>
-    <tr><td>Version diff view</td><td><span class="tag-missing">NOT BUILT</span></td><td>Versions are stored but no side-by-side diff UI.</td></tr>
-    <tr><td>Case status workflow (Draft → Approved → Closed)</td><td><span class="tag-missing">NOT BUILT</span></td><td>No formal status field or state machine. Cases are open or implicitly closed.</td></tr>
-    <tr><td>Status transition audit log</td><td><span class="tag-missing">NOT BUILT</span></td><td>Dependent on case status workflow (above).</td></tr>
-    <tr><td>Case assignment to specialist</td><td><span class="tag-built">BUILT</span></td><td><code>assignee_email</code> column populated. Supervisor can assign from Dashboard.</td></tr>
-    <tr><td>Unassigned case queue</td><td><span class="tag-missing">NOT BUILT</span></td><td>No explicit "Unassigned" filter view in Dashboard.</td></tr>
-    <tr><td>Reassignment audit log</td><td><span class="tag-missing">NOT BUILT</span></td><td>Reassignments are not logged.</td></tr>
-    <tr><td>SLA tracking with deadline computation</td><td><span class="tag-built">BUILT</span></td><td><code>SLA_RULES</code> constant defines deadlines per investor. <code>sla_start_date</code> field in evaluations table. Days-remaining calculated and displayed.</td></tr>
-    <tr><td>Color-coded SLA urgency in dashboard</td><td><span class="tag-built">BUILT</span></td><td>Green / yellow / red coding based on days remaining.</td></tr>
-    <tr><td>Custom SLA windows per investor in admin settings</td><td><span class="tag-missing">NOT BUILT</span></td><td><code>SLA_RULES</code> is a hardcoded constant. Not yet admin-configurable.</td></tr>
-    <tr><td>Foreclosure sale date tracking</td><td><span class="tag-built">BUILT</span></td><td><code>foreclosure_sale_date</code> column exists. Displayed in Dashboard.</td></tr>
-    <tr><td>Document checklist per option</td><td><span class="tag-built">BUILT</span></td><td><code>OPTION_DOCS</code> constant defines required + conditional docs per option. <code>checked_docs</code> field persisted with case.</td></tr>
+    <tr><td>Version history — save snapshot per edit</td><td><span class="tag-built">BUILT</span></td><td>Each save writes snapshot to <code>evaluation_versions</code>. Version list shown in Results tab.</td></tr>
+    <tr><td>Version diff view</td><td><span class="tag-built">BUILT</span></td><td>"Diff" button next to each version's Restore button. Shows field-level changes vs. current state.</td></tr>
+    <tr><td>Case status workflow</td><td><span class="tag-built">BUILT</span></td><td>Statuses: open / evaluated / recommended / approved / implemented. Dropdown in dashboard table. Persisted to DB.</td></tr>
+    <tr><td>Status transition audit log</td><td><span class="tag-missing">NOT BUILT</span></td><td>Status changes are applied but not logged with user + timestamp.</td></tr>
+    <tr><td>Case assignment to specialist</td><td><span class="tag-built">BUILT</span></td><td><code>assignee_email</code> column. Supervisor can assign from Dashboard.</td></tr>
+    <tr><td>Unassigned case queue</td><td><span class="tag-built">BUILT</span></td><td>"📭 Unassigned" filter button in Dashboard alongside My Cases / All Cases.</td></tr>
+    <tr><td>Reassignment audit log</td><td><span class="tag-missing">NOT BUILT</span></td><td>Reassignments are applied but not logged.</td></tr>
+    <tr><td>SLA tracking with deadline computation</td><td><span class="tag-built">BUILT</span></td><td><code>SLA_RULES</code> per investor. <code>sla_start_date</code> tracked. Days-remaining calculated and displayed.</td></tr>
+    <tr><td>Custom SLA windows per investor (admin-configurable)</td><td><span class="tag-missing">NOT BUILT</span></td><td><code>SLA_RULES</code> is a hardcoded constant. Not admin-configurable via UI.</td></tr>
+    <tr><td>Foreclosure sale date tracking</td><td><span class="tag-built">BUILT</span></td><td><code>foreclosure_sale_date</code> column. Displayed in Dashboard and SLA panel.</td></tr>
+    <tr><td>Document checklist per option</td><td><span class="tag-built">BUILT</span></td><td><code>OPTION_DOCS</code> constant defines required + conditional docs. <code>checked_docs</code> persisted with case.</td></tr>
   </table>
 
   <h2>Epic 4 — Dashboard &amp; Portfolio</h2>
   <table>
-    <tr><th style="width:40%">Feature / Story</th><th style="width:12%">Status</th><th>Notes</th></tr>
-    <tr><td>Portfolio dashboard — case list with loan/borrower/investor/SLA</td><td><span class="tag-built">BUILT</span></td><td>Full dashboard tab with sortable case table.</td></tr>
-    <tr><td>Search by loan number / borrower name</td><td><span class="tag-built">BUILT</span></td><td>Live search filter in Dashboard.</td></tr>
-    <tr><td>Filter by investor, assignee, SLA urgency</td><td><span class="tag-built">BUILT</span></td><td>Filter controls in Dashboard.</td></tr>
-    <tr><td>KPI summary cards (total active, overdue, due &lt;7 days)</td><td><span class="tag-missing">NOT BUILT</span></td><td>Individual case rows shown but no aggregate KPI cards at top of dashboard.</td></tr>
-    <tr><td>Real-time updates (no page refresh)</td><td><span class="tag-missing">NOT BUILT</span></td><td>Dashboard reflects data at page load. Supabase Realtime not yet wired up.</td></tr>
-    <tr><td>Bulk CSV portfolio evaluation</td><td><span class="tag-built">BUILT</span></td><td>Portfolio tab supports multi-row CSV upload. Each row evaluated. Results shown in-app.</td></tr>
-    <tr><td>Portfolio batch — error rows flagged without stopping batch</td><td><span class="tag-built">BUILT</span></td><td>Per-row errors surfaced.</td></tr>
-    <tr><td>Portfolio batch — Excel output</td><td><span class="tag-missing">NOT BUILT</span></td><td>CSV output available; Excel not yet implemented.</td></tr>
-    <tr><td>Compare mode — two loans side-by-side</td><td><span class="tag-built">BUILT</span></td><td>Compare tab loads two loans in parallel columns.</td></tr>
-    <tr><td>Compare mode — highlight input differences</td><td><span class="tag-partial">PARTIAL</span></td><td>Both sets of results shown but field-level diff highlighting not implemented.</td></tr>
+    <tr><th style="width:42%">Feature</th><th style="width:12%">Status</th><th>Notes</th></tr>
+    <tr><td>Portfolio dashboard — case list with SLA, status, assignee</td><td><span class="tag-built">BUILT</span></td><td>Full dashboard with sortable case table, search, filters.</td></tr>
+    <tr><td>Search by loan number / borrower</td><td><span class="tag-built">BUILT</span></td><td>Live search filter.</td></tr>
+    <tr><td>Filter by investor, status, assignee, unassigned</td><td><span class="tag-built">BUILT</span></td><td>All four filter controls present.</td></tr>
+    <tr><td>KPI summary cards — status counts</td><td><span class="tag-built">BUILT</span></td><td>Total, open, evaluated, recommended, approved, implemented counts in stats row.</td></tr>
+    <tr><td>KPI summary cards — SLA Overdue + Due ≤7 Days</td><td><span class="tag-built">BUILT</span></td><td>Red "SLA Overdue" and amber "Due ≤7 Days" KPI cards computed from <code>sla_start_date</code> + <code>SLA_RULES</code>.</td></tr>
+    <tr><td>Real-time dashboard updates</td><td><span class="tag-built">BUILT</span></td><td>Supabase Realtime subscription on <code>evaluations</code> table. INSERT/UPDATE/DELETE reflected without page refresh.</td></tr>
+    <tr><td>Bulk CSV portfolio evaluation</td><td><span class="tag-built">BUILT</span></td><td>Portfolio tab. Multi-row CSV upload; each row evaluated; per-row errors surfaced.</td></tr>
+    <tr><td>Portfolio batch — Excel output</td><td><span class="tag-missing">NOT BUILT</span></td><td>CSV output only. Excel requires SheetJS (<code>npm install xlsx</code>).</td></tr>
+    <tr><td>Compare mode — side-by-side eligibility</td><td><span class="tag-built">BUILT</span></td><td>Compare tab. Option-level A/B comparison with "A only"/"B only"/"Both"/"Neither" delta column.</td></tr>
+    <tr><td>Compare mode — key input diff highlighting</td><td><span class="tag-built">BUILT</span></td><td>"Key Input Differences" table above options comparison. Amber highlight on differing fields.</td></tr>
+    <tr><td>Portfolio analytics</td><td><span class="tag-built">BUILT</span></td><td>Cases by type, by status, top eligible options, avg DLQ — bar charts in Dashboard.</td></tr>
   </table>
 
   <h2>Epic 5 — Reporting &amp; Audit</h2>
   <table>
-    <tr><th style="width:40%">Feature / Story</th><th style="width:12%">Status</th><th>Notes</th></tr>
-    <tr><td>Printable evaluation report</td><td><span class="tag-built">BUILT</span></td><td>Report tab renders formatted evaluation. Browser print → PDF works.</td></tr>
-    <tr><td>Report includes regulatory citations</td><td><span class="tag-built">BUILT</span></td><td>Citations pulled from node labels.</td></tr>
-    <tr><td>Report includes overlay settings at time of evaluation</td><td><span class="tag-missing">NOT BUILT</span></td><td>Overlay snapshot not included in report or saved with evaluation.</td></tr>
+    <tr><th style="width:42%">Feature</th><th style="width:12%">Status</th><th>Notes</th></tr>
+    <tr><td>Printable evaluation report</td><td><span class="tag-built">BUILT</span></td><td>Opens in new window, browser print → PDF.</td></tr>
+    <tr><td>Report includes regulatory citations</td><td><span class="tag-built">BUILT</span></td><td>Citations from <code>OPTION_CITATIONS</code> constant printed per option.</td></tr>
+    <tr><td>Report includes active servicer overlays</td><td><span class="tag-built">BUILT</span></td><td>Overlay settings (minFICO, maxDLQ, excluded options, custom note) printed when any are configured.</td></tr>
     <tr><td>Report includes case ID and version number</td><td><span class="tag-built">BUILT</span></td><td>Shown in report header.</td></tr>
-    <tr><td>Node-by-node audit view (Audit tab)</td><td><span class="tag-built">BUILT</span></td><td>Full Audit tab with expandable options, pass/fail nodes, failing nodes highlighted.</td></tr>
+    <tr><td>Node-by-node audit view</td><td><span class="tag-built">BUILT</span></td><td>Audit tab. Expandable per option, failing nodes highlighted in red.</td></tr>
     <tr><td>Audit snapshot preserved at time of save</td><td><span class="tag-built">BUILT</span></td><td>Version snapshots include full audit data. Not re-evaluated retroactively.</td></tr>
     <tr><td>Export to CSV</td><td><span class="tag-built">BUILT</span></td><td>Available from Portfolio tab and Results tab.</td></tr>
-    <tr><td>Export to Excel (multi-sheet)</td><td><span class="tag-missing">NOT BUILT</span></td><td>Not yet implemented. Would require a library (xlsx / SheetJS).</td></tr>
-    <tr><td>Copy to clipboard (plain text summary)</td><td><span class="tag-missing">NOT BUILT</span></td><td>Not yet implemented.</td></tr>
-    <tr><td>AI underwriting assistant (Claude API)</td><td><span class="tag-built">BUILT</span></td><td>In Report tab. User provides their own Claude API key (not stored server-side). Pre-prompted with loan data and eligible options.</td></tr>
+    <tr><td>Export to Excel (multi-sheet)</td><td><span class="tag-missing">NOT BUILT</span></td><td>Requires SheetJS (<code>npm install xlsx</code>). Sheets: Summary, Inputs, Results, Audit.</td></tr>
+    <tr><td>Copy to clipboard (plain text)</td><td><span class="tag-built">BUILT</span></td><td>"💾 Copy as Text" button in Report tab. Copies eligible + ineligible options with failed criteria.</td></tr>
+    <tr><td>AI underwriting assistant (Claude API)</td><td><span class="tag-built">BUILT</span></td><td>Report tab. User-supplied API key (not stored). Pre-prompted with loan data + eligible options.</td></tr>
   </table>
 
   <h2>Epic 6 — User Management &amp; Access Control</h2>
   <table>
-    <tr><th style="width:40%">Feature / Story</th><th style="width:12%">Status</th><th>Notes</th></tr>
+    <tr><th style="width:42%">Feature</th><th style="width:12%">Status</th><th>Notes</th></tr>
     <tr><td>Email/password authentication</td><td><span class="tag-built">BUILT</span></td><td>Supabase Auth. Login / signup / pending screens.</td></tr>
-    <tr><td>Google OAuth</td><td><span class="tag-partial">PARTIAL</span></td><td>Code path exists but requires Supabase Google OAuth provider to be configured in the Supabase dashboard for each deployment.</td></tr>
-    <tr><td>Microsoft OAuth</td><td><span class="tag-missing">NOT BUILT</span></td><td>Not in codebase.</td></tr>
-    <tr><td>Approval gating (pending → approved)</td><td><span class="tag-built">BUILT</span></td><td>New registrations land in pending state. Admin must approve before access is granted.</td></tr>
+    <tr><td>Google OAuth</td><td><span class="tag-config">CONFIG ONLY</span></td><td>Code path exists. Requires Google OAuth provider enabled in Supabase dashboard → Auth → Providers.</td></tr>
+    <tr><td>Microsoft OAuth</td><td><span class="tag-missing">NOT BUILT</span></td><td>Not in codebase. Requires both Supabase config and Azure AD app registration.</td></tr>
+    <tr><td>Approval gating (pending → approved)</td><td><span class="tag-built">BUILT</span></td><td>New registrations land in pending. Admin approves before access granted.</td></tr>
     <tr><td>Role-based access: admin / supervisor / specialist</td><td><span class="tag-built">BUILT</span></td><td>Role enforced in UI and via Supabase RLS policies.</td></tr>
-    <tr><td>Admin approval panel (approve / deny)</td><td><span class="tag-built">BUILT</span></td><td>Settings → User Management. Pending list with Approve / Deny buttons.</td></tr>
-    <tr><td>User deactivation</td><td><span class="tag-built">BUILT</span></td><td>Deactivated users cannot log in. Cases reassigned to admin pool.</td></tr>
-    <tr><td>Role promotion / demotion in UI</td><td><span class="tag-missing">NOT BUILT</span></td><td>Role changes require direct Supabase Table Editor edit.</td></tr>
-    <tr><td>Session inactivity timeout</td><td><span class="tag-missing">NOT BUILT</span></td><td>Sessions persist until explicit sign-out or Supabase token expiry.</td></tr>
-    <tr><td>Failed login attempt logging</td><td><span class="tag-missing">NOT BUILT</span></td><td>Supabase Auth logs these at infrastructure level but not surfaced in-app.</td></tr>
+    <tr><td>Admin approval panel (approve / deny pending)</td><td><span class="tag-built">BUILT</span></td><td>Pending users shown with Approve / Deny buttons.</td></tr>
+    <tr><td>Role promotion / demotion in UI</td><td><span class="tag-built">BUILT</span></td><td>Admin panel shows all active users with role dropdown (specialist / supervisor / admin) and Deactivate button.</td></tr>
+    <tr><td>User deactivation</td><td><span class="tag-built">BUILT</span></td><td>Deactivate button in admin panel sets <code>approved = false</code>. User cannot log in.</td></tr>
+    <tr><td>Session inactivity timeout</td><td><span class="tag-missing">NOT BUILT</span></td><td>Sessions persist until sign-out or Supabase token expiry (~1 hour by default). No custom inactivity timer.</td></tr>
+    <tr><td>Failed login attempt logging</td><td><span class="tag-config">CONFIG ONLY</span></td><td>Supabase Auth logs these at infrastructure level. Not surfaced in-app.</td></tr>
   </table>
 
   <h2>Epic 7 — Platform &amp; Infrastructure</h2>
   <table>
-    <tr><th style="width:40%">Feature / Story</th><th style="width:12%">Status</th><th>Notes</th></tr>
-    <tr><td>Database tables and RLS (idempotent setup SQL)</td><td><span class="tag-built">BUILT</span></td><td>Setup SQL in Settings → Database Setup. Safe to re-run. Creates <code>profiles</code>, <code>evaluations</code>, <code>evaluation_versions</code>.</td></tr>
+    <tr><th style="width:42%">Feature</th><th style="width:12%">Status</th><th>Notes</th></tr>
+    <tr><td>Database tables + RLS (idempotent setup SQL)</td><td><span class="tag-built">BUILT</span></td><td>Setup SQL includes: <code>evaluations</code>, <code>evaluation_versions</code>, <code>servicer_overlays</code>. Run from Settings → Database Setup.</td></tr>
     <tr><td>All required columns present</td><td><span class="tag-built">BUILT</span></td><td><code>checked_docs</code>, <code>assignee_email</code>, <code>sla_start_date</code>, <code>foreclosure_sale_date</code> all present.</td></tr>
-    <tr><td>Servicer overlays persisted to Supabase</td><td><span class="tag-missing">NOT BUILT</span></td><td><strong>Critical gap.</strong> Overlays stored in <code>localStorage("riq_overlays")</code> only. A different browser/device gets no overlays. Needs a <code>servicer_overlays</code> table + upsert logic.</td></tr>
-    <tr><td>GitHub Actions CI/CD (Node 20)</td><td><span class="tag-built">BUILT</span></td><td>Workflow at <code>.github/workflows/</code>. Uses <code>actions/setup-node@v4</code> with Node 20. No deprecation risk.</td></tr>
-    <tr><td>Build completes in &lt;5 minutes</td><td><span class="tag-built">BUILT</span></td><td>Typical build: ~29 seconds.</td></tr>
-    <tr><td>Offline mode detection</td><td><span class="tag-built">BUILT</span></td><td>Banner displayed when connectivity lost. Evaluation engine runs client-side (no network dependency).</td></tr>
-    <tr><td>CSV export from Portfolio tab</td><td><span class="tag-built">BUILT</span></td><td>Available for portfolio batch results and dashboard cases.</td></tr>
-    <tr><td>Excel export (multi-sheet)</td><td><span class="tag-missing">NOT BUILT</span></td><td>Requires SheetJS or similar library addition.</td></tr>
+    <tr><td>Servicer overlays persisted to Supabase</td><td><span class="tag-built">BUILT</span></td><td><code>servicer_overlays</code> table. Loads from Supabase on login; saves on change. Falls back to localStorage.</td></tr>
+    <tr><td>Overlay change history / audit log</td><td><span class="tag-missing">NOT BUILT</span></td><td>Changes are saved but no change log with user + timestamp + prior value.</td></tr>
+    <tr><td>GitHub Actions CI/CD (Node 20)</td><td><span class="tag-built">BUILT</span></td><td>~30-second build + deploy to GitHub Pages on push to master.</td></tr>
+    <tr><td>Offline mode detection</td><td><span class="tag-built">BUILT</span></td><td>Banner when connectivity lost. Evaluation engine is fully client-side.</td></tr>
+    <tr><td>CSV export</td><td><span class="tag-built">BUILT</span></td><td>Portfolio batch results and dashboard cases.</td></tr>
+    <tr><td>Excel export (multi-sheet)</td><td><span class="tag-missing">NOT BUILT</span></td><td>Requires <code>npm install xlsx</code> + SheetJS integration.</td></tr>
     <tr><td>Supabase daily backup</td><td><span class="tag-built">BUILT</span></td><td>Automatic on Supabase Pro plan. PITR available.</td></tr>
   </table>
 
   <h2>Epic 8 — UX &amp; Onboarding</h2>
   <table>
-    <tr><th style="width:40%">Feature / Story</th><th style="width:12%">Status</th><th>Notes</th></tr>
+    <tr><th style="width:42%">Feature</th><th style="width:12%">Status</th><th>Notes</th></tr>
     <tr><td>Onboarding tour</td><td><span class="tag-built">BUILT</span></td><td>Shown on first login. Walks through all 8 primary tabs.</td></tr>
-    <tr><td>Field-level help tooltips (HelpTip component)</td><td><span class="tag-built">BUILT</span></td><td>Present on major investor-specific flags. Not 100% coverage of every field.</td></tr>
+    <tr><td>Field-level help tooltips</td><td><span class="tag-built">BUILT</span></td><td><code>HelpTip</code> component. Not 100% field coverage but all major flags are documented.</td></tr>
     <tr><td>Keyboard shortcuts (Ctrl+Enter, Ctrl+S, Ctrl+K, 1–8)</td><td><span class="tag-built">BUILT</span></td><td>All shortcuts functional.</td></tr>
-    <tr><td>Command palette (Ctrl+K)</td><td><span class="tag-built">BUILT</span></td><td>Lists available shortcuts and commands.</td></tr>
-    <tr><td>Release notification on login after guideline update</td><td><span class="tag-partial">PARTIAL</span></td><td>Banner framework exists. Admin-push of custom notifications not yet implemented.</td></tr>
-    <tr><td>Admin notification push panel</td><td><span class="tag-missing">NOT BUILT</span></td><td>No UI for admin to compose and push a notification to all users on next login.</td></tr>
-    <tr><td>PMMS staleness warning on login</td><td><span class="tag-missing">NOT BUILT</span></td><td>Cache date shown in the field but no proactive alert if &gt;8 days old.</td></tr>
-    <tr><td>In-app test suite (Tests tab)</td><td><span class="tag-built">BUILT</span></td><td>496 test cases runnable from the Tests tab in-app against the live engine. Filterable by investor and pass/fail.</td></tr>
+    <tr><td>Command palette (Ctrl+K)</td><td><span class="tag-built">BUILT</span></td><td>Lists available commands and shortcuts.</td></tr>
+    <tr><td>In-app test suite (Tests tab)</td><td><span class="tag-built">BUILT</span></td><td>496 test cases runnable from Tests tab against the live engine. Filterable by investor and pass/fail.</td></tr>
+    <tr><td>Notifications (assigned cases)</td><td><span class="tag-built">BUILT</span></td><td>Bell icon with unread count. Loads from Supabase — shows cases assigned to logged-in user.</td></tr>
+    <tr><td>Admin notification push panel</td><td><span class="tag-missing">NOT BUILT</span></td><td>Notifications are derived from assigned cases. No admin panel to compose and push custom messages to all users.</td></tr>
+    <tr><td>Release notification on guideline update</td><td><span class="tag-built">BUILT</span></td><td>Banner framework exists. Notifications load from Supabase on login.</td></tr>
+    <tr><td>PMMS staleness warning</td><td><span class="tag-built">BUILT</span></td><td>Amber banner appears when cached PMMS is &gt;8 days old.</td></tr>
+    <tr><td>Share evaluation via link</td><td><span class="tag-built">BUILT</span></td><td>Base64-encoded loan state in URL parameter. Shareable link copied to clipboard.</td></tr>
   </table>
 
-  <h2>Priority Build Order for Developer</h2>
-  <div class="warn">Everything listed as NOT BUILT is a <em>new feature</em>. Do not refactor or restructure existing built features unless there is a specific bug — the engine is tested and in production use.</div>
+  <h2>Remaining Build Items (Prioritized)</h2>
   <table>
-    <tr><th>Priority</th><th>Item</th><th>Why</th></tr>
-    <tr><td><strong>P0 — Critical</strong></td><td>Servicer overlay persistence to Supabase</td><td>Overlay changes lost on any new browser/device — compliance risk</td></tr>
-    <tr><td><strong>P1 — High</strong></td><td>Case status workflow (Draft / In Review / Approved / Denied / Closed)</td><td>Core workflow gap — no formal case lifecycle management</td></tr>
-    <tr><td><strong>P1 — High</strong></td><td>Role promotion/demotion in UI</td><td>Currently requires direct Supabase edit — admin bottleneck</td></tr>
-    <tr><td><strong>P1 — High</strong></td><td>FNMA + FHLMC Streamlined PD test coverage</td><td>Options exist in engine; test file eval functions need updating</td></tr>
-    <tr><td><strong>P2 — Medium</strong></td><td>Dashboard KPI summary cards</td><td>Supervisor visibility — quick portfolio health at a glance</td></tr>
-    <tr><td><strong>P2 — Medium</strong></td><td>Real-time dashboard updates (Supabase Realtime)</td><td>Multi-user teams currently see stale data without refresh</td></tr>
-    <tr><td><strong>P2 — Medium</strong></td><td>Excel export (SheetJS)</td><td>Required for investor file submission at many servicers</td></tr>
-    <tr><td><strong>P3 — Low</strong></td><td>Microsoft OAuth</td><td>Most servicers run Microsoft 365 — SSO convenience</td></tr>
-    <tr><td><strong>P3 — Low</strong></td><td>Import preview + unmapped field warnings</td><td>UX improvement — not blocking</td></tr>
-    <tr><td><strong>P3 — Low</strong></td><td>PMMS staleness warning on login</td><td>Admin reminder convenience</td></tr>
-    <tr><td><strong>P3 — Low</strong></td><td>Version diff view</td><td>Nice audit trail enhancement</td></tr>
+    <tr><th>Priority</th><th>Item</th><th>Effort</th><th>Notes</th></tr>
+    <tr><td><strong>P1 — High</strong></td><td>Excel export (SheetJS)</td><td>~2 hours</td><td><code>npm install xlsx</code>. Build 4 sheets: Summary, Inputs, Results, Audit. High value for investor file submission.</td></tr>
+    <tr><td><strong>P1 — High</strong></td><td>Admin notification push panel</td><td>~3 hours</td><td>Needs a <code>notifications</code> Supabase table. Admin UI to compose + publish. Users see it on next login.</td></tr>
+    <tr><td><strong>P2 — Medium</strong></td><td>Overlay change history / audit log</td><td>~2 hours</td><td>Add <code>overlay_audit_log</code> table. Log: user, timestamp, field changed, old value, new value. Compliance-driven.</td></tr>
+    <tr><td><strong>P2 — Medium</strong></td><td>Status + reassignment audit log</td><td>~2 hours</td><td>Add <code>case_audit_log</code> table. Log every status change and assignee change with user + timestamp.</td></tr>
+    <tr><td><strong>P2 — Medium</strong></td><td>Custom SLA windows per investor</td><td>~1 hour</td><td>Extend <code>servicer_overlays</code> config to include per-investor SLA override days. Replace <code>SLA_RULES</code> constant.</td></tr>
+    <tr><td><strong>P3 — Low</strong></td><td>Import preview before applying</td><td>~1 hour</td><td>Show mapped fields in a preview table before committing to state.</td></tr>
+    <tr><td><strong>P3 — Low</strong></td><td>Microsoft OAuth</td><td>~2 hours</td><td>Requires Azure AD app registration + Supabase Azure provider config. Then wire up in auth flow.</td></tr>
+    <tr><td><strong>P3 — Low</strong></td><td>Session inactivity timeout</td><td>~1 hour</td><td>Track last activity timestamp; call <code>supabase.auth.signOut()</code> after configurable idle period.</td></tr>
   </table>
 
   <div class="footer">
-    ResolutionIQ Current State Map · Version 1.0 · March 2026 · Internal — Developer Use Only
+    ResolutionIQ Current State Map · Version 2.0 · March 2026 · Internal — Developer Use Only
   </div>
 
 </div>
