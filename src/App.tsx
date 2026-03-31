@@ -3354,6 +3354,55 @@ const TEST_CASES:{investor:string;id:string;name:string;loan:any;expected:Record
   {investor:"FHLMC",id:"FHLMC-10",name:"Forbearance Plan fails long-term non-unemp",loan:TL({hardshipType:"Reduction in Income",fhlmcLongTermHardship:true,fhlmcUnemployed:false,propertyCondition:"Standard"}),expected:{"FHLMC Forbearance Plan":false}},
 ];
 
+// ─── ADMIN USERS PANEL ────────────────────────────────────────────────────────
+function AdminUsersPanel({profile, adminMsg, setAdminMsg, supabase}: {profile:any, adminMsg:string, setAdminMsg:(m:string)=>void, supabase:any}) {
+  const [allUsers, setAllUsers] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  React.useEffect(() => {
+    supabase.from("profiles").select("id,email,full_name,role,approved").order("full_name").then(({data}:any) => {
+      setAllUsers(data||[]); setLoading(false);
+    });
+  }, []);
+  const updateRole = async (id:string, role:string) => {
+    await supabase.from("profiles").update({role}).eq("id",id);
+    setAllUsers(u => u.map(x => x.id===id?{...x,role}:x));
+    setAdminMsg(`Role updated to ${role}`); setTimeout(()=>setAdminMsg(""),3000);
+  };
+  const deactivate = async (id:string) => {
+    await supabase.from("profiles").update({approved:false}).eq("id",id);
+    setAllUsers(u => u.map(x => x.id===id?{...x,approved:false}:x));
+    setAdminMsg("User deactivated"); setTimeout(()=>setAdminMsg(""),3000);
+  };
+  if (loading) return <div className="text-slate-500 text-sm text-center py-4">Loading users...</div>;
+  const active = allUsers.filter(u=>u.approved&&u.id!==profile.id);
+  if (active.length===0) return null;
+  return (
+    <div>
+      <div className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Active Users ({active.length})</div>
+      <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+        <table className="w-full text-sm">
+          <thead><tr className="border-b border-slate-700"><th className="text-left px-4 py-2.5 text-slate-400 font-semibold">Name</th><th className="text-left px-4 py-2.5 text-slate-400 font-semibold">Email</th><th className="text-left px-4 py-2.5 text-slate-400 font-semibold">Role</th><th className="px-4 py-2.5"></th></tr></thead>
+          <tbody>{active.map(u=>(
+            <tr key={u.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
+              <td className="px-4 py-2.5 text-white font-medium">{u.full_name||"—"}</td>
+              <td className="px-4 py-2.5 text-slate-400 text-xs">{u.email}</td>
+              <td className="px-4 py-2.5">
+                <select value={u.role||"specialist"} onChange={e=>updateRole(u.id,e.target.value)}
+                  className="bg-slate-700 text-slate-200 text-xs font-semibold px-2 py-1 rounded border border-slate-600 focus:outline-none">
+                  <option value="specialist">specialist</option>
+                  <option value="supervisor">supervisor</option>
+                  <option value="admin">admin</option>
+                </select>
+              </td>
+              <td className="px-4 py-2.5 text-right"><button onClick={()=>deactivate(u.id)} className="text-xs text-red-400 hover:text-red-300">Deactivate</button></td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 interface Profile { id:string; email:string; full_name:string; approved:boolean; role:string; }
 
@@ -3865,7 +3914,8 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
     try {
       const raw = JSON.parse(importJson);
       const mapped: Record<string,any> = {};
-      let imported = 0, unrecognized = 0;
+      let imported = 0;
+      const unrecognizedFields: string[] = [];
       // Handle BorrowerFirstName + BorrowerLastName combination
       const firstName = raw["BorrowerFirstName"] || "";
       const lastName = raw["BorrowerLastName"] || "";
@@ -3879,11 +3929,11 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
           const appKey = FIELD_MAP[key];
           if (appKey) { mapped[appKey] = String(val); imported++; }
         } else {
-          unrecognized++;
+          unrecognizedFields.push(key);
         }
       }
       setLoan(prev => ({...prev, ...mapped}));
-      setImportMsg(`✅ ${imported} fields imported, ${unrecognized} fields not recognized`);
+      setImportMsg(`✅ ${imported} fields imported${unrecognizedFields.length>0?` — ${unrecognizedFields.length} unrecognized: ${unrecognizedFields.slice(0,5).join(", ")}${unrecognizedFields.length>5?" …":""}`:""}`)
       setEvaluated(false);
       setTimeout(() => { setShowImportModal(false); setImportMsg(""); setImportJson(""); }, 2500);
     } catch(e) {
@@ -3942,7 +3992,7 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
       c.borrower_name?.toLowerCase().includes(dashSearch.toLowerCase());
     const matchType = dashFilter === "all" || c.loan_type === dashFilter;
     const matchStatus = dashStatus === "all" || (c.status || "open") === dashStatus;
-    const matchAssignee = assigneeFilter === "mine" ? (c.user_id === profile?.id) : true;
+    const matchAssignee = assigneeFilter === "mine" ? (c.user_id === profile?.id) : assigneeFilter === "unassigned" ? (!c.assignee_email) : true;
     return matchSearch && matchType && matchStatus && matchAssignee;
   });
 
@@ -4147,6 +4197,7 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
     <h2>❌ Ineligible Options (${ineligible.length})</h2>
     <table style="width:100%;border-collapse:collapse"><tr><th style="text-align:left;padding:6px;background:#f3f4f6;border:1px solid #e5e7eb">Option</th><th style="text-align:left;padding:6px;background:#f3f4f6;border:1px solid #e5e7eb">Failed Condition</th><th style="text-align:left;padding:6px;background:#f3f4f6;border:1px solid #e5e7eb">Value</th></tr>${ineligible.map(r=>{const f=r.nodes?.find(nd=>!nd.pass);return`<tr><td style="padding:5px 8px;border:1px solid #e5e7eb">${r.option}</td><td style="padding:5px 8px;border:1px solid #e5e7eb;color:#dc2626">${f?f.question:"—"}</td><td style="padding:5px 8px;border:1px solid #e5e7eb">${f?f.answer:"—"}</td></tr>`;}).join("")}</table>
     ${aiResponse?`<h2>🤖 AI Analysis</h2><div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:6px;white-space:pre-wrap;font-size:12px">${aiResponse}</div>`:""}
+    ${(overlays.minFICO||overlays.maxDLQMonths||overlays.excludedOptions.length>0||overlays.customNote)?`<h2>⚙️ Active Servicer Overlays</h2><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px"><tbody>${overlays.minFICO?`<tr style="background:#f8fafc"><td style="padding:6px 10px;font-weight:600;color:#374151;width:40%;border:1px solid #e5e7eb">Minimum FICO Score</td><td style="padding:6px 10px;border:1px solid #e5e7eb">${overlays.minFICO}</td></tr>`:""}${overlays.maxDLQMonths?`<tr style="background:#fff"><td style="padding:6px 10px;font-weight:600;color:#374151;border:1px solid #e5e7eb">Maximum DLQ Months</td><td style="padding:6px 10px;border:1px solid #e5e7eb">${overlays.maxDLQMonths}</td></tr>`:""}${overlays.excludedOptions.length>0?`<tr style="background:#f8fafc"><td style="padding:6px 10px;font-weight:600;color:#374151;border:1px solid #e5e7eb">Excluded Options</td><td style="padding:6px 10px;border:1px solid #e5e7eb">${overlays.excludedOptions.join(", ")}</td></tr>`:""}${overlays.customNote?`<tr style="background:#fff"><td style="padding:6px 10px;font-weight:600;color:#374151;border:1px solid #e5e7eb">Servicer Note</td><td style="padding:6px 10px;border:1px solid #e5e7eb">${overlays.customNote}</td></tr>`:""}</tbody></table>`:""}
     <div class="footer">Decision-support tool only. Final determinations must be confirmed by a qualified loss mitigation underwriter per current HUD, USDA, and VA guidelines.</div>
     </body></html>`);
     w.document.close();w.print();
@@ -4154,25 +4205,22 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
 
   if(showAdmin&&profile.role==="admin") return (
     <div className="min-h-screen bg-slate-900 p-6">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-black text-white">User Access Requests</h2>
-            <p className="text-slate-400 text-sm mt-0.5">Approve or deny pending sign-up requests</p>
+            <h2 className="text-xl font-black text-white">User Management</h2>
+            <p className="text-slate-400 text-sm mt-0.5">Approve requests and manage team roles</p>
           </div>
           <button onClick={()=>setShowAdmin(false)} className="text-slate-400 hover:text-white text-sm px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-500 transition-all">← Back to App</button>
         </div>
         {adminMsg&&<div className="bg-emerald-900/60 border border-emerald-700 text-emerald-300 text-sm px-4 py-3 rounded-xl mb-4">{adminMsg}</div>}
-        {pendingUsers.length===0
-          ? <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 text-center text-slate-400">No pending requests</div>
-          : <div className="space-y-3">
+        {pendingUsers.length>0&&(
+          <div className="mb-6">
+            <div className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Pending Approval ({pendingUsers.length})</div>
+            <div className="space-y-3">
               {pendingUsers.map(u=>(
                 <div key={u.id} className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-white font-semibold">{u.full_name||"—"}</p>
-                    <p className="text-slate-400 text-sm">{u.email}</p>
-                    <p className="text-slate-600 text-xs mt-0.5">Requested {new Date(u.requested_at).toLocaleDateString()}</p>
-                  </div>
+                  <div><p className="text-white font-semibold">{u.full_name||"—"}</p><p className="text-slate-400 text-sm">{u.email}</p><p className="text-slate-600 text-xs mt-0.5">Requested {new Date(u.requested_at).toLocaleDateString()}</p></div>
                   <div className="flex gap-2 shrink-0">
                     <button onClick={()=>approveUser(u.id)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold px-4 py-2 rounded-lg transition-all">Approve</button>
                     <button onClick={()=>denyUser(u.id)} className="bg-red-900/60 hover:bg-red-800 text-red-300 text-sm font-semibold px-4 py-2 rounded-lg transition-all">Deny</button>
@@ -4180,7 +4228,9 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
                 </div>
               ))}
             </div>
-        }
+          </div>
+        )}
+        <AdminUsersPanel profile={profile} adminMsg={adminMsg} setAdminMsg={setAdminMsg} supabase={supabase} />
       </div>
     </div>
   );
@@ -4387,15 +4437,35 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={()=>setShowImportModal(false)}>
           <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden" onClick={e=>e.stopPropagation()}>
             <div className="bg-slate-800 text-white px-5 py-4 flex items-center justify-between">
-              <span className="font-black text-base">📥 Import Loan Data (JSON)</span>
+              <span className="font-black text-base">📥 Import Loan Data</span>
               <button onClick={()=>setShowImportModal(false)} className="text-slate-400 hover:text-white text-lg leading-none">×</button>
             </div>
             <div className="p-5">
-              <p className="text-xs text-slate-500 mb-3">Paste JSON from BytePro or your LOS. Recognized fields: LoanNumber, CurrentUPB, GrossMonthlyIncome, InterestRate, DelinquencyMonths, LoanType, and more.</p>
+              <p className="text-xs text-slate-500 mb-3">Paste JSON or CSV (with header row) from BytePro or your LOS. Recognized fields: LoanNumber, CurrentUPB, GrossMonthlyIncome, InterestRate, DelinquencyMonths, LoanType, and more.</p>
               <textarea className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none" rows={10} value={importJson} onChange={e=>setImportJson(e.target.value)} placeholder={'{\n  "LoanNumber": "1234567890",\n  "CurrentUPB": "247500",\n  "GrossMonthlyIncome": "5200"\n}'}/>
               {importMsg&&<div className={`mt-2 text-xs font-semibold px-3 py-2 rounded-lg ${importMsg.startsWith("✅")?"bg-emerald-50 text-emerald-700":"bg-red-50 text-red-700"}`}>{importMsg}</div>}
               <div className="flex gap-2 mt-3">
-                <button onClick={importLoanData} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 rounded-lg transition-all">📥 Import</button>
+                <button onClick={importLoanData} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 rounded-lg transition-all">📥 Import JSON</button>
+                <button onClick={()=>{
+                  try {
+                    const rows = parseCSV(importJson);
+                    if (rows.length === 0) { setImportMsg("❌ No data rows found in CSV"); return; }
+                    const raw = rows[0];
+                    const mapped: Record<string,string> = {};
+                    let imported = 0; const unrecognizedFields: string[] = [];
+                    const firstName = raw["BorrowerFirstName"] || ""; const lastName = raw["BorrowerLastName"] || "";
+                    if (firstName || lastName) { mapped["borrowerName"] = [lastName, firstName].filter(Boolean).join(", "); imported++; }
+                    for (const [key, val] of Object.entries(raw)) {
+                      if (key === "BorrowerFirstName" || key === "BorrowerLastName") continue;
+                      if (key in FIELD_MAP) { const appKey = FIELD_MAP[key]; if (appKey) { mapped[appKey] = String(val); imported++; } }
+                      else { unrecognizedFields.push(key); }
+                    }
+                    setLoan(prev => ({...prev, ...mapped}));
+                    setImportMsg(`✅ ${imported} fields imported from CSV${unrecognizedFields.length>0?` — ${unrecognizedFields.length} unrecognized: ${unrecognizedFields.slice(0,5).join(", ")}${unrecognizedFields.length>5?" …":""}`:""}` );
+                    setEvaluated(false);
+                    setTimeout(() => { setShowImportModal(false); setImportMsg(""); setImportJson(""); }, 2500);
+                  } catch(e) { setImportMsg("❌ CSV parse error — check format (header row required)"); }
+                }} className="flex-1 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold py-2 rounded-lg transition-all">📊 Import CSV</button>
                 <button onClick={()=>setShowImportModal(false)} className="px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-semibold py-2 rounded-lg transition-all">Cancel</button>
               </div>
             </div>
@@ -4516,10 +4586,10 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
               </select>
               {profile && (
                 <div className="flex rounded-lg overflow-hidden border border-slate-200">
-                  {["mine","all"].map(v => (
+                  {[["mine","👤 My Cases"],["all","👥 All Cases"],["unassigned","📭 Unassigned"]].map(([v,label]) => (
                     <button key={v} onClick={() => setAssigneeFilter(v)}
                       className={`px-3 py-1.5 text-xs font-bold transition-colors ${assigneeFilter===v?"bg-emerald-700 text-white":"bg-white text-slate-500 hover:bg-slate-50"}`}>
-                      {v === "mine" ? "👤 My Cases" : "👥 All Cases"}
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -4533,8 +4603,23 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
                   const counts: Record<string,number> = {};
                   dashCases.forEach(c => { const s = c.status || "open"; counts[s] = (counts[s]||0)+1; });
                   const colorMap: Record<string,string> = {open:"bg-slate-100 text-slate-600",evaluated:"bg-blue-100 text-blue-700",recommended:"bg-amber-100 text-amber-700",approved:"bg-emerald-100 text-emerald-700",implemented:"bg-purple-100 text-purple-700"};
-                  return [<div key="total" className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-center"><div className="text-xs text-slate-400 font-semibold">Total</div><div className="text-lg font-black text-slate-700">{dashCases.length}</div></div>,
-                    ...statusList.filter(s=>counts[s]).map(s=><div key={s} className={`${colorMap[s]} rounded-xl px-4 py-2 text-center`}><div className="text-xs font-semibold capitalize">{s}</div><div className="text-lg font-black">{counts[s]}</div></div>)];
+                  const today = Date.now();
+                  let overdue = 0, dueSoon = 0;
+                  dashCases.forEach(c => {
+                    if (!c.sla_start_date) return;
+                    const slaRule = SLA_RULES[c.loan_type as keyof typeof SLA_RULES];
+                    if (!slaRule) return;
+                    const deadline = new Date(c.sla_start_date).getTime() + slaRule.evaluationDeadlineDays * 86400000;
+                    const daysLeft = Math.floor((deadline - today) / 86400000);
+                    if (daysLeft < 0) overdue++;
+                    else if (daysLeft <= 7) dueSoon++;
+                  });
+                  return [
+                    <div key="total" className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-center"><div className="text-xs text-slate-400 font-semibold">Total</div><div className="text-lg font-black text-slate-700">{dashCases.length}</div></div>,
+                    ...statusList.filter(s=>counts[s]).map(s=><div key={s} className={`${colorMap[s]} rounded-xl px-4 py-2 text-center`}><div className="text-xs font-semibold capitalize">{s}</div><div className="text-lg font-black">{counts[s]}</div></div>),
+                    overdue > 0 && <div key="overdue" className="bg-red-100 text-red-700 rounded-xl px-4 py-2 text-center border border-red-200"><div className="text-xs font-semibold">SLA Overdue</div><div className="text-lg font-black">{overdue}</div></div>,
+                    dueSoon > 0 && <div key="duesoon" className="bg-amber-100 text-amber-700 rounded-xl px-4 py-2 text-center border border-amber-200"><div className="text-xs font-semibold">Due ≤7 Days</div><div className="text-lg font-black">{dueSoon}</div></div>,
+                  ].filter(Boolean);
                 })()}
               </div>
             )}
@@ -4687,10 +4772,7 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
                     <button onClick={fetchPmms} disabled={pmmsLoading} className="px-2.5 py-1.5 rounded text-[10px] font-semibold bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 whitespace-nowrap" title="Fetch current PMMS from FRED (Federal Reserve Economic Data — no API key required)">{pmmsLoading?"…":"↻ Fetch"}</button>
                   </div>
                   {pmmsError&&<div className="text-[9px] text-red-500">{pmmsError}</div>}
-                  {globalPmms&&!pmmsError&&<div className="flex items-center justify-between text-[9px] text-slate-400 mt-0.5">
-                    <span>Cached: <strong className="text-slate-600">{globalPmms.rate}%</strong> as of {globalPmms.date}</span>
-                    {loan.pmmsRate!==globalPmms.rate&&<button onClick={()=>set("pmmsRate",globalPmms.rate)} className="text-blue-500 hover:text-blue-700 underline ml-2">Apply</button>}
-                  </div>}
+                  {globalPmms&&!pmmsError&&(()=>{const pmmsAgeDays=Math.floor((Date.now()-new Date(globalPmms.date).getTime())/86400000);return(<div className="mt-0.5"><div className="flex items-center justify-between text-[9px] text-slate-400"><span>Cached: <strong className="text-slate-600">{globalPmms.rate}%</strong> as of {globalPmms.date}</span>{loan.pmmsRate!==globalPmms.rate&&<button onClick={()=>set("pmmsRate",globalPmms.rate)} className="text-blue-500 hover:text-blue-700 underline ml-2">Apply</button>}</div>{pmmsAgeDays>8&&<div className="text-[9px] text-amber-600 font-semibold mt-0.5">⚠ Rate is {pmmsAgeDays} days old — click Fetch to update (published every Thursday)</div>}</div>);})()}
                 </div>}
                 {gmi>0&&(loan.loanType === "FHA" || loan.loanType === "USDA")&&<div className="bg-emerald-50 rounded p-2 text-xs text-emerald-800 space-y-0.5 mt-1">
                   {loan.loanType==="FHA"&&n(loan.currentPI)>0&&<div>FHA 25% P&I Target: <strong>{fmt$(n(loan.currentPI)*0.75)} P&I + {fmt$(n(loan.currentEscrow))} escrow</strong></div>}
@@ -5440,11 +5522,22 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
                             <span className="text-slate-400 ml-2">{new Date(v.created_at).toLocaleDateString()}</span>
                             {v.change_summary && <span className="text-slate-500 ml-2">— {v.change_summary}</span>}
                           </div>
-                          <button
-                            onClick={() => { setLoan({...initLoan,...v.loan_data}); setResults(v.results||[]); setEvaluated(true); }}
-                            className="text-emerald-600 hover:text-emerald-800 font-semibold ml-2">
-                            Restore
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={()=>{
+                                const cur=loan, ver=v.loan_data||{};
+                                const diffs=Object.keys({...cur,...ver}).filter(k=>String((cur as any)[k])!==String(ver[k])&&k!=="id"&&typeof (cur as any)[k]!=="object").map(k=>`${k}: "${(cur as any)[k]||""}" → "${ver[k]||""}"`);
+                                alert(diffs.length>0?`v${v.version_number} differs in ${diffs.length} field(s):\n\n${diffs.slice(0,20).join("\n")}${diffs.length>20?"\n…and "+(diffs.length-20)+" more":""}`:"No field differences from current state.");
+                              }}
+                              className="text-slate-400 hover:text-slate-600 font-semibold text-xs">
+                              Diff
+                            </button>
+                            <button
+                              onClick={() => { setLoan({...initLoan,...v.loan_data}); setResults(v.results||[]); setEvaluated(true); }}
+                              className="text-emerald-600 hover:text-emerald-800 font-semibold ml-1">
+                              Restore
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
