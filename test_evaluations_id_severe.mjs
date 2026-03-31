@@ -67,7 +67,7 @@ const initLoan = {
   fnmaDisasterHardship:false, fnmaFEMADesignation:false, fnmaInsuredLoss:false,
   fnmaDelinquencyAtDisaster:"0", fnmaSameDlisasterPriorDeferral:false,
   fnmaMortgageType:"Fixed Rate", fnmaCurrentIndex:"", fnmaMargin:"",
-  fnmaQRPCAchieved:false, fnmaFICO:"", fnmaHousingRatio:"",
+  fnmaQRPCAchieved:false, fnmaSolicitationCampaign:false, fnmaFICO:"", fnmaHousingRatio:"",
   fnmaCashReservesLt3Mo:false, fnmaLongTermHardship:false, fnmaPrior30DLQ12Mo:false,
   fhlmcHardshipResolved:false, fhlmcCanResumeFull:false, fhlmcImminentDefault:false,
   fhlmcPriorDeferredUPB:"0", fhlmcCumulativeDeferredMonths:"0",
@@ -253,6 +253,14 @@ function evaluateFHLMC(l) {
     const nodes=[node("Disaster-related hardship",l.fhlmcDisasterHardship?"Yes":"No",l.fhlmcDisasterHardship),node("Eligible Disaster (FEMA-declared or insured loss)",l.fhlmcFEMADesignation?"Yes":"No",l.fhlmcFEMADesignation),node("DLQ at time of disaster < 2 months",dlqAtDisaster+"mo",eligDlqAtDisaster),node("Current DLQ 1-12 months",dlq+"mo",eligDlqRange),node("Hardship resolved",l.fhlmcHardshipResolved?"Yes":"No",l.fhlmcHardshipResolved),node("Can resume full contractual payment",l.fhlmcCanResumeFull?"Yes":"No",l.fhlmcCanResumeFull),node("Conventional 1st lien",l.lienPosition,isConventional&&isFirstLien),node("No approved liquidation option active",l.fhlmcApprovedLiquidationOption?"Active":"None",noActiveLiquidation),node("No active/performing TPP",l.fhlmcActiveTPP?"Active":"None",noActiveTPP),node("No unexpired offer for another workout option",l.fhlmcUnexpiredOffer?"Yes":"No",noUnexpiredOffer)];
     results.push({option:"FHLMC Disaster Payment Deferral",eligible:nodes.every(nd=>nd.pass),nodes});
   }
+  // ── FHLMC Streamlined Payment Deferral (Solicitation) ───────────────────────
+  {
+    const eligDlqRange=dlq>=2&&dlq<=24, eligLoanAge=loanAge>=12;
+    const fhlmcCumDeferred=n(l.fhlmcCumulativeDeferredMonths), fhlmcPriorDeferral=n(l.fhlmcPriorDeferralMonths);
+    const eligCumCap=fhlmcCumDeferred<18, eligPriorDeferral=fhlmcPriorDeferral===0||fhlmcPriorDeferral>=12;
+    const nodes=[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("Conventional 1st lien",l.lienPosition,isConventional&&isFirstLien),node("Loan age >= 12 months",loanAge+"mo",eligLoanAge),node("DLQ 2-24 months (streamlined solicitation range)",dlq+"mo",eligDlqRange),node("Cumulative deferred months < 18 (lifetime cap, non-disaster — §9203.23)",fhlmcCumDeferred+"mo",eligCumCap),node("Prior non-disaster deferral >= 12 months ago (or never)",fhlmcPriorDeferral===0?"None":fhlmcPriorDeferral+"mo ago",eligPriorDeferral),node("No approved liquidation option active",l.fhlmcApprovedLiquidationOption?"Active":"None",noActiveLiquidation),node("No active/performing TPP",l.fhlmcActiveTPP?"Active":"None",noActiveTPP),node("No unexpired offer for another workout option",l.fhlmcUnexpiredOffer?"Yes":"No",noUnexpiredOffer)];
+    results.push({option:"FHLMC Streamlined Payment Deferral",eligible:nodes.every(nd=>nd.pass),nodes});
+  }
   {
     const isUnemployed=l.fhlmcUnemployed||l.hardshipType==="Unemployment";
     const isTemporary=!l.fhlmcLongTermHardship, eligForbearance=isUnemployed||isTemporary;
@@ -304,6 +312,15 @@ function evaluateFNMA(l) {
     const eligFEMA=l.fnmaFEMADesignation||l.fnmaInsuredLoss, eligDlqAtDisaster=dlqAtDisaster<2, eligDlqRange=dlq>=1&&dlq<=12;
     const nodes=[node("Disaster-related hardship",l.fnmaDisasterHardship?"Yes":"No",l.fnmaDisasterHardship),node("FEMA designation or insured property loss",(l.fnmaFEMADesignation||l.fnmaInsuredLoss)?"Yes":"No",eligFEMA),node("Conventional 1st lien",l.lienPosition,l.lienPosition==="First"),node("DLQ at time of disaster < 2 months",dlqAtDisaster+"mo",eligDlqAtDisaster),node("Current DLQ 1-12 months at evaluation",dlq+"mo",eligDlqRange),node("Hardship resolved",l.fnmaHardshipResolved?"Yes":"No",l.fnmaHardshipResolved),node("Can resume full contractual payment",l.fnmaCanResumeFull?"Yes":"No",l.fnmaCanResumeFull),node("Cannot reinstate or afford repayment plan",l.fnmaCannotReinstate?"Yes":"No",l.fnmaCannotReinstate),node("No prior deferral for this same disaster event",l.fnmaSameDlisasterPriorDeferral?"Yes":"No",!l.fnmaSameDlisasterPriorDeferral),node("Not within 36 months of maturity",l.fnmaWithin36MonthsMaturity?"Within 36mo":"OK",!l.fnmaWithin36MonthsMaturity),...commonBlockers];
     results.push({option:"FNMA Disaster Payment Deferral",eligible:nodes.every(nd=>nd.pass),nodes});
+  }
+  // ── FNMA Streamlined Payment Deferral (Solicitation — Campaign MODNRC) ──────
+  {
+    const eligLienPos=l.lienPosition==="First", eligLoanAge=loanAge>=12, eligDlqRange=dlq>=2&&dlq<=6;
+    const eligCumCap=cumulativeDeferred<12, eligPriorDeferral=priorDeferralMonths===0||priorDeferralMonths>=12;
+    const eligNotNearMaturity=!l.fnmaWithin36MonthsMaturity, eligNoFailedTPP=!l.fnmaFailedTPP12Months;
+    const eligSolicitation=l.fnmaSolicitationCampaign;
+    const nodes=[node("Non-disaster hardship",l.hardshipType,!isDisaster),node("Conventional 1st lien",l.lienPosition,eligLienPos),node("Loan age >= 12 months",loanAge+"mo",eligLoanAge),node("DLQ 2-6 months at evaluation",dlq+"mo",eligDlqRange),node("Servicer solicitation campaign active (LM.R1447 — Campaign MODNRC; BRP not required per LM.R1452)",l.fnmaSolicitationCampaign?"Active":"None",eligSolicitation),node("Cumulative deferred months < 12 (lifetime, non-disaster)",cumulativeDeferred+"mo",eligCumCap),node("Prior non-disaster deferral >= 12 months ago (or never)",priorDeferralMonths===0?"None":priorDeferralMonths+"mo ago",eligPriorDeferral),node("Not within 36 months of maturity",l.fnmaWithin36MonthsMaturity?"Within 36mo":"OK",eligNotNearMaturity),node("No failed Flex Mod TPP within 12 months",l.fnmaFailedTPP12Months?"Yes":"No",eligNoFailedTPP),...commonBlockers];
+    results.push({option:"FNMA Streamlined Payment Deferral",eligible:nodes.every(nd=>nd.pass),nodes});
   }
   {
     const eligLienPos=l.lienPosition==="First", eligLoanAge=loanAge>=12, eligDLQ=dlq>=2||l.fnmaImminentDefault;
@@ -710,6 +727,78 @@ check("FHLMC","BOUND-FHLMC-06 Disaster Flex Mod DLQ@disaster 2mo — NOT eligibl
   L({delinquencyMonths:"3",fhlmcDisasterHardship:true,fhlmcFEMADesignation:true,
      fhlmcDLQAtDisaster:"2"}),
   {"Freddie Mac Flex Modification (Disaster)":false});
+
+// ── FHLMC Streamlined Payment Deferral (Solicitation) ─────────────────────────
+
+// Happy: standard eligible case (non-disaster, conv first, 12mo+ old, 3mo DLQ, clean)
+check("FHLMC","STRM-FHLMC-01 Streamlined PD eligible — 3mo DLQ, clean slate",
+  L({delinquencyMonths:"3",fhlmcCumulativeDeferredMonths:"0",fhlmcPriorDeferralMonths:"0"}),
+  {"FHLMC Streamlined Payment Deferral":true});
+
+// Happy: upper DLQ boundary (24 months — max for streamlined vs 6mo for standard)
+check("FHLMC","STRM-FHLMC-02 Streamlined PD eligible — 24mo DLQ (upper range)",
+  L({delinquencyMonths:"24",fhlmcCumulativeDeferredMonths:"0",fhlmcPriorDeferralMonths:"0"}),
+  {"FHLMC Streamlined Payment Deferral":true});
+
+// Sad: DLQ = 1 (below 2mo minimum)
+check("FHLMC","STRM-FHLMC-03 Streamlined PD ineligible — 1mo DLQ (below minimum)",
+  L({delinquencyMonths:"1",fhlmcCumulativeDeferredMonths:"0",fhlmcPriorDeferralMonths:"0"}),
+  {"FHLMC Streamlined Payment Deferral":false});
+
+// Sad: DLQ = 25 (above 24mo maximum)
+check("FHLMC","STRM-FHLMC-04 Streamlined PD ineligible — 25mo DLQ (above maximum)",
+  L({delinquencyMonths:"25",fhlmcCumulativeDeferredMonths:"0",fhlmcPriorDeferralMonths:"0"}),
+  {"FHLMC Streamlined Payment Deferral":false});
+
+// Sad: cumulative deferred >= 18 (cap exceeded)
+check("FHLMC","STRM-FHLMC-05 Streamlined PD ineligible — 18mo cumulative cap exceeded",
+  L({delinquencyMonths:"3",fhlmcCumulativeDeferredMonths:"18",fhlmcPriorDeferralMonths:"0"}),
+  {"FHLMC Streamlined Payment Deferral":false});
+
+// Key distinction: standard PD requires hardship resolved + can resume; streamlined does not
+check("FHLMC","STRM-FHLMC-06 Streamlined PD eligible when hardship NOT resolved (no borrower contact required)",
+  L({delinquencyMonths:"3",fhlmcHardshipResolved:false,fhlmcCanResumeFull:false,
+     fhlmcCumulativeDeferredMonths:"0",fhlmcPriorDeferralMonths:"0"}),
+  {"FHLMC Streamlined Payment Deferral":true,"FHLMC Payment Deferral":false});
+
+// ── FNMA Streamlined Payment Deferral (Solicitation — Campaign MODNRC) ─────────
+
+// Happy: solicitation campaign active, 3mo DLQ, clean slate
+check("FNMA","STRM-FNMA-01 Streamlined PD eligible — campaign active, 3mo DLQ",
+  L({delinquencyMonths:"3",fnmaSolicitationCampaign:true,fnmaCumulativeDeferredMonths:"0",
+     fnmaPriorDeferralMonths:"0",fnmaHardshipResolved:false,fnmaCanResumeFull:false}),
+  {"FNMA Streamlined Payment Deferral":true});
+
+// Sad: solicitation campaign NOT active — key differentiator from standard PD
+check("FNMA","STRM-FNMA-02 Streamlined PD ineligible — no active solicitation campaign",
+  L({delinquencyMonths:"3",fnmaSolicitationCampaign:false,fnmaCumulativeDeferredMonths:"0",
+     fnmaPriorDeferralMonths:"0"}),
+  {"FNMA Streamlined Payment Deferral":false});
+
+// Sad: DLQ = 7 (above 6mo maximum for FNMA streamlined vs 24mo for FHLMC)
+check("FNMA","STRM-FNMA-03 Streamlined PD ineligible — 7mo DLQ (above 6mo max)",
+  L({delinquencyMonths:"7",fnmaSolicitationCampaign:true,fnmaCumulativeDeferredMonths:"0",
+     fnmaPriorDeferralMonths:"0"}),
+  {"FNMA Streamlined Payment Deferral":false});
+
+// Sad: DLQ = 1 (below 2mo minimum)
+check("FNMA","STRM-FNMA-04 Streamlined PD ineligible — 1mo DLQ (below minimum)",
+  L({delinquencyMonths:"1",fnmaSolicitationCampaign:true,fnmaCumulativeDeferredMonths:"0",
+     fnmaPriorDeferralMonths:"0"}),
+  {"FNMA Streamlined Payment Deferral":false});
+
+// Sad: cumulative deferred >= 12 (FNMA cap is 12, stricter than FHLMC's 18)
+check("FNMA","STRM-FNMA-05 Streamlined PD ineligible — 12mo cumulative cap exceeded",
+  L({delinquencyMonths:"3",fnmaSolicitationCampaign:true,fnmaCumulativeDeferredMonths:"12",
+     fnmaPriorDeferralMonths:"0"}),
+  {"FNMA Streamlined Payment Deferral":false});
+
+// Key distinction: streamlined does NOT require hardship resolved or borrower interview
+check("FNMA","STRM-FNMA-06 Streamlined PD eligible when hardship NOT resolved (no BRP required per LM.R1452)",
+  L({delinquencyMonths:"3",fnmaSolicitationCampaign:true,fnmaCumulativeDeferredMonths:"0",
+     fnmaPriorDeferralMonths:"0",fnmaHardshipResolved:false,fnmaCanResumeFull:false,
+     fnmaCannotReinstate:false}),
+  {"FNMA Streamlined Payment Deferral":true,"FNMA Payment Deferral":false});
 
 // ─── RESULTS ──────────────────────────────────────────────────────────────────
 console.log("\n=== IMMINENT DEFAULT & SEVERELY DELINQUENT TEST RESULTS ===");

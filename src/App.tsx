@@ -3542,13 +3542,36 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
     setAdminMsg("Request denied and account removed.");
     setTimeout(()=>setAdminMsg(""),4000);
   };
-  // Overlay persistence
+  // Overlay persistence — load from Supabase after auth, fall back to localStorage
+  const overlaysLoaded = React.useRef(false);
   useEffect(() => {
-    const saved = localStorage.getItem("riq_overlays");
-    if (saved) try { setOverlays(JSON.parse(saved)); } catch {}
-  }, []);
+    if (!profile) return;
+    const loadOverlays = async () => {
+      try {
+        const { data } = await supabase.from("servicer_overlays").select("config").eq("org_id","default").single();
+        if (data?.config && Object.keys(data.config).length > 0) {
+          setOverlays(data.config);
+          localStorage.setItem("riq_overlays", JSON.stringify(data.config));
+        } else {
+          const saved = localStorage.getItem("riq_overlays");
+          if (saved) try { setOverlays(JSON.parse(saved)); } catch {}
+        }
+      } catch {
+        const saved = localStorage.getItem("riq_overlays");
+        if (saved) try { setOverlays(JSON.parse(saved)); } catch {}
+      }
+      overlaysLoaded.current = true;
+    };
+    loadOverlays();
+  }, [profile]);
   useEffect(() => {
+    if (!overlaysLoaded.current) return;
     localStorage.setItem("riq_overlays", JSON.stringify(overlays));
+    if (profile) {
+      supabase.from("servicer_overlays")
+        .upsert({ org_id: "default", config: overlays, updated_at: new Date().toISOString(), updated_by: profile.id }, { onConflict: "org_id" })
+        .then(() => {});
+    }
   }, [overlays]);
   // Offline detection
   useEffect(() => {
@@ -4338,8 +4361,23 @@ CREATE POLICY "Authenticated users insert versions" ON evaluation_versions FOR I
 ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS checked_docs jsonb;
 ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS assignee_email text;
 ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS sla_start_date date;
-ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS foreclosure_sale_date date;`}</pre>
-              <button onClick={()=>{navigator.clipboard.writeText(`CREATE TABLE IF NOT EXISTS evaluations (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  loan_number text,\n  borrower_name text,\n  loan_type text,\n  created_at timestamptz DEFAULT now(),\n  loan_data jsonb NOT NULL,\n  results jsonb,\n  notes text,\n  guideline_version text,\n  evaluated_at timestamptz,\n  status text DEFAULT 'open',\n  user_id uuid REFERENCES auth.users(id),\n  checked_docs jsonb,\n  assignee_email text,\n  sla_start_date date,\n  foreclosure_sale_date date\n);\n\nALTER TABLE evaluations ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY "Users manage own cases" ON evaluations\n  FOR ALL USING (auth.uid() = user_id);\n\nCREATE POLICY "Authenticated users can insert" ON evaluations\n  FOR INSERT WITH CHECK (auth.uid() = user_id);\n\nCREATE TABLE IF NOT EXISTS evaluation_versions (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  evaluation_id uuid REFERENCES evaluations(id) ON DELETE CASCADE,\n  user_id uuid REFERENCES auth.users(id),\n  version_number integer NOT NULL DEFAULT 1,\n  loan_data jsonb NOT NULL,\n  results jsonb,\n  notes text,\n  change_summary text,\n  created_at timestamptz DEFAULT now()\n);\nALTER TABLE evaluation_versions ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Users manage own versions" ON evaluation_versions FOR ALL USING (auth.uid() = user_id);\nCREATE POLICY "Authenticated users insert versions" ON evaluation_versions FOR INSERT WITH CHECK (auth.uid() = user_id);\n\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS checked_docs jsonb;\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS assignee_email text;\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS sla_start_date date;\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS foreclosure_sale_date date;`);setSaveToast("✅ SQL copied to clipboard!");setTimeout(()=>setSaveToast(""),3000);}} className="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all">📋 Copy SQL</button>
+ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS foreclosure_sale_date date;
+
+-- Servicer overlays (org-wide config, shared across all authenticated users)
+CREATE TABLE IF NOT EXISTS servicer_overlays (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  org_id text NOT NULL UNIQUE DEFAULT 'default',
+  config jsonb NOT NULL DEFAULT '{}',
+  updated_at timestamptz DEFAULT now(),
+  updated_by uuid REFERENCES auth.users(id)
+);
+ALTER TABLE servicer_overlays ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Authenticated users read overlays" ON servicer_overlays
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Authenticated users write overlays" ON servicer_overlays
+  FOR ALL USING (auth.uid() IS NOT NULL);
+INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFLICT (org_id) DO NOTHING;`}</pre>
+              <button onClick={()=>{navigator.clipboard.writeText(`CREATE TABLE IF NOT EXISTS evaluations (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  loan_number text,\n  borrower_name text,\n  loan_type text,\n  created_at timestamptz DEFAULT now(),\n  loan_data jsonb NOT NULL,\n  results jsonb,\n  notes text,\n  guideline_version text,\n  evaluated_at timestamptz,\n  status text DEFAULT 'open',\n  user_id uuid REFERENCES auth.users(id),\n  checked_docs jsonb,\n  assignee_email text,\n  sla_start_date date,\n  foreclosure_sale_date date\n);\n\nALTER TABLE evaluations ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY "Users manage own cases" ON evaluations\n  FOR ALL USING (auth.uid() = user_id);\n\nCREATE POLICY "Authenticated users can insert" ON evaluations\n  FOR INSERT WITH CHECK (auth.uid() = user_id);\n\nCREATE TABLE IF NOT EXISTS evaluation_versions (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  evaluation_id uuid REFERENCES evaluations(id) ON DELETE CASCADE,\n  user_id uuid REFERENCES auth.users(id),\n  version_number integer NOT NULL DEFAULT 1,\n  loan_data jsonb NOT NULL,\n  results jsonb,\n  notes text,\n  change_summary text,\n  created_at timestamptz DEFAULT now()\n);\nALTER TABLE evaluation_versions ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Users manage own versions" ON evaluation_versions FOR ALL USING (auth.uid() = user_id);\nCREATE POLICY "Authenticated users insert versions" ON evaluation_versions FOR INSERT WITH CHECK (auth.uid() = user_id);\n\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS checked_docs jsonb;\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS assignee_email text;\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS sla_start_date date;\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS foreclosure_sale_date date;\n\nCREATE TABLE IF NOT EXISTS servicer_overlays (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  org_id text NOT NULL UNIQUE DEFAULT 'default',\n  config jsonb NOT NULL DEFAULT '{}',\n  updated_at timestamptz DEFAULT now(),\n  updated_by uuid REFERENCES auth.users(id)\n);\nALTER TABLE servicer_overlays ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Authenticated users read overlays" ON servicer_overlays\n  FOR SELECT USING (auth.uid() IS NOT NULL);\nCREATE POLICY "Authenticated users write overlays" ON servicer_overlays\n  FOR ALL USING (auth.uid() IS NOT NULL);\nINSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFLICT (org_id) DO NOTHING;`);setSaveToast("✅ SQL copied to clipboard!");setTimeout(()=>setSaveToast(""),3000);}} className="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all">📋 Copy SQL</button>
             </div>
           </div>
         </div>
@@ -5621,7 +5659,36 @@ ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS foreclosure_sale_date date;`}</
               const b=Object.fromEntries(results2.map(r=>[r.option,r.eligible]));
               const aCount=results.filter(r=>r.eligible).length;
               const bCount=results2.filter(r=>r.eligible).length;
-              return(<div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              const keyFields:[string,string,string][]=[
+                ["Investor",loan.loanType,loan2.loanType],
+                ["DLQ (months)",loan.delinquencyMonths||"—",loan2.delinquencyMonths||"—"],
+                ["Hardship",loan.hardshipType,loan2.hardshipType],
+                ["Hardship Duration",loan.hardshipDuration,loan2.hardshipDuration],
+                ["UPB",loan.upb?`$${Number(loan.upb).toLocaleString()}`:"—",loan2.upb?`$${Number(loan2.upb).toLocaleString()}`:"—"],
+                ["GMI",loan.grossMonthlyIncome?`$${Number(loan.grossMonthlyIncome).toLocaleString()}`:"—",loan2.grossMonthlyIncome?`$${Number(loan2.grossMonthlyIncome).toLocaleString()}`:"—"],
+                ["Current Rate",loan.currentInterestRate?loan.currentInterestRate+"%":"—",loan2.currentInterestRate?loan2.currentInterestRate+"%":"—"],
+                ["PMMS Rate",loan.pmmsRate?loan.pmmsRate+"%":"—",loan2.pmmsRate?loan2.pmmsRate+"%":"—"],
+                ["Lien Position",loan.lienPosition,loan2.lienPosition],
+                ["Occupancy",loan.occupancyStatus,loan2.occupancyStatus],
+                ["Foreclosure Active",loan.foreclosureActive?"Yes":"No",loan2.foreclosureActive?"Yes":"No"],
+              ];
+              return(<div className="space-y-4">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="bg-slate-700 text-white px-5 py-2.5 text-xs font-bold tracking-widest uppercase">Key Input Differences</div>
+                  <table className="w-full text-xs">
+                    <thead><tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="text-left px-4 py-2 font-semibold text-slate-500">Field</th>
+                      <th className="text-left px-4 py-2 font-semibold text-emerald-700">A ({loan.loanType})</th>
+                      <th className="text-left px-4 py-2 font-semibold text-teal-700">B ({loan2.loanType})</th>
+                    </tr></thead>
+                    <tbody>{keyFields.map(([label,av,bv],i)=>{const diff=av!==bv;return(<tr key={i} className={`border-b border-slate-100 ${diff?"bg-amber-50/70":""}`}>
+                      <td className="px-4 py-2 font-medium text-slate-600">{label}</td>
+                      <td className={`px-4 py-2 ${diff?"font-semibold text-emerald-800":"text-slate-500"}`}>{av}</td>
+                      <td className={`px-4 py-2 ${diff?"font-semibold text-teal-800":"text-slate-500"}`}>{bv}</td>
+                    </tr>);})}</tbody>
+                  </table>
+                </div>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white px-5 py-3 flex items-center justify-between">
                   <span className="text-sm font-bold tracking-tight">Side-by-Side Comparison</span>
                   <div className="flex items-center gap-3 text-xs">
@@ -5635,7 +5702,7 @@ ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS foreclosure_sale_date date;`}</
                   <tbody>{all.map((opt,i)=>{const aV=a[opt],bV=b[opt];return(<tr key={i} className={`border-b border-slate-100 ${aV&&bV?"bg-emerald-50/60":(!aV&&!bV)?"":"bg-amber-50/60"}`}><td className="px-4 py-2.5 font-medium text-slate-700">{opt}</td><td className="px-4 py-2.5 text-center">{aV===undefined?"—":aV?<span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-black text-[10px]">✓</span>:<span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-100 text-red-600 font-black text-[10px]">✗</span>}</td><td className="px-4 py-2.5 text-center">{bV===undefined?"—":bV?<span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-black text-[10px]">✓</span>:<span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-100 text-red-600 font-black text-[10px]">✗</span>}</td><td className="px-4 py-2.5 text-center">{aV&&bV?<span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-semibold">Both</span>:(!aV&&!bV)?<span className="text-slate-300">Neither</span>:(aV&&!bV)?<span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-semibold">A only</span>:<span className="px-2 py-0.5 rounded-full bg-teal-100 text-teal-700 font-semibold">B only</span>}</td></tr>);})}</tbody>
                   <tfoot><tr className="bg-slate-50 border-t-2 border-slate-200"><td className="px-4 py-3 font-bold text-slate-700">Total Eligible</td><td className="px-4 py-3 text-center font-black text-emerald-700 text-sm">{aCount}</td><td className="px-4 py-3 text-center font-black text-teal-700 text-sm">{bCount}</td><td className="px-4 py-3 text-center"><span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${aCount>bCount?"bg-emerald-100 text-emerald-700":bCount>aCount?"bg-teal-100 text-teal-700":"bg-slate-100 text-slate-500"}`}>{aCount>bCount?"A wins":bCount>aCount?"B wins":"Tied"}</span></td></tr></tfoot>
                 </table></div>
-              </div>);
+              </div></div>);
             })()}
           </div>
         )}
