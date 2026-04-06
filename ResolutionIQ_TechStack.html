@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResolutionIQ — Tech Stack</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',system-ui,sans-serif; font-size:10.5px; color:#111827; background:#fff; line-height:1.6; }
+  .cover { min-height:40vh; display:flex; flex-direction:column; justify-content:center; align-items:center;
+    background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%); color:#fff; text-align:center;
+    padding:48px 40px; page-break-after:always; }
+  .cover-badge { display:inline-block; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
+    color:#93c5fd; font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase;
+    padding:5px 18px; border-radius:20px; margin-bottom:24px; }
+  .cover h1 { font-size:28px; font-weight:700; margin-bottom:10px; }
+  .cover h1 span { color:#60a5fa; }
+  .cover-sub { font-size:13px; color:#94a3b8; max-width:520px; line-height:1.6; }
+  .cover-meta { font-size:10px; color:#64748b; margin-top:16px; }
+  .body { padding:40px 64px; }
+  h2 { font-size:13px; font-weight:800; color:#1e3a5f; margin:28px 0 10px; padding-bottom:6px; border-bottom:2px solid #e5e7eb; }
+  h3 { font-size:11px; font-weight:700; color:#374151; margin:14px 0 5px; }
+  p { margin-bottom:8px; font-size:10.5px; line-height:1.7; color:#374151; }
+  ul, ol { padding-left:18px; margin-bottom:9px; }
+  li { margin-bottom:4px; font-size:10.5px; line-height:1.6; color:#374151; }
+  .note { background:#eff6ff; border-left:3px solid #2d5fa6; padding:8px 12px; border-radius:4px; margin:8px 0; font-size:9.5px; color:#1e40af; line-height:1.6; }
+  code { font-family:'Courier New',monospace; font-size:9.5px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:4px; padding:1px 5px; }
+  pre { font-family:'Courier New',monospace; font-size:9px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:6px; padding:10px 14px; overflow-x:auto; white-space:pre-wrap; margin:8px 0; line-height:1.5; }
+  table { width:100%; border-collapse:collapse; margin:10px 0; font-size:9.5px; }
+  th { background:#1e3a5f; color:#fff; padding:7px 10px; text-align:left; font-weight:600; }
+  td { border:1px solid #e5e7eb; padding:6px 10px; vertical-align:top; }
+  tr:nth-child(even) td { background:#f8fafc; }
+  .badge { display:inline-block; font-size:8.5px; font-weight:700; padding:2px 7px; border-radius:10px; text-transform:uppercase; letter-spacing:.5px; }
+  .badge-blue { background:#dbeafe; color:#1e40af; }
+  .badge-green { background:#dcfce7; color:#166534; }
+  .badge-amber { background:#fef3c7; color:#92400e; }
+  .badge-purple { background:#ede9fe; color:#5b21b6; }
+  .badge-slate { background:#f1f5f9; color:#475569; }
+  .layer-card { border:1.5px solid #e5e7eb; border-radius:8px; padding:12px 16px; margin-bottom:10px; }
+  .layer-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .layer-icon { width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+  .layer-title { font-size:11.5px; font-weight:700; color:#1e3a5f; }
+  .layer-sub { font-size:9px; color:#64748b; font-weight:500; text-transform:uppercase; letter-spacing:.5px; }
+  .arch-diagram { background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:8px; padding:16px; margin:10px 0; font-family:'Courier New',monospace; font-size:9px; line-height:1.8; color:#374151; }
+  .footer { margin-top:40px; padding-top:16px; border-top:1px solid #e5e7eb; text-align:center; font-size:9px; color:#9ca3af; }
+  @media print { body { font-size:9.5px; } }
+  @page { size:letter; margin:0.5in 0.65in; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-badge">Technical Reference</div>
+  <h1><span>ResolutionIQ</span><br>Technology Stack</h1>
+  <div class="cover-sub">A complete reference of the frameworks, services, libraries, and infrastructure used to build and operate the ResolutionIQ loss mitigation eligibility platform.</div>
+  <div class="cover-meta">Version 1.1 · April 2026 · Internal — Engineering &amp; Architecture</div>
+</div>
+
+<div class="body">
+
+  <h2>Platform Overview</h2>
+  <p>ResolutionIQ is a single-page web application (SPA) that evaluates mortgage loans for loss mitigation eligibility across five investors (FHA, FNMA, FHLMC, VA, USDA). It operates as a pure client-side React application backed by Supabase for persistence, authentication, and real-time updates. There is no custom backend server — all business logic runs in the browser.</p>
+
+  <div class="arch-diagram">
+┌─────────────────────────────────────────────────────────┐
+│                     Browser (SPA)                       │
+│  React 18 + TypeScript · Vite build · Tailwind CSS      │
+│                                                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────┐ │
+│  │ Eligibility  │  │  Case Mgmt   │  │   Settings /  │ │
+│  │   Engine     │  │  Dashboard   │  │ Admin Panels  │ │
+│  └──────────────┘  └──────────────┘  └───────────────┘ │
+└────────────────────────┬────────────────────────────────┘
+                         │ Supabase JS Client (v2)
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│                     Supabase Cloud                      │
+│  PostgreSQL · Auth (JWT) · Row-Level Security           │
+│  Realtime Subscriptions · Storage (future)              │
+└─────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│               External Data Sources                     │
+│  FRED API (PMMS mortgage rate — CSV endpoint)           │
+└─────────────────────────────────────────────────────────┘</div>
+
+  <h2>Local Development — Quick Start</h2>
+  <div class="layer-card">
+    <div class="layer-header">
+      <div class="layer-icon" style="background:#f1f5f9;">💻</div>
+      <div>
+        <div class="layer-title">Prerequisites &amp; Setup</div>
+        <div class="layer-sub">Developer Onboarding</div>
+      </div>
+      <span class="badge badge-slate" style="margin-left:auto;">Node 18+</span>
+    </div>
+    <p><strong>Prerequisites:</strong> Node.js 18 or higher, npm 9+, Git. No other global tooling required.</p>
+    <pre>
+# 1. Clone the repository
+git clone https://github.com/jacklawrence713/ResolutionIQ.git
+cd ResolutionIQ
+
+# 2. Install dependencies
+npm install
+
+# 3. Create environment file (copy from template or create manually)
+#    Add your Supabase project credentials:
+VITE_SUPABASE_URL=https://&lt;your-project&gt;.supabase.co
+VITE_SUPABASE_ANON_KEY=&lt;your-anon-key&gt;
+
+# 4. Start the dev server
+npm run dev
+# → http://localhost:5173
+
+# 5. Run tests (pick any file)
+node test_evaluations.mjs
+node test_evaluations_id_severe.mjs</pre>
+    <p><strong>Build for production:</strong> <code>npm run build</code> → outputs static files to <code>dist/</code>. Deploy by pushing to <code>master</code> — GitHub Actions handles the rest.</p>
+  </div>
+
+  <h2>Browser &amp; Environment Compatibility</h2>
+  <table>
+    <tr><th>Environment</th><th>Status</th><th>Notes</th></tr>
+    <tr><td>Chrome / Edge (Chromium)</td><td>✅ Fully supported</td><td>Primary development target</td></tr>
+    <tr><td>Firefox</td><td>✅ Supported</td><td>Tested; print-to-PDF uses browser dialog</td></tr>
+    <tr><td>Safari</td><td>⚠️ Likely works</td><td>Not actively tested; CSS print may vary</td></tr>
+    <tr><td>Mobile (iOS / Android)</td><td>❌ Not optimized</td><td>Desktop-first layout; not intended for mobile use</td></tr>
+    <tr><td>Internet Explorer / Legacy Edge</td><td>❌ Not supported</td><td>ES2020+ syntax; no polyfills included</td></tr>
+  </table>
+
+  <h2>Core Technology Stack</h2>
+
+  <div class="layer-card">
+    <div class="layer-header">
+      <div class="layer-icon" style="background:#dbeafe;">⚛️</div>
+      <div>
+        <div class="layer-title">React 18</div>
+        <div class="layer-sub">UI Framework</div>
+      </div>
+      <span class="badge badge-blue" style="margin-left:auto;">v18.x</span>
+    </div>
+    <ul>
+      <li>Functional components only — no class components</li>
+      <li>Hooks: <code>useState</code>, <code>useEffect</code>, <code>useRef</code>, <code>useMemo</code>, <code>useCallback</code></li>
+      <li>All application state managed via <code>useState</code> at the root <code>ResolutionIQApp</code> component; props drilled to children</li>
+      <li>No Redux, Zustand, or other state management library</li>
+      <li>React.useRef used for imperative guards (e.g., <code>overlaysLoaded</code> ref pattern to prevent premature Supabase writes)</li>
+    </ul>
+  </div>
+
+  <div class="layer-card">
+    <div class="layer-header">
+      <div class="layer-icon" style="background:#ede9fe;">🔷</div>
+      <div>
+        <div class="layer-title">TypeScript</div>
+        <div class="layer-sub">Type System</div>
+      </div>
+      <span class="badge badge-purple" style="margin-left:auto;">v5.x</span>
+    </div>
+    <ul>
+      <li>Strict mode enabled (<code>tsconfig.json</code>)</li>
+      <li>Inline interface definitions for <code>LoanData</code>, <code>EvalResult</code>, <code>EvalNode</code>, <code>Profile</code>, <code>Overlays</code></li>
+      <li>Type assertions used in Supabase response destructuring</li>
+      <li>All eligibility engine functions typed: <code>(loan: LoanData, overlays: Overlays) =&gt; EvalResult[]</code></li>
+    </ul>
+  </div>
+
+  <div class="layer-card">
+    <div class="layer-header">
+      <div class="layer-icon" style="background:#fef3c7;">⚡</div>
+      <div>
+        <div class="layer-title">Vite</div>
+        <div class="layer-sub">Build Tool &amp; Dev Server</div>
+      </div>
+      <span class="badge badge-amber" style="margin-left:auto;">v5.x</span>
+    </div>
+    <ul>
+      <li>Dev server: <code>npm run dev</code> → <code>http://localhost:5173</code> with HMR</li>
+      <li>Production build: <code>npm run build</code> → outputs to <code>dist/</code></li>
+      <li>Config: <code>vite.config.ts</code> — standard React + TS preset, no custom plugins</li>
+      <li>Environment variables: <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> loaded from <code>.env</code></li>
+    </ul>
+  </div>
+
+  <div class="layer-card">
+    <div class="layer-header">
+      <div class="layer-icon" style="background:#dcfce7;">🎨</div>
+      <div>
+        <div class="layer-title">Tailwind CSS</div>
+        <div class="layer-sub">Styling</div>
+      </div>
+      <span class="badge badge-green" style="margin-left:auto;">v3.x</span>
+    </div>
+    <ul>
+      <li>Utility-first CSS — all styling via Tailwind class names directly in JSX</li>
+      <li>No CSS modules, styled-components, or external UI component library</li>
+      <li>Custom color palette defined in <code>tailwind.config.js</code> (brand blues: <code>#1e3a5f</code>, <code>#2d5fa6</code>)</li>
+      <li>Print utilities (<code>print:hidden</code>, <code>print:block</code>) used for report rendering</li>
+      <li>Responsive breakpoints used minimally — app is desktop-first</li>
+    </ul>
+  </div>
+
+  <div class="layer-card">
+    <div class="layer-header">
+      <div class="layer-icon" style="background:#f0fdf4;">🟢</div>
+      <div>
+        <div class="layer-title">Supabase</div>
+        <div class="layer-sub">Backend-as-a-Service</div>
+      </div>
+      <span class="badge badge-green" style="margin-left:auto;">Cloud · JS SDK v2</span>
+    </div>
+    <ul>
+      <li><strong>Authentication:</strong> Email + password via Supabase Auth; JWT tokens managed automatically by SDK; session persisted to <code>localStorage</code></li>
+      <li><strong>Database:</strong> PostgreSQL (managed by Supabase); 4 application tables (see Database Schema section)</li>
+      <li><strong>Row-Level Security (RLS):</strong> All tables have RLS enabled; policies enforce per-user data isolation</li>
+      <li><strong>Realtime:</strong> Supabase Realtime subscription on <code>evaluations</code> table drives live dashboard updates without polling</li>
+      <li><strong>Client:</strong> <code>@supabase/supabase-js</code> v2 — single client instance initialized at module scope in <code>App.tsx</code></li>
+    </ul>
+  </div>
+
+  <h2>Database Schema</h2>
+  <table>
+    <tr><th>Table</th><th>Purpose</th><th>Key Columns</th></tr>
+    <tr>
+      <td><code>profiles</code></td>
+      <td>User accounts, roles, approval status</td>
+      <td><code>id</code> (FK → auth.users), <code>email</code>, <code>full_name</code>, <code>role</code> (admin/supervisor/specialist), <code>approved</code> (bool)</td>
+    </tr>
+    <tr>
+      <td><code>evaluations</code></td>
+      <td>Saved loan cases and eligibility results</td>
+      <td><code>id</code>, <code>user_id</code>, <code>loan_data</code> (jsonb), <code>results</code> (jsonb), <code>checked_docs</code> (jsonb), <code>assignee_email</code>, <code>sla_start_date</code>, <code>foreclosure_sale_date</code>, <code>status</code>, <code>created_at</code></td>
+    </tr>
+    <tr>
+      <td><code>evaluation_versions</code></td>
+      <td>Point-in-time snapshots for version history</td>
+      <td><code>id</code>, <code>evaluation_id</code> (FK), <code>version_number</code>, <code>snapshot</code> (jsonb), <code>created_at</code></td>
+    </tr>
+    <tr>
+      <td><code>servicer_overlays</code></td>
+      <td>Organization-wide servicer overlay configuration</td>
+      <td><code>id</code>, <code>org_id</code> (text, unique, default: "default"), <code>config</code> (jsonb), <code>updated_at</code>, <code>updated_by</code> (FK → auth.users)</td>
+    </tr>
+  </table>
+
+  <h3>Overlay Config Shape (<code>servicer_overlays.config</code>)</h3>
+  <pre>{
+  minFICO: number | "",          // e.g. 580 — options requiring FICO below this are ineligible
+  maxDLQMonths: number | "",     // e.g. 18 — options only valid below this DLQ threshold
+  excludedOptions: string[],     // e.g. ["Deed-in-Lieu"] — disabled globally
+  excludedHardships: string[],   // e.g. ["investment loss"]
+  customNote: string             // free-text compliance note shown on reports
+}</pre>
+
+  <h2>Application Architecture</h2>
+
+  <h3>File Structure</h3>
+  <table>
+    <tr><th>Path</th><th>Description</th></tr>
+    <tr><td><code>src/App.tsx</code></td><td>Entire application (~6,300 lines). All components, hooks, engine logic, and UI in one file.</td></tr>
+    <tr><td><code>src/main.tsx</code></td><td>React root mount. Renders <code>&lt;ResolutionIQApp /&gt;</code> into <code>#root</code>.</td></tr>
+    <tr><td><code>index.html</code></td><td>Vite HTML entry point.</td></tr>
+    <tr><td><code>vite.config.ts</code></td><td>Vite build configuration.</td></tr>
+    <tr><td><code>tailwind.config.js</code></td><td>Tailwind CSS configuration — custom color palette, content paths.</td></tr>
+    <tr><td><code>postcss.config.js</code></td><td>PostCSS pipeline for Tailwind processing and autoprefixer.</td></tr>
+    <tr><td><code>.eslintrc.cjs</code></td><td>ESLint rules (Vite default: react-hooks, react-refresh plugins). Runs on <code>npm run lint</code>.</td></tr>
+    <tr><td><code>.env</code></td><td>Supabase URL + anon key (not committed to git — add to <code>.gitignore</code>).</td></tr>
+    <tr><td><code>test_evaluations_*.mjs</code></td><td>6 standalone Node.js test files; inline eligibility engine copies; run with <code>node filename.mjs</code>.</td></tr>
+  </table>
+
+  <h3>Key Architectural Patterns</h3>
+  <table>
+    <tr><th>Pattern</th><th>Description</th></tr>
+    <tr>
+      <td>Node audit system</td>
+      <td>Every eligibility criterion is recorded as <code>node(question, answer, pass)</code>. <code>eligible = nodes.every(n =&gt; n.pass)</code>. Provides full audit trail per option per investor.</td>
+    </tr>
+    <tr>
+      <td>Monorepo-in-one-file</td>
+      <td>All components, constants, types, and engine functions live in <code>src/App.tsx</code>. No module splitting. Optimizes for rapid iteration; complexity managed with named sections and <code>// ──── SECTION ────</code> comments.</td>
+    </tr>
+    <tr>
+      <td>Overlays-loaded guard</td>
+      <td><code>overlaysLoaded = React.useRef(false)</code> prevents the overlay save <code>useEffect</code> from writing empty state to Supabase before the initial load from the database completes.</td>
+    </tr>
+    <tr>
+      <td>Realtime subscription</td>
+      <td>Supabase Realtime channel on <code>evaluations</code> table pushes INSERT/UPDATE/DELETE events to the dashboard — no polling required.</td>
+    </tr>
+    <tr>
+      <td>Print-to-PDF report</td>
+      <td><code>printReport()</code> builds a full HTML string with all results and audit nodes, opens it in a new window, and calls <code>window.print()</code>. No PDF library dependency needed.</td>
+    </tr>
+  </table>
+
+  <h3>Known Architectural Limitations</h3>
+  <table>
+    <tr><th>Limitation</th><th>Detail</th><th>Impact</th></tr>
+    <tr>
+      <td>Single-tenant only</td>
+      <td><code>org_id</code> is hardcoded to <code>"default"</code> in overlay queries</td>
+      <td>Cannot serve multiple organizations from one Supabase project without schema changes</td>
+    </tr>
+    <tr>
+      <td>Monolithic file</td>
+      <td>All code in <code>src/App.tsx</code> (~6,300 lines)</td>
+      <td>Increasing file size impacts IDE performance and merge conflict risk; consider splitting into modules past ~8,000 lines</td>
+    </tr>
+    <tr>
+      <td>Test engine duplication</td>
+      <td>Eligibility engine is copied inline into each of the 6 test <code>.mjs</code> files — not imported from <code>App.tsx</code></td>
+      <td>Engine changes must be manually synced to all test files; risk of drift</td>
+    </tr>
+    <tr>
+      <td>No session timeout</td>
+      <td>Supabase JWT refresh runs indefinitely; no inactivity logout implemented</td>
+      <td>Compliance risk for PII access on shared workstations</td>
+    </tr>
+    <tr>
+      <td>No mobile support</td>
+      <td>Desktop-first layout; no responsive breakpoints for small screens</td>
+      <td>Unusable on phones/tablets by design</td>
+    </tr>
+  </table>
+
+  <h2>External Integrations</h2>
+  <table>
+    <tr><th>Service</th><th>Purpose</th><th>Protocol</th></tr>
+    <tr>
+      <td>FRED (Federal Reserve Economic Data)</td>
+      <td>Fetches current PMMS 30-year fixed mortgage rate for net present value calculations</td>
+      <td>HTTP GET — public CSV endpoint (<code>fredgraph.csv?id=MORTGAGE30US</code>). No API key required. Rate is cached in <code>localStorage</code> with timestamp.</td>
+    </tr>
+    <tr>
+      <td>Supabase Auth</td>
+      <td>User registration, login, session management</td>
+      <td>REST + JWT via Supabase JS SDK. Email/password. Session stored in <code>localStorage</code>.</td>
+    </tr>
+    <tr>
+      <td>Supabase Database</td>
+      <td>All persistent data storage</td>
+      <td>REST (PostgREST) via Supabase JS SDK. All queries use the typed client.</td>
+    </tr>
+    <tr>
+      <td>Supabase Realtime</td>
+      <td>Live dashboard updates</td>
+      <td>WebSocket via Supabase Realtime channel. Subscribed to <code>evaluations</code> table changes.</td>
+    </tr>
+  </table>
+
+  <h2>Deployment Pipeline</h2>
+
+  <div class="layer-card">
+    <div class="layer-header">
+      <div class="layer-icon" style="background:#f1f5f9;">🚀</div>
+      <div>
+        <div class="layer-title">GitHub Actions → GitHub Pages</div>
+        <div class="layer-sub">CI/CD Pipeline</div>
+      </div>
+    </div>
+    <ul>
+      <li><strong>Trigger:</strong> Push to <code>master</code> branch</li>
+      <li><strong>Steps:</strong> <code>npm ci</code> → <code>npm run build</code> → deploy <code>dist/</code> to GitHub Pages</li>
+      <li><strong>Deploy time:</strong> ~2 minutes from push to live</li>
+      <li><strong>Secrets:</strong> <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> stored as GitHub Actions repository secrets</li>
+      <li><strong>Repository:</strong> <code>jacklawrence713/ResolutionIQ</code></li>
+      <li><strong>Supabase plan:</strong> Confirm Free vs. Pro — Pro plan required for Point-in-Time Recovery (daily backups only on Free); also affects Realtime connection concurrency limits</li>
+    </ul>
+  </div>
+
+  <h2>Dependencies Summary</h2>
+  <table>
+    <tr><th>Package</th><th>Version</th><th>Purpose</th></tr>
+    <tr><td><code>react</code></td><td>^18.x</td><td>UI framework</td></tr>
+    <tr><td><code>react-dom</code></td><td>^18.x</td><td>DOM rendering</td></tr>
+    <tr><td><code>typescript</code></td><td>^5.x</td><td>Type safety</td></tr>
+    <tr><td><code>vite</code></td><td>^5.x</td><td>Build tool + dev server</td></tr>
+    <tr><td><code>@vitejs/plugin-react</code></td><td>^4.x</td><td>Vite React plugin (SWC)</td></tr>
+    <tr><td><code>tailwindcss</code></td><td>^3.x</td><td>Utility CSS framework</td></tr>
+    <tr><td><code>autoprefixer</code></td><td>^10.x</td><td>CSS vendor prefixing</td></tr>
+    <tr><td><code>postcss</code></td><td>^8.x</td><td>CSS processing pipeline</td></tr>
+    <tr><td><code>@supabase/supabase-js</code></td><td>^2.x</td><td>Supabase client (Auth, DB, Realtime)</td></tr>
+  </table>
+  <div class="note">No UI component library (MUI, Chakra, shadcn, etc.) is used. All components are hand-built with Tailwind. No charting library — charts are built from raw HTML/CSS. No PDF library — reports use browser print dialog.</div>
+
+  <h3>Planned / Not Yet Installed</h3>
+  <table>
+    <tr><th>Package</th><th>Purpose</th><th>Priority</th></tr>
+    <tr><td><code>xlsx</code> (SheetJS)</td><td>Excel export of evaluation results and portfolio data</td><td>P1</td></tr>
+    <tr><td>Supabase <code>notifications</code> table</td><td>Admin push notification panel (in-app alerts to all users)</td><td>P2</td></tr>
+    <tr><td>Azure AD / Microsoft OAuth</td><td>SSO via Supabase social auth provider (requires Azure app registration)</td><td>P1</td></tr>
+  </table>
+
+  <h2>Eligibility Engine Coverage</h2>
+  <table>
+    <tr><th>Investor</th><th>Loss Mitigation Options Evaluated</th></tr>
+    <tr><td><strong>FHA</strong></td><td>Informal Forbearance, Formal Forbearance, Repayment Plan, Loan Modification (FHA-HAMP), FHA-HAMP w/ Partial Claim, Standalone Partial Claim, Pre-Foreclosure Sale (PFS), Deed-in-Lieu</td></tr>
+    <tr><td><strong>FNMA</strong></td><td>Forbearance, Repayment Plan, Payment Deferral (Standard), Streamlined Payment Deferral, Cap &amp; Extend Modification, FNMA Flex Modification, Short Sale, Deed-in-Lieu</td></tr>
+    <tr><td><strong>FHLMC</strong></td><td>Forbearance, Repayment Plan, Payment Deferral (Standard), Streamlined Payment Deferral, Disaster Payment Deferral, Cap &amp; Extend Modification, Flex Modification, Short Sale, Deed-in-Lieu</td></tr>
+    <tr><td><strong>VA</strong></td><td>Repayment Plan, Special Forbearance, Loan Modification, VASP (VA Servicing Purchase), Compromise Sale, Deed-in-Lieu</td></tr>
+    <tr><td><strong>USDA</strong></td><td>Repayment Agreement, Special Forbearance, Loan Modification (Combination Mod), Pre-Foreclosure Sale, Deed-in-Lieu</td></tr>
+  </table>
+
+  <h2>Testing</h2>
+  <table>
+    <tr><th>File</th><th>Coverage</th><th>Test Count</th></tr>
+    <tr><td><code>test_evaluations.mjs</code></td><td>Core eligibility — standard passing/failing cases per investor</td><td>~120</td></tr>
+    <tr><td><code>test_evaluations_boundary.mjs</code></td><td>Boundary conditions (DLQ thresholds, FICO limits, LTV edges)</td><td>~80</td></tr>
+    <tr><td><code>test_evaluations_id_severe.mjs</code></td><td>Imminent default &amp; severe delinquency scenarios; Streamlined PD (FNMA/FHLMC)</td><td>78</td></tr>
+    <tr><td><code>test_evaluations_fha.mjs</code></td><td>FHA-specific — Partial Claim, FHA-HAMP, PFS edge cases</td><td>~60</td></tr>
+    <tr><td><code>test_evaluations_va.mjs</code></td><td>VA-specific — VASP, funding fee scenarios</td><td>~40</td></tr>
+    <tr><td><code>test_evaluations_usda.mjs</code></td><td>USDA-specific — rural development loan scenarios</td><td>~40</td></tr>
+  </table>
+  <p>Tests run via Node.js directly: <code>node test_evaluations_id_severe.mjs</code>. No test framework (Jest/Vitest) — assertions use inline <code>if</code> checks with <code>console.log</code> output. Engine logic is duplicated inline in each test file and must be manually synced when <code>App.tsx</code> engine changes.</p>
+
+  <h2>Security Considerations</h2>
+  <ul>
+    <li><strong>RLS:</strong> All Supabase tables have Row-Level Security enabled. Users can only read/write their own data; supervisors/admins have elevated access via role-check policies.</li>
+    <li><strong>Anon key exposure:</strong> The Supabase anon key is embedded in the client bundle (standard Supabase pattern). RLS is the security boundary — the anon key alone cannot bypass RLS policies.</li>
+    <li><strong>No server-side secrets:</strong> No private API keys or server-side code. All sensitive configuration lives in Supabase project settings.</li>
+    <li><strong>Auth:</strong> JWT sessions expire per Supabase default (1 hour rolling); refresh tokens handled automatically by the SDK.</li>
+    <li><strong>PII:</strong> Loan data (borrower name, SSN, address) may be stored in the <code>evaluations.loan_data</code> JSONB column. Ensure Supabase project is configured with encryption at rest (enabled by default on Pro plan).</li>
+  </ul>
+
+  <h2>Not Used / Intentional Omissions</h2>
+  <table>
+    <tr><th>Technology</th><th>Reason Not Used</th></tr>
+    <tr><td>Redux / Zustand / Context API</td><td>State is scoped to one root component; prop drilling is manageable at current scale</td></tr>
+    <tr><td>React Router</td><td>Navigation is tab-based within a single component; no URL routing needed</td></tr>
+    <tr><td>UI library (MUI, Chakra, shadcn)</td><td>Full design control required; Tailwind utilities sufficient</td></tr>
+    <tr><td>Jest / Vitest</td><td>Test files are standalone Node.js scripts; no build pipeline needed for tests</td></tr>
+    <tr><td>Custom backend / API server</td><td>Supabase provides all backend needs; no Express/Next.js/Fastify server</td></tr>
+    <tr><td>Docker</td><td>Deployed as static files to GitHub Pages; no containerization needed</td></tr>
+    <tr><td>GraphQL</td><td>Supabase REST (PostgREST) is sufficient; no GraphQL layer added</td></tr>
+  </table>
+
+  <div class="footer">
+    ResolutionIQ Tech Stack Reference · Version 1.1 · April 2026 · Internal — Engineering &amp; Architecture
+  </div>
+
+</div>
+</body>
+</html>
