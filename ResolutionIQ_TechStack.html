@@ -267,7 +267,7 @@ node test_evaluations_id_severe.mjs</pre>
     <tr><td><code>postcss.config.js</code></td><td>PostCSS pipeline for Tailwind processing and autoprefixer.</td></tr>
     <tr><td><code>.eslintrc.cjs</code></td><td>ESLint rules (Vite default: react-hooks, react-refresh plugins). Runs on <code>npm run lint</code>.</td></tr>
     <tr><td><code>.env</code></td><td>Supabase URL + anon key (not committed to git — add to <code>.gitignore</code>).</td></tr>
-    <tr><td><code>test_evaluations_*.mjs</code></td><td>6 standalone Node.js test files; inline eligibility engine copies; run with <code>node filename.mjs</code>.</td></tr>
+    <tr><td><code>test_evaluations_*.mjs</code></td><td>3 standalone Node.js test files; inline eligibility engine copies; run with <code>node filename.mjs</code>.</td></tr>
   </table>
 
   <h3>Key Architectural Patterns</h3>
@@ -275,7 +275,7 @@ node test_evaluations_id_severe.mjs</pre>
     <tr><th>Pattern</th><th>Description</th></tr>
     <tr>
       <td>Node audit system</td>
-      <td>Every eligibility criterion is recorded as <code>node(question, answer, pass)</code>. <code>eligible = nodes.every(n =&gt; n.pass)</code>. Provides full audit trail per option per investor.</td>
+      <td>Every eligibility criterion is recorded as <code>node(question, answer, pass, hint?)</code>. <code>eligible = nodes.every(n =&gt; n.pass)</code>. Optional <code>hint</code> param adds contextual notes (e.g. imminent default rule breakdowns) shown in the UI and print report.</td>
     </tr>
     <tr>
       <td>Monorepo-in-one-file</td>
@@ -406,14 +406,11 @@ node test_evaluations_id_severe.mjs</pre>
   <h2>Testing</h2>
   <table>
     <tr><th>File</th><th>Coverage</th><th>Test Count</th></tr>
-    <tr><td><code>test_evaluations.mjs</code></td><td>Core eligibility — standard passing/failing cases per investor</td><td>~120</td></tr>
-    <tr><td><code>test_evaluations_boundary.mjs</code></td><td>Boundary conditions (DLQ thresholds, FICO limits, LTV edges)</td><td>~80</td></tr>
-    <tr><td><code>test_evaluations_id_severe.mjs</code></td><td>Imminent default &amp; severe delinquency scenarios; Streamlined PD (FNMA/FHLMC)</td><td>78</td></tr>
-    <tr><td><code>test_evaluations_fha.mjs</code></td><td>FHA-specific — Partial Claim, FHA-HAMP, PFS edge cases</td><td>~60</td></tr>
-    <tr><td><code>test_evaluations_va.mjs</code></td><td>VA-specific — VASP, funding fee scenarios</td><td>~40</td></tr>
-    <tr><td><code>test_evaluations_usda.mjs</code></td><td>USDA-specific — rural development loan scenarios</td><td>~40</td></tr>
+    <tr><td><code>test_evaluations.mjs</code></td><td>Happy path — each option eligible under standard conditions for all 5 investors (FHA 53, USDA 51, VA 53, FHLMC 52, FNMA 53)</td><td>262</td></tr>
+    <tr><td><code>test_evaluations_id_severe.mjs</code></td><td>Imminent default, boundary conditions, Streamlined PD (FNMA/FHLMC), severely delinquent paths</td><td>78</td></tr>
+    <tr><td><code>test_evaluations_sad.mjs</code></td><td>Sad path — each option ineligible under specific disqualifying conditions for all 5 investors</td><td>125</td></tr>
   </table>
-  <p>Tests run via Node.js directly: <code>node test_evaluations_id_severe.mjs</code>. No test framework (Jest/Vitest) — assertions use inline <code>if</code> checks with <code>console.log</code> output. Engine logic is duplicated inline in each test file and must be manually synced when <code>App.tsx</code> engine changes.</p>
+  <p><strong>Total: 465 tests.</strong> Run via Node.js directly: <code>node test_evaluations.mjs</code>. No test framework (Jest/Vitest) — assertions use inline checks with <code>console.log</code> output. Engine logic is duplicated inline in each test file and must be manually synced when <code>App.tsx</code> engine changes.</p>
 
   <h2>Security Considerations</h2>
   <ul>

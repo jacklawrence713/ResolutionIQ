@@ -73,7 +73,7 @@
       <li>Navigate to <strong>Settings → Database Setup</strong></li>
       <li>Click <strong>Copy SQL</strong> to copy the full setup script to clipboard</li>
     </ol>
-    <p>The SQL script creates the following tables if they don't exist: <code>profiles</code>, <code>evaluations</code>, <code>evaluation_versions</code>, and configures Row Level Security (RLS) policies.</p>
+    <p>The SQL script creates the following tables if they don't exist: <code>profiles</code>, <code>evaluations</code>, <code>evaluation_versions</code>, <code>servicer_overlays</code>, and configures Row Level Security (RLS) policies.</p>
   </div>
 
   <div class="step-block">
@@ -100,11 +100,12 @@
     <p>In Supabase Table Editor, confirm these tables exist:</p>
     <table>
       <tr><th>Table</th><th>Key Columns</th></tr>
-      <tr><td>profiles</td><td>id, email, full_name, approved, role</td></tr>
+      <tr><td>profiles</td><td>id, email, full_name, role, approved, created_at</td></tr>
       <tr><td>evaluations</td><td>id, user_id, loan_data, results, checked_docs, assignee_email, sla_start_date, foreclosure_sale_date, created_at</td></tr>
-      <tr><td>evaluation_versions</td><td>id, evaluation_id, version_number, snapshot, created_at</td></tr>
+      <tr><td>evaluation_versions</td><td>id, evaluation_id, version_number, loan_data, results, created_at</td></tr>
+      <tr><td>servicer_overlays</td><td>id, org_id, config, updated_at, updated_by</td></tr>
     </table>
-    <div class="warn">If <code>checked_docs</code> or <code>assignee_email</code> columns are missing, re-run the DB Setup SQL. These columns are required for case management features.</div>
+    <div class="warn">If <code>checked_docs</code>, <code>assignee_email</code>, or <code>servicer_overlays</code> are missing, re-run the DB Setup SQL. These are required for case management and overlay features.</div>
   </div>
 
   <h2>Phase 2 — First Admin User</h2>

@@ -118,7 +118,7 @@ npm install</pre>
     <pre>VITE_SUPABASE_URL=https://upifjsslzunnsalraark.supabase.co
 VITE_SUPABASE_ANON_KEY=sb_publishable_jabRLGzCMBj8UJL6tzNkTA_qbQfwM9R</pre>
     <p>The anon key is the public publishable key — safe for client-side use. Never add the service role key.</p>
-    <div class="note">For a dev/staging environment, create a separate Supabase project and run the DB Setup SQL (Settings → Database Setup in-app) to provision all three tables.</div>
+    <div class="note">For a dev/staging environment, create a separate Supabase project and run the DB Setup SQL (Settings → Database Setup in-app) to provision all four tables: <code>profiles</code>, <code>evaluations</code>, <code>evaluation_versions</code>, <code>servicer_overlays</code>.</div>
   </div>
 
   <div class="step-block">
@@ -129,13 +129,10 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_jabRLGzCMBj8UJL6tzNkTA_qbQfwM9R</pre>
 
   <div class="step-block">
     <div class="step-header"><div class="step-num">4</div><div class="step-title">Run Tests</div></div>
-    <pre>node test_evaluations.mjs
-node test_evaluations_id_severe.mjs
-node test_evaluations_sad.mjs
-node test_waterfall.mjs
-node test_validation.mjs
-node test_computed_fields.mjs</pre>
-    <p>Node.js only — no test framework. All 496 must pass before any PR. Tests are also runnable from the Tests tab in-app.</p>
+    <pre>node test_evaluations.mjs          # 262 cases — happy path, all 5 investors
+node test_evaluations_id_severe.mjs # 78 cases  — imminent default, boundary, Streamlined PD
+node test_evaluations_sad.mjs       # 125 cases — sad path / ineligibility conditions</pre>
+    <p>Node.js only — no test framework. All 465 must pass before any PR. Tests are also runnable from the Tests tab in-app.</p>
   </div>
 
   <div class="step-block">
@@ -167,8 +164,8 @@ evaluateUSDA(loan: LoanData): EligibilityResult[]</pre>
   <h3>5.2 The Node System</h3>
   <p>Every single eligibility criterion is a "node." The <code>node()</code> helper is defined inside each engine function:</p>
   <pre>const nodes: AuditNode[] = [];
-const node = (question: string, answer: string, pass: boolean) => {
-  nodes.push({ question, answer, pass });
+const node = (question: string, answer: string, pass: boolean, hint?: string) => {
+  nodes.push({ question, answer, pass, ...(hint ? { hint } : {}) });
 };
 
 // Usage:
