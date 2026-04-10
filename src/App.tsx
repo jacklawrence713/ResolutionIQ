@@ -497,7 +497,7 @@ const initLoan = {
   fnmaFEMADesignation:false,
   fnmaInsuredLoss:false,
   fnmaDelinquencyAtDisaster:"0",
-  fnmaSameDlisasterPriorDeferral:false,
+  fnmaSameDisasterPriorDeferral:false,
   fnmaMortgageType:"Fixed Rate",   // "Fixed Rate" or "ARM"
   fnmaCurrentIndex:"",             // current index rate % (ARM only, e.g. SOFR)
   fnmaMargin:"",                   // margin % (ARM only)
@@ -2125,7 +2125,7 @@ function calcApprovalTerms(optionName, l) {
 }
 
 // ─── AUDIT NODE ───────────────────────────────────────────────────────────────
-function node(q, a, pass) { return { question:q, answer:String(a), pass }; }
+function node(q, a, pass, hint?) { return { question:q, answer:String(a), pass, ...(hint ? { hint } : {}) }; }
 
 // ─── ELIGIBILITY ENGINES ─────────────────────────────────────────────────────
 function evaluateFHA(l) {
@@ -2848,7 +2848,7 @@ function evaluateFNMA(l) {
     const eligLienPos = l.lienPosition === "First";
     const eligDlqAtDisaster = dlqAtDisaster < 2;
     const eligDlqRange = dlq >= 1 && dlq <= 12;
-    const eligNotSameDisaster = !l.fnmaSameDlisasterPriorDeferral;
+    const eligNotSameDisaster = !l.fnmaSameDisasterPriorDeferral;
     const eligNotNearMaturity = !fnmaWithin36Mo;
     const nodes = [
       node("Disaster-related hardship", l.fnmaDisasterHardship?"Yes":"No", eligDisaster),
@@ -2859,7 +2859,7 @@ function evaluateFNMA(l) {
       node("Hardship resolved", l.fnmaHardshipResolved?"Yes":"No", l.fnmaHardshipResolved),
       node("Can resume full contractual payment", l.fnmaCanResumeFull?"Yes":"No", l.fnmaCanResumeFull),
       node("Cannot reinstate or afford repayment plan", l.fnmaCannotReinstate?"Yes":"No", l.fnmaCannotReinstate),
-      node("No prior deferral for this same disaster event", l.fnmaSameDlisasterPriorDeferral?"Yes":"No", eligNotSameDisaster),
+      node("No prior deferral for this same disaster event", l.fnmaSameDisasterPriorDeferral?"Yes":"No", eligNotSameDisaster),
       node("Not within 36 months of maturity", fnmaWithin36Mo?"Within 36mo":"OK", eligNotNearMaturity),
       ...commonBlockers,
     ];
@@ -3578,7 +3578,7 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
     if(showAdmin&&profile.role==="admin"){
       supabase.rpc("get_pending_users").then(({data})=>setPendingUsers((data||[]) as any));
     }
-  },[showAdmin]);
+  },[showAdmin, profile]);
   const approveUser=async(id:string)=>{
     await supabase.rpc("approve_user",{target_id:id});
     setPendingUsers(p=>p.filter(u=>u.id!==id));
@@ -3621,7 +3621,7 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
         .upsert({ org_id: "default", config: overlays, updated_at: new Date().toISOString(), updated_by: profile.id }, { onConflict: "org_id" })
         .then(() => {});
     }
-  }, [overlays]);
+  }, [overlays, profile]);
   // Offline detection
   useEffect(() => {
     const on = () => setIsOffline(false);
@@ -4195,7 +4195,7 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
     <h2>✅ Eligible Options (${eligible.length})</h2>
     ${eligible.length===0?"<p style='color:#dc2626;font-weight:bold'>No eligible options. Refer for adverse action / foreclosure review.</p>":eligible.map(r=>`<div class="eligible"><h3>${r.option}${OPTION_CITATIONS[r.option]?" ("+OPTION_CITATIONS[r.option]+")":""}</h3>${r.note?`<p><strong>📌 Note:</strong> ${r.note}</p>`:""}${calcTermsHTML(r)}</div>`).join("")}
     <h2>❌ Ineligible Options (${ineligible.length})</h2>
-    <table style="width:100%;border-collapse:collapse"><tr><th style="text-align:left;padding:6px;background:#f3f4f6;border:1px solid #e5e7eb">Option</th><th style="text-align:left;padding:6px;background:#f3f4f6;border:1px solid #e5e7eb">Failed Condition</th><th style="text-align:left;padding:6px;background:#f3f4f6;border:1px solid #e5e7eb">Value</th></tr>${ineligible.map(r=>{const f=r.nodes?.find(nd=>!nd.pass);return`<tr><td style="padding:5px 8px;border:1px solid #e5e7eb">${r.option}</td><td style="padding:5px 8px;border:1px solid #e5e7eb;color:#dc2626">${f?f.question:"—"}</td><td style="padding:5px 8px;border:1px solid #e5e7eb">${f?f.answer:"—"}</td></tr>`;}).join("")}</table>
+    <table style="width:100%;border-collapse:collapse"><tr><th style="text-align:left;padding:6px;background:#f3f4f6;border:1px solid #e5e7eb">Option</th><th style="text-align:left;padding:6px;background:#f3f4f6;border:1px solid #e5e7eb">Failed Condition</th><th style="text-align:left;padding:6px;background:#f3f4f6;border:1px solid #e5e7eb">Value</th></tr>${ineligible.map(r=>{const f=r.nodes?.find(nd=>!nd.pass);return`<tr><td style="padding:5px 8px;border:1px solid #e5e7eb">${r.option}</td><td style="padding:5px 8px;border:1px solid #e5e7eb;color:#dc2626">${f?f.question+(f.hint?`<br><span style="font-size:10px;color:#6b7280;font-weight:normal">${f.hint}</span>`:""):"—"}</td><td style="padding:5px 8px;border:1px solid #e5e7eb">${f?f.answer:"—"}</td></tr>`;}).join("")}</table>
     ${aiResponse?`<h2>🤖 AI Analysis</h2><div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:6px;white-space:pre-wrap;font-size:12px">${aiResponse}</div>`:""}
     ${(overlays.minFICO||overlays.maxDLQMonths||overlays.excludedOptions.length>0||overlays.customNote)?`<h2>⚙️ Active Servicer Overlays</h2><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px"><tbody>${overlays.minFICO?`<tr style="background:#f8fafc"><td style="padding:6px 10px;font-weight:600;color:#374151;width:40%;border:1px solid #e5e7eb">Minimum FICO Score</td><td style="padding:6px 10px;border:1px solid #e5e7eb">${overlays.minFICO}</td></tr>`:""}${overlays.maxDLQMonths?`<tr style="background:#fff"><td style="padding:6px 10px;font-weight:600;color:#374151;border:1px solid #e5e7eb">Maximum DLQ Months</td><td style="padding:6px 10px;border:1px solid #e5e7eb">${overlays.maxDLQMonths}</td></tr>`:""}${overlays.excludedOptions.length>0?`<tr style="background:#f8fafc"><td style="padding:6px 10px;font-weight:600;color:#374151;border:1px solid #e5e7eb">Excluded Options</td><td style="padding:6px 10px;border:1px solid #e5e7eb">${overlays.excludedOptions.join(", ")}</td></tr>`:""}${overlays.customNote?`<tr style="background:#fff"><td style="padding:6px 10px;font-weight:600;color:#374151;border:1px solid #e5e7eb">Servicer Note</td><td style="padding:6px 10px;border:1px solid #e5e7eb">${overlays.customNote}</td></tr>`:""}</tbody></table>`:""}
     <div class="footer">Decision-support tool only. Final determinations must be confirmed by a qualified loss mitigation underwriter per current HUD, USDA, and VA guidelines.</div>
@@ -5099,7 +5099,7 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
                     <Tog label="Property in FEMA-Declared Disaster Area eligible for IA (or employer's location)" value={loan.fnmaFEMADesignation} onChange={v=>set("fnmaFEMADesignation",v)}/>
                     <Tog label="Property experienced an insured loss" value={loan.fnmaInsuredLoss} onChange={v=>set("fnmaInsuredLoss",v)}/>
                     <F label="DLQ at time of disaster (months — 0 = current)"><Num value={loan.fnmaDelinquencyAtDisaster} onChange={v=>set("fnmaDelinquencyAtDisaster",v)} placeholder="0"/></F>
-                    <Tog label="Already received deferral for this same disaster event" value={loan.fnmaSameDlisasterPriorDeferral} onChange={v=>set("fnmaSameDlisasterPriorDeferral",v)}/>
+                    <Tog label="Already received deferral for this same disaster event" value={loan.fnmaSameDisasterPriorDeferral} onChange={v=>set("fnmaSameDisasterPriorDeferral",v)}/>
                   </>)}
                 </Sec>
               </>)}
@@ -5564,7 +5564,7 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
                       <div className="mt-2 space-y-1">
                         {r.nodes?.map((nd,j)=>(<div key={j} className={`flex items-start gap-2 py-0.5 text-xs ${nd.pass?"text-emerald-700":"text-red-600 font-semibold"}`}>
                           <span className="flex-shrink-0">{nd.pass?"✓":"✗"}</span>
-                          <span>{nd.question}: <em>{nd.answer}</em></span>
+                          <span>{nd.question}: <em>{nd.answer}</em>{nd.hint&&<span className="text-slate-400 ml-1 text-[10px] font-normal">({nd.hint})</span>}</span>
                         </div>))}
                       </div>
                     </div>}
@@ -5600,7 +5600,7 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
                       <div className="mt-3 space-y-1">
                         {r.nodes?.map((nd,j)=>(<div key={j} className={`flex items-center gap-2 p-2 rounded-lg text-xs ${nd.pass?"bg-emerald-50 text-emerald-800":"bg-red-50 text-red-700 font-semibold"}`}>
                           <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black flex-shrink-0 ${nd.pass?"bg-emerald-500 text-white":"bg-red-500 text-white"}`}>{nd.pass?"✓":"✗"}</span>
-                          <span className="flex-1">{nd.question}</span>
+                          <span className="flex-1">{nd.question}{nd.hint&&<span className="block text-[10px] font-normal opacity-60 mt-0.5">{nd.hint}</span>}</span>
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${nd.pass?"bg-emerald-200 text-emerald-800":"bg-red-200 text-red-800"}`}>{nd.answer}</span>
                         </div>))}
                       </div>
