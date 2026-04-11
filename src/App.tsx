@@ -2523,11 +2523,9 @@ function evaluateFHLMC(l) {
   // Soft ineligibility (exception path exists)
   const softIneligible = priorMods >= 3 || l.fhlmcFailedFlexTPP12Mo || l.fhlmcPriorFlexMod60DLQ;
   // 2e: auto-derive imminent default
-  const fhlmcHousingRatioCalc2 = fhlmcPITI > 0 && fhlmcGMI > 0 ? fhlmcPITI / fhlmcGMI * 100 : null;
-  const fhlmcHousingRatio2 = fhlmcHousingRatioCalc2 ?? n(l.fhlmcHousingExpenseRatio);
   const fhlmcIDHasInputs = fhlmcCash > 0 && fhlmcPITI > 0 && fhlmcGMI > 0 && fico > 0;
   const fhlmcIDRule1 = fhlmcCashLt25k && isPrimaryRes && l.fhlmcLongTermHardship;
-  const fhlmcIDRule2 = fico <= 620 || l.fhlmcPrior30DayDLQ6Mo || fhlmcHousingRatio2 > 40;
+  const fhlmcIDRule2 = fico <= 620 || l.fhlmcPrior30DayDLQ6Mo || housingRatio > 40;
   const fhlmcImminentDefaultAuto = fhlmcIDHasInputs ? (fhlmcIDRule1 && fhlmcIDRule2) : l.fhlmcImminentDefault;
 
   // ── 0. Reinstatement ─────────────────────────────────────────────────────────
@@ -3473,6 +3471,23 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
   const [testError,setTestError]=useState("");
   const [testFilter,setTestFilter]=useState("all");
   const [testInvestorFilter,setTestInvestorFilter]=useState("all");
+  // Feature 3: Inactivity timeout
+  const INACTIVITY_MINUTES = 30;
+  const inactivityTimer = React.useRef<ReturnType<typeof setTimeout>|null>(null);
+  const [showInactivityWarning, setShowInactivityWarning] = React.useState(false);
+  // Feature 6: Import preview
+  const [importPreview, setImportPreview] = React.useState<Record<string,string>|null>(null);
+  // Feature 7: TPP payment status
+  const [tppPaymentStatus, setTppPaymentStatus] = React.useState<Record<string,"pending"|"received"|"missed">>({});
+  // Feature 8: Dashboard pagination
+  const [dashPage, setDashPage] = React.useState(1);
+  const DASH_PAGE_SIZE = 25;
+  // Feature 9: Borrower contact log
+  const [contactLog, setContactLog] = React.useState<any[]>([]);
+  const [showAddContact, setShowAddContact] = React.useState(false);
+  const [newContact, setNewContact] = React.useState({date: new Date().toISOString().split("T")[0], type:"Phone", result:"No Answer", notes:""});
+  // Feature 11: Overlay history
+  const [overlayHistory, setOverlayHistory] = React.useState<any[]>([]);
   const runTests=useCallback(()=>{
     try {
       const evalMap:{[k:string]:(l:any)=>any[]}={FHA:evaluateFHA,USDA:evaluateUSDA,VA:evaluateVA,FNMA:evaluateFNMA,FHLMC:evaluateFHLMC};
@@ -3620,6 +3635,13 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
       supabase.from("servicer_overlays")
         .upsert({ org_id: "default", config: overlays, updated_at: new Date().toISOString(), updated_by: profile.id }, { onConflict: "org_id" })
         .then(() => {});
+      if (overlaysLoaded.current) {
+        supabase.from("overlay_audit_log").insert({
+          org_id: "default",
+          user_id: profile.id,
+          overlay_snapshot: overlays,
+        }).then(() => {});
+      }
     }
   }, [overlays, profile]);
   // Offline detection
@@ -3657,6 +3679,28 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
       setShowTour(true);
     }
   }, []);
+
+  // Feature 3: Inactivity timeout
+  const resetInactivityTimer = React.useCallback(() => {
+    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+    setShowInactivityWarning(false);
+    inactivityTimer.current = setTimeout(() => {
+      setShowInactivityWarning(true);
+      setTimeout(() => {
+        supabase.auth.signOut();
+      }, 60000);
+    }, INACTIVITY_MINUTES * 60 * 1000);
+  }, []);
+
+  useEffect(() => {
+    const events = ["mousemove","keydown","click","scroll","touchstart"];
+    events.forEach(e => window.addEventListener(e, resetInactivityTimer, { passive: true }));
+    resetInactivityTimer();
+    return () => {
+      events.forEach(e => window.removeEventListener(e, resetInactivityTimer));
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+    };
+  }, [resetInactivityTimer]);
 
   // SLA computation
   const computeSLA = () => {
@@ -3798,6 +3842,9 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
       if (ov.excludedOptions?.includes(r.option)) {
         blocks.push(`Servicer overlay: ${r.option} excluded by servicer policy`);
       }
+      if (ov.excludedHardshipTypes?.includes(loanData.hardshipType)) {
+        blocks.push(`Servicer overlay: ${loanData.hardshipType} hardship type excluded by servicer policy`);
+      }
       if (blocks.length > 0) {
         return { ...r, eligible: false, overlayBlocked: true, overlayReasons: blocks, nodes: [...(r.nodes||[]), ...blocks.map(b => ({question:"Servicer Overlay", answer:b, pass:false}))] };
       }
@@ -3864,6 +3911,20 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
         setChangeSummary("");
         setSaveToast("✅ Case updated — version "+nextVersion+" saved!");
         loadVersions();
+        // Feature 10: Audit log for status/assignee changes
+        if (profile) {
+          const prevCase = savedCases.find((c:any) => c.id === currentCaseId);
+          const auditEntries: any[] = [];
+          if (prevCase?.status !== "evaluated") {
+            auditEntries.push({ evaluation_id: currentCaseId, user_id: profile.id, action: "status_change", old_value: prevCase?.status || "open", new_value: "evaluated" });
+          }
+          if (prevCase?.assignee_email !== assigneeEmail) {
+            auditEntries.push({ evaluation_id: currentCaseId, user_id: profile.id, action: "assignee_change", old_value: prevCase?.assignee_email || "", new_value: assigneeEmail });
+          }
+          if (auditEntries.length > 0) {
+            await supabase.from("case_audit_log").insert(auditEntries);
+          }
+        }
       } else {
         // Insert new case
         const { data: inserted, error: insertErr } = await supabase.from("evaluations").insert(casePayload).select("id").single();
@@ -3932,10 +3993,8 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
           unrecognizedFields.push(key);
         }
       }
-      setLoan(prev => ({...prev, ...mapped}));
-      setImportMsg(`✅ ${imported} fields imported${unrecognizedFields.length>0?` — ${unrecognizedFields.length} unrecognized: ${unrecognizedFields.slice(0,5).join(", ")}${unrecognizedFields.length>5?" …":""}`:""}`)
-      setEvaluated(false);
-      setTimeout(() => { setShowImportModal(false); setImportMsg(""); setImportJson(""); }, 2500);
+      setImportPreview(mapped);
+      setImportMsg(`✅ ${imported} fields ready to import${unrecognizedFields.length>0?` — ${unrecognizedFields.length} unrecognized: ${unrecognizedFields.slice(0,5).join(", ")}${unrecognizedFields.length>5?" …":""}`:""}`)
     } catch(e) {
       setImportMsg("❌ Invalid JSON — please check your input");
     }
@@ -3995,6 +4054,42 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
     const matchAssignee = assigneeFilter === "mine" ? (c.user_id === profile?.id) : assigneeFilter === "unassigned" ? (!c.assignee_email) : true;
     return matchSearch && matchType && matchStatus && matchAssignee;
   });
+
+  // Feature 8: Dashboard pagination
+  useEffect(() => { setDashPage(1); }, [dashSearch, dashFilter, dashStatus, assigneeFilter]);
+  const pagedCases = filteredCases.slice((dashPage-1)*DASH_PAGE_SIZE, dashPage*DASH_PAGE_SIZE);
+  const totalPages = Math.ceil(filteredCases.length / DASH_PAGE_SIZE);
+
+  // Feature 9: Contact log functions
+  const loadContactLog = async () => {
+    if (!currentCaseId || !supabaseConfigured) return;
+    const {data} = await supabase.from("contact_log").select("*").eq("evaluation_id", currentCaseId).order("contact_date", {ascending: false});
+    setContactLog(data || []);
+  };
+  useEffect(() => { loadContactLog(); }, [currentCaseId]);
+
+  const addContactEntry = async () => {
+    if (!currentCaseId) return;
+    await supabase.from("contact_log").insert({
+      evaluation_id: currentCaseId,
+      user_id: profile?.id,
+      contact_date: newContact.date,
+      contact_type: newContact.type,
+      contact_result: newContact.result,
+      notes: newContact.notes || null,
+    });
+    setNewContact({date: new Date().toISOString().split("T")[0], type:"Phone", result:"No Answer", notes:""});
+    setShowAddContact(false);
+    loadContactLog();
+  };
+
+  // Feature 11: Overlay history functions
+  const loadOverlayHistory = async () => {
+    if (!supabaseConfigured || !profile) return;
+    const {data} = await supabase.from("overlay_audit_log").select("*").eq("org_id","default").order("changed_at",{ascending:false}).limit(10);
+    setOverlayHistory(data || []);
+  };
+  useEffect(() => { loadOverlayHistory(); }, [profile]);
 
   // CSV parser
   const parseCSV = (text: string): Record<string, string>[] => {
@@ -4201,6 +4296,49 @@ function MainApp({profile,onSignOut}:{profile:Profile;onSignOut:()=>void}) {
     <div class="footer">Decision-support tool only. Final determinations must be confirmed by a qualified loss mitigation underwriter per current HUD, USDA, and VA guidelines.</div>
     </body></html>`);
     w.document.close();w.print();
+  };
+
+  const printDenialNotice = () => {
+    const w = window.open("","_blank");
+    if (!w) return;
+    const today = new Date().toLocaleDateString("en-US", {year:"numeric",month:"long",day:"numeric"});
+    const failReasons = ineligible.map(r => {
+      const f = r.nodes?.find((nd:any) => !nd.pass);
+      return `<tr><td style="padding:6px 10px;border:1px solid #e5e7eb">${r.option}</td><td style="padding:6px 10px;border:1px solid #e5e7eb;color:#dc2626">${f ? f.question : "Criteria not met"}</td><td style="padding:6px 10px;border:1px solid #e5e7eb">${f ? f.answer : "—"}</td></tr>`;
+    }).join("");
+    w.document.write(`<!DOCTYPE html><html><head><title>Loss Mitigation Denial Notice</title>
+  <style>body{font-family:Arial,sans-serif;font-size:11px;color:#111;padding:40px 60px;max-width:800px;margin:auto}
+  h1{font-size:18px;margin-bottom:4px}h2{font-size:13px;color:#1e3a5f;margin-top:20px;border-bottom:1px solid #e5e7eb;padding-bottom:4px}
+  table{width:100%;border-collapse:collapse;margin:10px 0}th{background:#1e3a5f;color:#fff;padding:7px 10px;text-align:left;font-size:10px}
+  td{border:1px solid #e5e7eb;padding:6px 10px;vertical-align:top}
+  .footer{margin-top:32px;font-size:9px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:10px}
+  @media print{@page{margin:0.5in}}</style></head><body>
+  <h1>Loss Mitigation Denial Notice</h1>
+  <p style="font-size:10px;color:#6b7280">Date: ${today}</p>
+  <h2>Borrower Information</h2>
+  <table><tr><th>Field</th><th>Value</th></tr>
+  <tr><td>Borrower Name</td><td>${loan.borrowerName||"—"}</td></tr>
+  <tr><td>Loan Number</td><td>${loan.loanNumber||"—"}</td></tr>
+  <tr><td>Investor / Loan Type</td><td>${loan.loanType||"—"}</td></tr>
+  <tr><td>Delinquency</td><td>${loan.delinquencyMonths||"—"} months</td></tr>
+  <tr><td>Hardship Type</td><td>${loan.hardshipType||"—"}</td></tr>
+  </table>
+  <h2>Denial — Loss Mitigation Options Reviewed</h2>
+  <p>After review of your loss mitigation application, we have determined that you do not currently qualify for any available loss mitigation option based on the applicable investor guidelines. The specific reasons for each option are detailed below.</p>
+  <table><tr><th>Option Reviewed</th><th>Reason Not Available</th><th>Current Value</th></tr>${failReasons}</table>
+  <h2>Your Rights</h2>
+  <ul style="padding-left:16px;font-size:10px">
+  <li>You have <strong>14 days</strong> from the date of this notice to appeal this determination.</li>
+  <li>To appeal, submit a written request with supporting documentation to your servicer.</li>
+  <li>You may also contact a HUD-approved housing counselor at <strong>1-800-569-4287</strong> for free assistance.</li>
+  <li>This notice does not waive any rights you have under applicable federal, state, or local law.</li>
+  </ul>
+  <h2>Next Steps</h2>
+  <p>If your financial situation changes, you may reapply for loss mitigation at any time. Contact your servicer to discuss available options including short sale or deed-in-lieu of foreclosure if you are unable to retain your home.</p>
+  <div class="footer">This notice was generated by ResolutionIQ — decision-support tool only. Final determinations must be reviewed and signed by a qualified loss mitigation specialist. This document does not constitute legal advice.</div>
+  </body></html>`);
+    w.document.close();
+    w.print();
   };
 
   if(showAdmin&&profile.role==="admin") return (
@@ -4442,7 +4580,46 @@ CREATE POLICY "Authenticated users read overlays" ON servicer_overlays
   FOR SELECT USING (auth.uid() IS NOT NULL);
 CREATE POLICY "Authenticated users write overlays" ON servicer_overlays
   FOR ALL USING (auth.uid() IS NOT NULL);
-INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFLICT (org_id) DO NOTHING;`}</pre>
+INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFLICT (org_id) DO NOTHING;
+
+-- Borrower contact log
+CREATE TABLE IF NOT EXISTS contact_log (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  evaluation_id uuid REFERENCES evaluations(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES auth.users(id),
+  contact_date date NOT NULL DEFAULT CURRENT_DATE,
+  contact_type text NOT NULL,
+  contact_result text NOT NULL,
+  notes text,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE contact_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users manage own contact logs" ON contact_log FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Authenticated users read contact logs" ON contact_log FOR SELECT USING (auth.uid() IS NOT NULL);
+
+-- Case audit log (status/assignee changes)
+CREATE TABLE IF NOT EXISTS case_audit_log (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  evaluation_id uuid REFERENCES evaluations(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES auth.users(id),
+  action text NOT NULL,
+  old_value text,
+  new_value text,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE case_audit_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Authenticated users manage audit log" ON case_audit_log FOR ALL USING (auth.uid() IS NOT NULL);
+
+-- Overlay change history
+CREATE TABLE IF NOT EXISTS overlay_audit_log (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  org_id text NOT NULL DEFAULT 'default',
+  user_id uuid REFERENCES auth.users(id),
+  changed_at timestamptz DEFAULT now(),
+  overlay_snapshot jsonb NOT NULL
+);
+ALTER TABLE overlay_audit_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Authenticated users manage overlay audit" ON overlay_audit_log FOR ALL USING (auth.uid() IS NOT NULL);`}</pre>
               <button onClick={()=>{navigator.clipboard.writeText(`-- User profiles (role, approval status)\nCREATE TABLE IF NOT EXISTS profiles (\n  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,\n  email text,\n  full_name text,\n  role text NOT NULL DEFAULT 'specialist',\n  approved boolean NOT NULL DEFAULT false,\n  created_at timestamptz DEFAULT now()\n);\nALTER TABLE profiles ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Users read own profile" ON profiles FOR SELECT USING (auth.uid() = id);\nCREATE POLICY "Users insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);\nCREATE POLICY "Authenticated users update profiles" ON profiles FOR UPDATE USING (auth.uid() IS NOT NULL);\nCREATE POLICY "Authenticated users read all profiles" ON profiles FOR SELECT USING (auth.uid() IS NOT NULL);\n\nCREATE TABLE IF NOT EXISTS evaluations (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  loan_number text,\n  borrower_name text,\n  loan_type text,\n  created_at timestamptz DEFAULT now(),\n  loan_data jsonb NOT NULL,\n  results jsonb,\n  notes text,\n  guideline_version text,\n  evaluated_at timestamptz,\n  status text DEFAULT 'open',\n  user_id uuid REFERENCES auth.users(id),\n  checked_docs jsonb,\n  assignee_email text,\n  sla_start_date date,\n  foreclosure_sale_date date\n);\n\nALTER TABLE evaluations ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY "Users manage own cases" ON evaluations\n  FOR ALL USING (auth.uid() = user_id);\n\nCREATE POLICY "Authenticated users can insert" ON evaluations\n  FOR INSERT WITH CHECK (auth.uid() = user_id);\n\nCREATE TABLE IF NOT EXISTS evaluation_versions (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  evaluation_id uuid REFERENCES evaluations(id) ON DELETE CASCADE,\n  user_id uuid REFERENCES auth.users(id),\n  version_number integer NOT NULL DEFAULT 1,\n  loan_data jsonb NOT NULL,\n  results jsonb,\n  notes text,\n  change_summary text,\n  created_at timestamptz DEFAULT now()\n);\nALTER TABLE evaluation_versions ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Users manage own versions" ON evaluation_versions FOR ALL USING (auth.uid() = user_id);\nCREATE POLICY "Authenticated users insert versions" ON evaluation_versions FOR INSERT WITH CHECK (auth.uid() = user_id);\n\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS checked_docs jsonb;\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS assignee_email text;\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS sla_start_date date;\nALTER TABLE evaluations ADD COLUMN IF NOT EXISTS foreclosure_sale_date date;\n\nCREATE TABLE IF NOT EXISTS servicer_overlays (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  org_id text NOT NULL UNIQUE DEFAULT 'default',\n  config jsonb NOT NULL DEFAULT '{}',\n  updated_at timestamptz DEFAULT now(),\n  updated_by uuid REFERENCES auth.users(id)\n);\nALTER TABLE servicer_overlays ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Authenticated users read overlays" ON servicer_overlays\n  FOR SELECT USING (auth.uid() IS NOT NULL);\nCREATE POLICY "Authenticated users write overlays" ON servicer_overlays\n  FOR ALL USING (auth.uid() IS NOT NULL);\nINSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFLICT (org_id) DO NOTHING;`);setSaveToast("✅ SQL copied to clipboard!");setTimeout(()=>setSaveToast(""),3000);}} className="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all">📋 Copy SQL</button>
             </div>
           </div>
@@ -4458,32 +4635,51 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
             </div>
             <div className="p-5">
               <p className="text-xs text-slate-500 mb-3">Paste JSON or CSV (with header row) from BytePro or your LOS. Recognized fields: LoanNumber, CurrentUPB, GrossMonthlyIncome, InterestRate, DelinquencyMonths, LoanType, and more.</p>
-              <textarea className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none" rows={10} value={importJson} onChange={e=>setImportJson(e.target.value)} placeholder={'{\n  "LoanNumber": "1234567890",\n  "CurrentUPB": "247500",\n  "GrossMonthlyIncome": "5200"\n}'}/>
-              {importMsg&&<div className={`mt-2 text-xs font-semibold px-3 py-2 rounded-lg ${importMsg.startsWith("✅")?"bg-emerald-50 text-emerald-700":"bg-red-50 text-red-700"}`}>{importMsg}</div>}
-              <div className="flex gap-2 mt-3">
-                <button onClick={importLoanData} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 rounded-lg transition-all">📥 Import JSON</button>
-                <button onClick={()=>{
-                  try {
-                    const rows = parseCSV(importJson);
-                    if (rows.length === 0) { setImportMsg("❌ No data rows found in CSV"); return; }
-                    const raw = rows[0];
-                    const mapped: Record<string,string> = {};
-                    let imported = 0; const unrecognizedFields: string[] = [];
-                    const firstName = raw["BorrowerFirstName"] || ""; const lastName = raw["BorrowerLastName"] || "";
-                    if (firstName || lastName) { mapped["borrowerName"] = [lastName, firstName].filter(Boolean).join(", "); imported++; }
-                    for (const [key, val] of Object.entries(raw)) {
-                      if (key === "BorrowerFirstName" || key === "BorrowerLastName") continue;
-                      if (key in FIELD_MAP) { const appKey = FIELD_MAP[key]; if (appKey) { mapped[appKey] = String(val); imported++; } }
-                      else { unrecognizedFields.push(key); }
-                    }
-                    setLoan(prev => ({...prev, ...mapped}));
-                    setImportMsg(`✅ ${imported} fields imported from CSV${unrecognizedFields.length>0?` — ${unrecognizedFields.length} unrecognized: ${unrecognizedFields.slice(0,5).join(", ")}${unrecognizedFields.length>5?" …":""}`:""}` );
-                    setEvaluated(false);
-                    setTimeout(() => { setShowImportModal(false); setImportMsg(""); setImportJson(""); }, 2500);
-                  } catch(e) { setImportMsg("❌ CSV parse error — check format (header row required)"); }
-                }} className="flex-1 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold py-2 rounded-lg transition-all">📊 Import CSV</button>
-                <button onClick={()=>setShowImportModal(false)} className="px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-semibold py-2 rounded-lg transition-all">Cancel</button>
-              </div>
+              {!importPreview ? (
+                <>
+                  <textarea className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none" rows={10} value={importJson} onChange={e=>setImportJson(e.target.value)} placeholder={'{\n  "LoanNumber": "1234567890",\n  "CurrentUPB": "247500",\n  "GrossMonthlyIncome": "5200"\n}'}/>
+                  {importMsg&&<div className={`mt-2 text-xs font-semibold px-3 py-2 rounded-lg ${importMsg.startsWith("✅")?"bg-emerald-50 text-emerald-700":"bg-red-50 text-red-700"}`}>{importMsg}</div>}
+                  <div className="flex gap-2 mt-3">
+                    <button onClick={importLoanData} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 rounded-lg transition-all">📥 Import JSON</button>
+                    <button onClick={()=>{
+                      try {
+                        const rows = parseCSV(importJson);
+                        if (rows.length === 0) { setImportMsg("❌ No data rows found in CSV"); return; }
+                        const raw = rows[0];
+                        const mapped: Record<string,string> = {};
+                        let imported = 0; const unrecognizedFields: string[] = [];
+                        const firstName = raw["BorrowerFirstName"] || ""; const lastName = raw["BorrowerLastName"] || "";
+                        if (firstName || lastName) { mapped["borrowerName"] = [lastName, firstName].filter(Boolean).join(", "); imported++; }
+                        for (const [key, val] of Object.entries(raw)) {
+                          if (key === "BorrowerFirstName" || key === "BorrowerLastName") continue;
+                          if (key in FIELD_MAP) { const appKey = FIELD_MAP[key]; if (appKey) { mapped[appKey] = String(val); imported++; } }
+                          else { unrecognizedFields.push(key); }
+                        }
+                        setImportPreview(mapped);
+                        setImportMsg(`✅ ${imported} fields ready to import from CSV${unrecognizedFields.length>0?` — ${unrecognizedFields.length} unrecognized: ${unrecognizedFields.slice(0,5).join(", ")}${unrecognizedFields.length>5?" …":""}`:""}` );
+                      } catch(e) { setImportMsg("❌ CSV parse error — check format (header row required)"); }
+                    }} className="flex-1 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold py-2 rounded-lg transition-all">📊 Import CSV</button>
+                    <button onClick={()=>{ setShowImportModal(false); setImportMsg(""); setImportJson(""); setImportPreview(null); }} className="px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-semibold py-2 rounded-lg transition-all">Cancel</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {importMsg&&<div className={`mb-3 text-xs font-semibold px-3 py-2 rounded-lg ${importMsg.startsWith("✅")?"bg-emerald-50 text-emerald-700":"bg-red-50 text-red-700"}`}>{importMsg}</div>}
+                  <div className="text-xs font-bold text-slate-600 mb-2">Preview — {Object.keys(importPreview).length} fields to apply:</div>
+                  <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-xl mb-3">
+                    {Object.entries(importPreview).map(([k, v]) => (
+                      <div key={k} className="flex items-center gap-2 px-3 py-1.5 border-b border-slate-100 last:border-0 text-xs">
+                        <span className="font-semibold text-slate-600 w-40 flex-shrink-0">{k}</span>
+                        <span className="text-slate-800 font-mono truncate">{String(v)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setLoan(prev => ({...prev, ...importPreview})); setEvaluated(false); setImportPreview(null); setShowImportModal(false); setImportMsg(""); setImportJson(""); }} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2 rounded-lg transition-all">✅ Apply Import</button>
+                    <button onClick={() => { setImportPreview(null); setImportMsg(""); }} className="px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-semibold py-2 rounded-lg transition-all">← Back</button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -4655,7 +4851,7 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredCases.map(c => {
+                        {pagedCases.map(c => {
                           const topOption = c.results?.find((r:any) => r.eligible)?.option || "—";
                           const dlq = c.loan_data?.delinquencyMonths || "—";
                           const statusColors: Record<string,string> = {open:"bg-slate-100 text-slate-600",evaluated:"bg-blue-100 text-blue-700",recommended:"bg-amber-100 text-amber-700",approved:"bg-emerald-100 text-emerald-700",implemented:"bg-purple-100 text-purple-700"};
@@ -4682,6 +4878,16 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
                       </tbody>
                     </table>
                     {filteredCases.length === 0 && <div className="text-center py-10 text-slate-400 text-sm">No cases found{dashSearch ? ` matching "${dashSearch}"` : ""}</div>}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 text-xs text-slate-500">
+                        <span>Showing {((dashPage-1)*DASH_PAGE_SIZE)+1}–{Math.min(dashPage*DASH_PAGE_SIZE, filteredCases.length)} of {filteredCases.length}</span>
+                        <div className="flex gap-1">
+                          <button onClick={() => setDashPage(p => Math.max(1,p-1))} disabled={dashPage===1} className="px-3 py-1 rounded border disabled:opacity-40 hover:bg-slate-50">← Prev</button>
+                          <span className="px-3 py-1 font-bold text-slate-700">{dashPage} / {totalPages}</span>
+                          <button onClick={() => setDashPage(p => Math.min(totalPages,p+1))} disabled={dashPage===totalPages} className="px-3 py-1 rounded border disabled:opacity-40 hover:bg-slate-50">Next →</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
             }
@@ -5341,6 +5547,7 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
                   </div>
                 </div>
                 {eligible.length===0&&<div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-800 font-bold mb-4">⚠️ No eligible options. Review for adverse action / foreclosure referral.</div>}
+                {evaluated && eligible.length === 0 && <button onClick={printDenialNotice} className="w-full mt-2 mb-4 bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 rounded-lg transition-all">🖨️ Generate Denial Notice</button>}
                 {eligible.length>0&&<div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Eligible Options — click to view calculated terms</div>}
                 {eligible.map((r,i)=>(
                   <div key={i} className="rounded-xl border border-emerald-200 overflow-hidden shadow-sm mb-3 transition-all hover:shadow-md">
@@ -5422,6 +5629,38 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
                         <div className="flex gap-2"><span className="text-red-500 font-semibold">If Failed:</span><span className="text-slate-700">Borrower returns to default — servicer must re-evaluate options</span></div>
                         <div className="flex gap-2"><span className="text-slate-500 font-semibold">Income Doc:</span><span className="text-slate-700">{needsIncomeDoc ? "Required prior to permanent modification" : "Not required — streamlined review"}</span></div>
                       </div>
+                      <div className="mt-3">
+                        <div className="text-xs font-black text-blue-700 mb-2">TPP Payment Status</div>
+                        {([["1", pmt1], ["2", pmt2], ["3", pmt3]] as [string,string][]).map(([num, date]) => {
+                          const status = tppPaymentStatus[num] || "pending";
+                          return (
+                            <div key={num} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 mb-1.5 border border-blue-100">
+                              <div className="text-xs">
+                                <span className="font-bold text-slate-700">Payment {num}</span>
+                                <span className="text-slate-400 ml-2">{fmtDate(date)}</span>
+                              </div>
+                              <div className="flex gap-1">
+                                {(["pending","received","missed"] as const).map(s => (
+                                  <button key={s} onClick={() => setTppPaymentStatus(p => ({...p, [num]: s}))}
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-all ${
+                                      status === s
+                                        ? s === "received" ? "bg-emerald-500 text-white"
+                                        : s === "missed" ? "bg-red-500 text-white"
+                                        : "bg-slate-400 text-white"
+                                      : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                    }`}>{s}</button>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {Object.values(tppPaymentStatus).filter(s=>s==="received").length === 3 && (
+                          <div className="mt-2 bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-xs font-bold text-emerald-700 text-center">✅ All 3 TPP payments received — proceed to permanent modification</div>
+                        )}
+                        {Object.values(tppPaymentStatus).some(s=>s==="missed") && (
+                          <div className="mt-2 bg-red-50 border border-red-200 rounded-lg p-2 text-xs font-bold text-red-700 text-center">⚠️ Missed payment — review TPP default procedures</div>
+                        )}
+                      </div>
                     </div>
                   );
                 })()}
@@ -5500,6 +5739,15 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
                             value={foreclosureSaleDate} onChange={e => setForeclosureSaleDate(e.target.value)}/>
                         </div>
                       </div>
+                      {foreclosureSaleDate && (results.filter(r=>r.eligible).length > 0 || evaluated) && (
+                        <div className="mt-2 bg-red-50 border border-red-300 rounded-lg p-3 flex items-start gap-2">
+                          <span className="text-red-500 text-base flex-shrink-0">⚠️</span>
+                          <div>
+                            <div className="text-xs font-black text-red-700">Dual Tracking Risk</div>
+                            <div className="text-xs text-red-600 mt-0.5">A foreclosure sale date is set while loss mitigation is active. CFPB Regulation X §1024.41 prohibits proceeding with foreclosure while a complete loss mitigation application is pending. Confirm foreclosure is on hold pending this evaluation.</div>
+                          </div>
+                        </div>
+                      )}
                       {sla ? (
                         <div className="space-y-2">
                           {sla.results.map((r, i) => {
@@ -5557,6 +5805,62 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {currentCaseId && supabaseConfigured && (
+                  <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-sm font-black text-slate-700">📞 Borrower Contact Log</div>
+                      <button onClick={() => setShowAddContact(v => !v)} className="text-xs bg-emerald-600 text-white font-bold px-3 py-1 rounded-lg hover:bg-emerald-700">+ Add Entry</button>
+                    </div>
+                    {showAddContact && (
+                      <div className="bg-slate-50 rounded-xl p-3 mb-3 border border-slate-200">
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 block mb-1">Date</label>
+                            <input type="date" className="border rounded px-2 py-1 text-xs w-full" value={newContact.date} onChange={e=>setNewContact(p=>({...p,date:e.target.value}))}/>
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 block mb-1">Type</label>
+                            <select className="border rounded px-2 py-1 text-xs w-full" value={newContact.type} onChange={e=>setNewContact(p=>({...p,type:e.target.value}))}>
+                              {["Phone","Letter","Email","In-Person","Text"].map(t=><option key={t}>{t}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 block mb-1">Result</label>
+                            <select className="border rounded px-2 py-1 text-xs w-full" value={newContact.result} onChange={e=>setNewContact(p=>({...p,result:e.target.value}))}>
+                              {["No Answer","Left Voicemail","QRPC Achieved","Refused to Discuss","Wrong Number","Letter Sent","Email Sent"].map(r=><option key={r}>{r}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 block mb-1">Notes</label>
+                            <input className="border rounded px-2 py-1 text-xs w-full" value={newContact.notes} onChange={e=>setNewContact(p=>({...p,notes:e.target.value}))} placeholder="Optional notes"/>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={addContactEntry} className="flex-1 bg-emerald-600 text-white text-xs font-bold py-1.5 rounded-lg hover:bg-emerald-700">Save</button>
+                          <button onClick={()=>setShowAddContact(false)} className="px-3 bg-slate-200 text-slate-600 text-xs font-bold py-1.5 rounded-lg hover:bg-slate-300">Cancel</button>
+                        </div>
+                      </div>
+                    )}
+                    {contactLog.length === 0
+                      ? <div className="text-xs text-slate-400 text-center py-3">No contact attempts recorded</div>
+                      : <div className="space-y-1.5">
+                          {contactLog.map((entry, i) => (
+                            <div key={i} className="flex items-start gap-2 bg-slate-50 rounded-lg px-3 py-2 text-xs">
+                              <span className="text-slate-400 font-bold flex-shrink-0">{entry.contact_type==="Phone"?"📞":entry.contact_type==="Letter"?"✉️":entry.contact_type==="Email"?"📧":"💬"}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-slate-700">{entry.contact_date}</span>
+                                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${entry.contact_result==="QRPC Achieved"?"bg-emerald-100 text-emerald-700":"bg-slate-200 text-slate-600"}`}>{entry.contact_result}</span>
+                                </div>
+                                {entry.notes && <div className="text-slate-500 mt-0.5 truncate">{entry.notes}</div>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                    }
                   </div>
                 )}
 
@@ -5998,6 +6302,21 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
               </div>
             )}
 
+            {overlayHistory.length > 0 && (
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 mb-4">
+                <div className="text-sm font-bold text-slate-700 mb-3">🕒 Overlay Change History</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Recent Overlay Changes</div>
+                <div className="space-y-1">
+                  {overlayHistory.map((h, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs bg-slate-50 rounded-lg px-3 py-2">
+                      <span className="text-slate-500">{new Date(h.changed_at).toLocaleDateString()} {new Date(h.changed_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</span>
+                      <button onClick={() => { if(window.confirm("Restore this overlay configuration?")) { setOverlays(h.overlay_snapshot); }}} className="text-blue-500 hover:text-blue-700 text-[10px] font-bold">Restore</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="bg-white rounded-2xl border border-slate-200 p-5 mb-4">
               <div className="text-sm font-bold text-slate-700 mb-3">🎓 Onboarding</div>
               <button onClick={() => { setTourStep(0); setShowTour(true); }}
@@ -6130,6 +6449,17 @@ INSERT INTO servicer_overlays (org_id, config) VALUES ('default', '{}') ON CONFL
             )}
           </div>
         )}
+      {/* Feature 3: Inactivity warning modal */}
+      {showInactivityWarning && (
+        <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+            <div className="text-4xl mb-3">⏱️</div>
+            <div className="text-lg font-black text-slate-800 mb-2">Session Expiring</div>
+            <div className="text-sm text-slate-500 mb-4">You've been inactive for {INACTIVITY_MINUTES} minutes. You'll be signed out in 60 seconds to protect patient data.</div>
+            <button onClick={resetInactivityTimer} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-sm">Stay Signed In</button>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );
